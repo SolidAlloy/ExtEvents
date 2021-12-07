@@ -1,0 +1,21 @@
+{
+  "name": "com.solidalloy.ext-events",
+  "version": "1.0.0",
+  "displayName": "ExtEvents",
+  "description": "UnityEvents, but better.",
+  "dependencies": {
+    "com.solidalloy.util": "1.33.1",
+    "com.unity.settings-manager": "1.0.3",
+    "com.solidalloy.type-references": "2.11.5"
+  },
+  "keywords": [
+    "event",
+    "UnityEvent",
+    "tool",
+    "editor"
+  ],
+  "author": {
+    "name": "SolidAlloy",
+    "url": "https://github.com/SolidAlloy/"
+  }
+}
