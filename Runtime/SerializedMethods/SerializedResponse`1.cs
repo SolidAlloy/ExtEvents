@@ -7,7 +7,7 @@
     {
         public void Invoke(T arg)
         {
-            
+
         }
     }
 }

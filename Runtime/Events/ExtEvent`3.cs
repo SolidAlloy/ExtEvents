@@ -10,6 +10,7 @@
         [SerializeField] private string _arg1Name;
         [SerializeField] private string _arg2Name;
         [SerializeField] private string _arg3Name;
+        [SerializeField] private List<SerializedResponse<T1, T2, T3>> _responses;
 
         public IReadOnlyList<Action<T1, T2, T3>> DynamicListeners { get; }
         public IReadOnlyList<Action<T1, T2, T3>> PersistentListeners { get; }

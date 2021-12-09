@@ -9,6 +9,7 @@
     {
         [SerializeField] private string _arg1Name;
         [SerializeField] private string _arg2Name;
+        [SerializeField] private List<SerializedResponse<T1, T2>> _responses;
 
         public IReadOnlyList<Action<T1, T2>> DynamicListeners { get; }
         public IReadOnlyList<Action<T1, T2>> PersistentListeners { get; }
