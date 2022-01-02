@@ -31,7 +31,7 @@
             }
         }
 
-        private MethodInfo GetMethod(BindingFlags bindingFlags)
+        public MethodInfo GetMethod(BindingFlags bindingFlags)
         {
             if (_type.Type == null || string.IsNullOrEmpty(_memberName))
                 return null;

@@ -7,16 +7,16 @@
     [Serializable]
     public class ExtEvent : BaseExtEvent
     {
-        [SerializeField] private List<SerializedResponse> _responses;
+        [SerializeField] internal SerializedResponse[] _responses;
 
         public IReadOnlyList<Action> DynamicListeners { get; }
         public IReadOnlyList<Action> PersistentListeners { get; } // maybe not a list of actions
 
         public void Invoke()
         {
-            foreach (var response in _responses)
+            for (int index = 0; index < _responses.Length; index++)
             {
-                response.Invoke();
+                _responses[index].Invoke();
             }
         }
 
