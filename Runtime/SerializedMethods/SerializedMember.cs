@@ -5,85 +5,50 @@
     using TypeReferences;
     using UnityEngine;
 
+    public enum MemberType { Field, Property, Method }
+
     [Serializable]
     public class SerializedMember
     {
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" })] private TypeReference _type; // TODO: remove includeAdditionalAssemblies
-        [SerializeField] private string _memberName;
-        [SerializeField] private TypeReference[] _argumentTypeReferences;
-        [SerializeField] private MemberType _memberType;
+        [SerializeField] internal string _memberName;
+        [SerializeField] internal MemberType _memberType;
 
-        public Invokable GetInvokable(BindingFlags bindingFlags)
+        public EfficientInvoker GetInvokable(Type declaringType, BindingFlags bindingFlags, Type[] argumentTypes)
         {
-            switch (_memberType)
+            MemberInfo member = _memberType switch
             {
-                case MemberType.Field:
-                    var field = GetField(bindingFlags);
-                    return new Invokable(field, _memberType);
-                case MemberType.Property:
-                    var property = GetProperty(bindingFlags);
-                    return new Invokable(property, _memberType);
-                case MemberType.Method:
-                    var method = GetMethod(bindingFlags);
-                    return new Invokable(method, _memberType);
-                default:
-                    throw new NotImplementedException();
-            }
+                MemberType.Field => GetField(declaringType, bindingFlags, argumentTypes[0]),
+                MemberType.Property => GetProperty(declaringType, bindingFlags, argumentTypes[0]),
+                MemberType.Method => GetMethod(declaringType, bindingFlags, argumentTypes),
+                _ => throw new NotImplementedException()
+            };
+
+            return member == null ? null : EfficientInvoker.Create(member);
         }
 
-        public MethodInfo GetMethod(BindingFlags bindingFlags)
+        public MethodInfo GetMethod(Type declaringType, BindingFlags bindingFlags, Type[] argumentTypes)
         {
-            if (_type.Type == null || string.IsNullOrEmpty(_memberName))
+            if (string.IsNullOrEmpty(_memberName))
                 return null;
 
-            var argumentTypes = GetArgumentTypes();
+            return declaringType.GetMethod(_memberName, bindingFlags, null, CallingConventions.Any, argumentTypes, null);
+        }
 
-            if (AnyTypeNull(argumentTypes))
+        private FieldInfo GetField(Type declaringType, BindingFlags bindingFlags, Type returnType)
+        {
+            if (string.IsNullOrEmpty(_memberName))
                 return null;
 
-            return _type.Type.GetMethod(_memberName, bindingFlags, null, CallingConventions.Any, argumentTypes, null);
+            var fieldInfo = declaringType.GetField(_memberName, bindingFlags);
+            return fieldInfo?.FieldType == returnType ? fieldInfo : null;
         }
 
-        private FieldInfo GetField(BindingFlags bindingFlags)
+        private PropertyInfo GetProperty(Type declaringType, BindingFlags bindingFlags, Type returnType)
         {
-            if (_type.Type == null || string.IsNullOrEmpty(_memberName))
+            if (string.IsNullOrEmpty(_memberName))
                 return null;
 
-            return _type.Type.GetField(_memberName, bindingFlags);
-        }
-
-        private PropertyInfo GetProperty(BindingFlags bindingFlags)
-        {
-            if (_type.Type == null || string.IsNullOrEmpty(_memberName))
-                return null;
-
-            return _type.Type.GetProperty(_memberName, bindingFlags);
-        }
-
-        public bool AnyTypeNull(Type[] types)
-        {
-            foreach (Type type in types)
-            {
-                if (type == null)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private Type[] _argumentTypes;
-        public Type[] ArgumentTypes => _argumentTypes ??= GetArgumentTypes();
-
-        private Type[] GetArgumentTypes()
-        {
-            var types = new Type[_argumentTypeReferences.Length];
-
-            for (int i = 0; i < _argumentTypeReferences.Length; i++)
-            {
-                types[i] = _argumentTypeReferences[i].Type;
-            }
-
-            return types;
+            return declaringType.GetProperty(_memberName, bindingFlags, null, returnType, Type.EmptyTypes, null);
         }
     }
 }

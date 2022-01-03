@@ -4,12 +4,11 @@
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Reflection;
-    using UnityEngine;
     using UnityEngine.Assertions;
 
     public sealed class EfficientInvoker
     {
-        private static readonly Dictionary<MemberInfo, EfficientInvoker> _methodToWrapperMap
+        private static readonly Dictionary<MemberInfo, EfficientInvoker> _memberToWrapperMap
             = new Dictionary<MemberInfo, EfficientInvoker>();
 
         private readonly Action<object, object[]> _func;
@@ -19,51 +18,19 @@
             _func = func;
         }
 
-        public static EfficientInvoker ForMethod(MethodInfo methodInfo)
+        public static EfficientInvoker Create(MemberInfo memberInfo)
         {
-            if (methodInfo == null)
-                throw new ArgumentNullException(nameof(methodInfo));
+            if (memberInfo == null)
+                throw new ArgumentNullException(nameof(memberInfo));
 
-            if (_methodToWrapperMap.TryGetValue(methodInfo, out var func))
+            if (_memberToWrapperMap.TryGetValue(memberInfo, out var func))
             {
                 return func;
             }
 
-            var wrapper = CreateMethodWrapper(methodInfo, false);
+            var wrapper = CreateMemberWrapper(memberInfo);
             func = new EfficientInvoker(wrapper);
-            _methodToWrapperMap.Add(methodInfo, func);
-            return func;
-        }
-
-        public static EfficientInvoker ForMethodAot(MethodInfo methodInfo)
-        {
-            if (methodInfo == null)
-                throw new ArgumentNullException(nameof(methodInfo));
-
-            // if (_methodToWrapperMap.TryGetValue(methodInfo, out var func))
-            // {
-            //     return func;
-            // }
-
-            var wrapper = CreateMethodWrapper(methodInfo, true);
-            var func = new EfficientInvoker(wrapper);
-            // _methodToWrapperMap.Add(methodInfo, func);
-            return func;
-        }
-
-        public static EfficientInvoker ForProperty(PropertyInfo propertyInfo)
-        {
-            if (propertyInfo == null)
-                throw new ArgumentNullException(nameof(propertyInfo));
-
-            if (_methodToWrapperMap.TryGetValue(propertyInfo, out var func))
-            {
-                return func;
-            }
-
-            var wrapper = CreatePropertyWrapper(propertyInfo);
-            func = new EfficientInvoker(wrapper);
-            _methodToWrapperMap.Add(propertyInfo, func);
+            _memberToWrapperMap.Add(memberInfo, func);
             return func;
         }
 
@@ -83,15 +50,9 @@
             return Expression.Lambda(invokeExp, targetExp, argsExp);
         }
 
-        private static Action<object, object[]> CreateMethodWrapper(MethodInfo method, bool aot)
+        private static Action<object, object[]> CreateMethodWrapper(MethodInfo method)
         {
             var lambda = CreateMethodLambda(method);
-
-            if (aot)
-            {
-                return lambda.CompileAot();
-            }
-
             var compiledLambda = lambda.Compile();
             return (Action<object, object[]>)compiledLambda;
         }
@@ -111,13 +72,16 @@
             }
         }
 
-        private static Action<object, object[]> CreatePropertyWrapper(PropertyInfo propertyInfo)
+        private static Action<object, object[]> CreateMemberWrapper(MemberInfo memberInfo)
         {
+            if (memberInfo is MethodInfo methodInfo)
+                return CreateMethodWrapper(methodInfo);
+
             var targetExp = Expression.Parameter(typeof(object), "target");
             var argsExp = Expression.Parameter(typeof(object[]), "args");
-            Assert.IsNotNull(propertyInfo.DeclaringType);
-            var castArgExp = Expression.Convert(targetExp, propertyInfo.DeclaringType);
-            var propExp = Expression.Property(castArgExp, propertyInfo);
+            Assert.IsNotNull(memberInfo.DeclaringType);
+            var castArgExp = Expression.Convert(targetExp, memberInfo.DeclaringType);
+            var propExp = (memberInfo is FieldInfo fieldInfo) ? Expression.Field(castArgExp, fieldInfo) : Expression.Property(castArgExp, (PropertyInfo) memberInfo);
             var castPropExp = Expression.Convert(propExp, typeof(object));
             var lambdaExp = Expression.Lambda(castPropExp, targetExp, argsExp);
             var lambda = lambdaExp.Compile();

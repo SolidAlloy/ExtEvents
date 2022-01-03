@@ -2,40 +2,15 @@
 {
     using System;
     using System.Reflection;
+    using JetBrains.Annotations;
+    using TypeReferences;
     using UnityEngine;
+    using UnityEngine.Events;
     using Object = UnityEngine.Object;
 
-    // [Serializable]
-    // public class Response
-    // {
-    //     [SerializeField] private SerializedMember _member;
-    //
-    //
-    //
-    //     public void Invoke()
-    //     {
-    //         if (_member.AnyTypeNull(_member.ArgumentTypes))
-    //         {
-    //             Debug.LogWarning("One of the argument types changed. Cannot invoke the response anymore");
-    //             return;
-    //         }
-    //
-    //         // get invokable from serialized member and invoke it.
-    //         _invokable ??= _member.GetInvokable(_isStatic
-    //             ? BindingFlags.Public | BindingFlags.Static
-    //             : BindingFlags.Public | BindingFlags.Instance);
-    //
-    //     }
-    // }
-
-    [Serializable]
-    public class TypedSerializedResponse
-    {
-        // list all possible combinations of arguments as separate fields (with up to three args)
-        // duplicate all the combinations with funcs that have a return value.
-
-        // variables where any variable is serialized cannot be cast to delegate - any way to speed them up?
-    }
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
 
     [Serializable]
     public class SerializedResponse
@@ -47,17 +22,19 @@
         // let's try to think of a solution for responses with one serialized argument at least. How does UnityEvent solve it?
         // Unity just lists all possible argument values in a structure.
         // I can use JsonUtility to convert serialized fields to string and back, and store the type of fields. If performance needs to be considered, add a bunch of fields for common types like Unity does.
-        [SerializeField] private string[] _serializedArguments;
-        [SerializeField] private SerializedMember _member;
-        [SerializeField] private Object _target;
-        [SerializeField] private bool _isStatic;
+        [SerializeField] internal SerializedArgument[] _serializedArguments;
+        [SerializeField] internal SerializedMember _member;
+        [SerializeField] internal Object _target;
+        [SerializeField] internal bool _isStatic;
+        [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
+        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" })] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
 
         [SerializeField] private BuiltResponse _builtResponse;
 
         [NonSerialized] private bool _initialized;
         private object[] _arguments;
 
-        private Invokable _invokable;
+        private EfficientInvoker _invokable;
         private object _objectTarget;
 
         private BindingFlags Flags => BindingFlags.Public | (_isStatic ? BindingFlags.Static : BindingFlags.Instance);
@@ -67,36 +44,55 @@
             _initialized = false;
         }
 
-        public void Invoke()
+        public void Invoke([NotNull] object[] args)
         {
+            if (_callState == UnityEventCallState.Off)
+                return;
+
+#if UNITY_EDITOR
+            if (_callState == UnityEventCallState.RuntimeOnly && !EditorApplication.isPlaying)
+                return;
+    #endif
+
             if (_initialized)
             {
-                InvokeImpl();
+                InvokeImpl(args);
                 return;
             }
 
             Initialize();
             _initialized = true;
-            InvokeImpl();
+            InvokeImpl(args);
         }
 
-        public MethodInfo GetMethod() => _member.GetMethod(Flags);
+        // TODO remove
+        public MethodInfo GetMethod() => _member.GetMethod(_isStatic ? _type.Type : _target.GetType(), Flags, GetArgumentTypes());
 
-        private void InvokeImpl()
+        private void InvokeImpl(object[] args)
         {
+            FillWithDynamicArgs(args);
+
             if (_builtResponse != null)
             {
                 _builtResponse.Invoke(_objectTarget, _arguments);
                 return;
             }
 
-            _invokable.Invoke(_objectTarget, _arguments);
+            _invokable?.Invoke(_objectTarget, _arguments); // TODO: log a warning optionally
         }
 
         private void Initialize()
         {
             if (_builtResponse == null)
-                _invokable = _member.GetInvokable(Flags);
+            {
+                var types = GetArgumentTypes();
+                var declaringType = _isStatic ? _type.Type : _target.GetType();
+
+                if (types != null && declaringType != null)
+                {
+                    _invokable = _member.GetInvokable(declaringType, Flags, types);
+                }
+            }
 
             _objectTarget = GetTarget();
             _arguments = GetArguments();
@@ -116,6 +112,17 @@
             return null;
         }
 
+        private void FillWithDynamicArgs(object[] args)
+        {
+            if (args.Length == 0)
+                return;
+
+            for (int i = 0; i < _arguments.Length; i++)
+            {
+                _arguments[i] ??= args[_serializedArguments[i].Index];
+            }
+        }
+
         private object[] GetArguments()
         {
             if (_serializedArguments.Length == 0)
@@ -125,12 +132,36 @@
 
             for (int i = 0; i < _serializedArguments.Length; i++)
             {
-                var type = typeof(ArgumentHolder<>).MakeGenericType(_member.ArgumentTypes[i]);
-                var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(_serializedArguments[i], type);
-                arguments[i] = argumentHolder.Value;
+                var serializedArg = _serializedArguments[i];
+
+                if (serializedArg.IsSerialized)
+                {
+                    arguments[i] = serializedArg.Value;
+                }
+                else
+                {
+                    arguments[i] = null;
+                }
             }
 
             return arguments;
+        }
+
+        private Type[] GetArgumentTypes()
+        {
+            var types = new Type[_serializedArguments.Length];
+
+            for (int i = 0; i < _serializedArguments.Length; i++)
+            {
+                types[i] = _serializedArguments[i].Type.Type;
+
+                if (types[i] == null)
+                {
+                    return null;
+                }
+            }
+
+            return types;
         }
     }
 }

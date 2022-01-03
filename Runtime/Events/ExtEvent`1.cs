@@ -8,7 +8,9 @@
     public class ExtEvent<T> : BaseExtEvent
     {
         [SerializeField] private string _argName;
-        [SerializeField] private List<SerializedResponse<T>> _responses;
+        [SerializeField] private SerializedResponse[] _responses;
+
+        private readonly object[] _arguments = new object[1];
 
         public IReadOnlyList<Action<T>> DynamicListeners { get; }
         public IReadOnlyList<Action<T>> PersistentListeners { get; }
@@ -20,7 +22,12 @@
 
         public void Invoke(T arg)
         {
+            _arguments[0] = arg;
 
+            for (int index = 0; index < _responses.Length; index++)
+            {
+                _responses[index].Invoke(_arguments);
+            }
         }
 
         public void AddPersistentListener(Action<T> action)

@@ -9,7 +9,9 @@
     {
         [SerializeField] private string _arg1Name;
         [SerializeField] private string _arg2Name;
-        [SerializeField] private List<SerializedResponse<T1, T2>> _responses;
+        [SerializeField] private SerializedResponse[] _responses;
+
+        private readonly object[] _arguments = new object[2];
 
         public IReadOnlyList<Action<T1, T2>> DynamicListeners { get; }
         public IReadOnlyList<Action<T1, T2>> PersistentListeners { get; }
@@ -22,7 +24,13 @@
 
         public void Invoke(T1 arg1, T2 arg2)
         {
+            _arguments[0] = arg1;
+            _arguments[1] = arg2;
 
+            for (int index = 0; index < _responses.Length; index++)
+            {
+                _responses[index].Invoke(_arguments);
+            }
         }
 
         public void AddPersistentListener(Action<T1, T2> action)
