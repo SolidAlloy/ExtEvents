@@ -1,5 +1,6 @@
 ﻿namespace ExtEvents.Editor
 {
+    using System.Collections.Generic;
     using GenericUnityObjects.Editor.Util;
     using SolidUtilities.Editor.Extensions;
     using UnityEditor;
@@ -7,6 +8,26 @@
 
     public static class ExtEventHelper
     {
+        public static IEnumerable<(SerializedProperty extEventProperty, ExtEvent extEvent)> FindExtEvents(Object obj)
+        {
+            var serializedObject = new SerializedObject(obj);
+            var prop = serializedObject.GetIterator();
+
+            if (!prop.Next(true))
+                yield break;
+
+            do
+            {
+                if (prop.name != nameof(ExtEvent._responses) || prop.GetObjectType() != typeof(SerializedResponse[]))
+                    continue;
+
+                var extEventProperty = prop.GetParent();
+                var extEvent = extEventProperty.GetObject<ExtEvent>();
+                yield return (extEventProperty, extEvent);
+            }
+            while (prop.NextVisible(true));
+        }
+
         public static void BuildResponses(SerializedProperty extEventProperty, ExtEvent extEvent)
         {
             // We need to do it before a build, then delete the assemblies

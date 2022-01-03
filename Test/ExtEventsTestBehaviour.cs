@@ -3,7 +3,9 @@ namespace Test
     using ExtEvents;
     using ExtEvents.Editor;
     using Sirenix.OdinInspector;
+    using SolidUtilities.Editor.Extensions;
     using SolidUtilities.Helpers;
+    using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
     using UnityEditor.SceneManagement;
     using UnityEngine;
@@ -14,6 +16,10 @@ namespace Test
         [SerializeField] private SceneAsset _scene;
 
         public ExtEvent VoidEvent;
+
+        public ExtEvent[] Events;
+
+        public string[] EmptyArray;
 
         [Button]
         public void Build()
@@ -35,7 +41,7 @@ namespace Test
 
                 foreach (Component component in components)
                 {
-                    foreach ((var prop, var extEvent) in BuiltResponsesCreator.FindExtEvents(component))
+                    foreach ((var prop, var extEvent) in ExtEventHelper.FindExtEvents(component))
                     {
                         Debug.Log($"found prop {prop.propertyPath}, extEvent not null {extEvent != null}");
                     }
@@ -57,6 +63,29 @@ namespace Test
                     VoidEvent.Invoke();
                 }
             }
+        }
+
+        [Button]
+        public void PrintPropertyPaths()
+        {
+            var serializedObject = new SerializedObject(this);
+            var prop = serializedObject.GetIterator();
+
+            if (prop.Next(true))
+            {
+                do
+                {
+                    Debug.Log(prop.propertyPath);
+                } while (prop.NextVisible(true));
+            }
+        }
+
+        [Button]
+        public void TestGettingObject(string propertyPath)
+        {
+            var serializedObject = new SerializedObject(this);
+            var prop = serializedObject.FindProperty(propertyPath);
+            Debug.Log(prop.GetObject().GetType());
         }
     }
 }
