@@ -101,7 +101,7 @@
             menu.ShowAsContext();
         }
 
-        private static Type[] GetEventParamTypes(SerializedProperty extEventProperty)
+        public static Type[] GetEventParamTypes(SerializedProperty extEventProperty)
         {
             var eventType = extEventProperty.GetObjectType();
 
@@ -378,7 +378,7 @@
 
             memberNameProp.stringValue = memberInfo.Name;
 
-            var eventParamTypes = GetEventParamTypes(responseProperty);
+            var eventParamTypes = GetEventParamTypes(responseProperty.GetParent().GetParent());
 
             if (memberInfo is MethodInfo method)
             {
@@ -424,6 +424,7 @@
             bool matchingParamFound = matchingParamIndex != -1;
 
             argumentProp.FindPropertyRelative(nameof(SerializedArgument.IsSerialized)).boolValue = !matchingParamFound;
+            argumentProp.FindPropertyRelative(nameof(SerializedArgument._canBeDynamic)).boolValue = matchingParamFound;
 
             if (matchingParamFound)
                 argumentProp.FindPropertyRelative(nameof(SerializedArgument.Index)).intValue = matchingParamIndex;

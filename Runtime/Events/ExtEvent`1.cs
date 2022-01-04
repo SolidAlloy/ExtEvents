@@ -7,18 +7,12 @@
     [Serializable]
     public class ExtEvent<T> : BaseExtEvent
     {
-        [SerializeField] private string _argName;
         [SerializeField] private SerializedResponse[] _responses;
 
         private readonly object[] _arguments = new object[1];
 
         public IReadOnlyList<Action<T>> DynamicListeners { get; }
         public IReadOnlyList<Action<T>> PersistentListeners { get; }
-
-        public ExtEvent(string argName)
-        {
-            _argName = argName;
-        }
 
         public void Invoke(T arg)
         {

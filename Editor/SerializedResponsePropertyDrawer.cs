@@ -6,6 +6,7 @@
     using UnityEditor;
     using UnityEngine;
     using UnityEngine.Events;
+    using Object = UnityEngine.Object;
 
     [CustomPropertyDrawer(typeof(SerializedResponse))]
     public class SerializedResponsePropertyDrawer : PropertyDrawer
@@ -41,7 +42,15 @@
             }
             else
             {
-                EditorGUI.PropertyField(targetRect, property.FindPropertyRelative(nameof(SerializedResponse._target)), GUIContent.none);
+                var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
+                var newTarget = EditorGUI.ObjectField(targetRect, targetProp.objectReferenceValue, typeof(Object), true);
+
+                if (targetProp.objectReferenceValue != newTarget)
+                {
+                    targetProp.objectReferenceValue = newTarget;
+                    Debug.Log(newTarget is GameObject);
+                    // TODO if gameObject, open a generic menu to specify the component.
+                }
             }
 
             currentRect.y += EditorGUIUtility.singleLineHeight + LinePadding;

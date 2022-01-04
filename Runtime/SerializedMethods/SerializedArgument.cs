@@ -11,6 +11,7 @@
         public bool IsSerialized;
         public TypeReference Type;
         [SerializeField] internal string _serializedArg;
+        [SerializeField] internal bool _canBeDynamic;
 
         public object Value
         {
