@@ -3,5 +3,8 @@
     using System;
 
     [Serializable]
-    public class BaseExtEvent { }
+    public class BaseExtEvent
+    {
+
+    }
 }

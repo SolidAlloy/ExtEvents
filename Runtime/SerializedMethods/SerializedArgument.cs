@@ -10,7 +10,7 @@
         public int Index;
         public bool IsSerialized;
         public TypeReference Type;
-        [SerializeField] private string _serializedArg;
+        [SerializeField] internal string _serializedArg;
 
         public object Value
         {
@@ -19,10 +19,22 @@
                 if (!IsSerialized)
                     throw new InvalidOperationException();
 
-                var type = typeof(ArgumentHolder<>).MakeGenericType(Type);
-                var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(_serializedArg, type);
-                return argumentHolder.Value;
+                return GetValue(_serializedArg, Type);
             }
+        }
+
+        public static object GetValue(string serializedArg, Type valueType)
+        {
+            var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
+            var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
+            return argumentHolder?.Value;
+        }
+
+        public static string SerializeValue(object value, Type valueType)
+        {
+            var argHolderType = typeof(ArgumentHolder<>).MakeGenericType(valueType);
+            var argHolder = Activator.CreateInstance(argHolderType, value);
+            return JsonUtility.ToJson(argHolder);
         }
     }
 }

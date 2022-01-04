@@ -12,8 +12,10 @@
     using UnityEditor;
 #endif
 
+    public enum MemberType { Field, Property, Method }
+
     [Serializable]
-    public class SerializedResponse
+    public partial class SerializedResponse
     {
         // link to serialized member
         // serialized field for any argument of the action
@@ -23,7 +25,6 @@
         // Unity just lists all possible argument values in a structure.
         // I can use JsonUtility to convert serialized fields to string and back, and store the type of fields. If performance needs to be considered, add a bunch of fields for common types like Unity does.
         [SerializeField] internal SerializedArgument[] _serializedArguments;
-        [SerializeField] internal SerializedMember _member;
         [SerializeField] internal Object _target;
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
@@ -66,7 +67,7 @@
         }
 
         // TODO remove
-        public MethodInfo GetMethod() => _member.GetMethod(_isStatic ? _type.Type : _target.GetType(), Flags, GetArgumentTypes());
+        public MethodInfo GetMethod() => GetMethod(_isStatic ? _type.Type : _target.GetType(), GetArgumentTypes());
 
         private void InvokeImpl(object[] args)
         {
@@ -90,7 +91,7 @@
 
                 if (types != null && declaringType != null)
                 {
-                    _invokable = _member.GetInvokable(declaringType, Flags, types);
+                    _invokable = GetInvokable(declaringType, types);
                 }
             }
 

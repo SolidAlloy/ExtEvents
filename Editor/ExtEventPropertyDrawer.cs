@@ -1,6 +1,8 @@
 ﻿namespace ExtEvents.Editor
 {
     using System.Collections.Generic;
+    using System.Reflection;
+    using SolidUtilities.Editor.Extensions;
     using UnityEditor;
     using UnityEditorInternal;
     using UnityEngine;
@@ -23,6 +25,14 @@
         {
             var reorderableList = GetList(property, label);
             reorderableList.DoList(position);
+        }
+
+        public static void ClearListCache(SerializedProperty responseProperty)
+        {
+            var extEventProperty = responseProperty.GetParent().GetParent();
+            var list = GetList(extEventProperty, null);
+            var clearCacheMethod = typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic);
+            clearCacheMethod.Invoke(list, null);
         }
 
         private static ReorderableList GetList(SerializedProperty property, GUIContent label)
