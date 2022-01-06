@@ -34,6 +34,13 @@
             { "String", "string" }
         };
 
+        public static bool HasMember(SerializedProperty responseProperty)
+        {
+            var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
+            var declaringType = GetDeclaringType(responseProperty, isStatic);
+            return TryGetMemberName(declaringType, responseProperty, isStatic, out _, out _);
+        }
+
         public static void Draw(Rect rect, SerializedProperty responseProperty, out List<string> argNames)
         {
             var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
@@ -97,6 +104,11 @@
             if (!isStatic)
                 AddInstanceFields(menu, declaringType, responseProperty, eventParamTypes);
 
+            if (menu.GetItemCount() == 0)
+            {
+                menu.AddDisabledItem(new GUIContent("No methods found"));
+            }
+
             // menu.DropDown(rect);
             menu.ShowAsContext();
         }
@@ -139,7 +151,7 @@
                 return false;
             }
 
-            var flags = BindingFlags.Public | (isStatic ? BindingFlags.Static : BindingFlags.Instance);
+            var flags = BindingFlags.Public | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
             var memberTypeProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberType));
 
             if (!HasMember(declaringType, currentMemberName, flags, memberTypeProp, argTypes, out argNames))

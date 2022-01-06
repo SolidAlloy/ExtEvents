@@ -107,7 +107,11 @@
 
             foreach ((string name, int index) in argNames)
             {
-                menu.AddItem(new GUIContent(name), indexProp.intValue == index, i => indexProp.intValue = (int) i, index);
+                menu.AddItem(new GUIContent(name), indexProp.intValue == index, i =>
+                {
+                    indexProp.intValue = (int) i;
+                    indexProp.serializedObject.ApplyModifiedProperties();
+                }, index);
             }
 
             menu.ShowAsContext();
@@ -136,6 +140,12 @@
 
         private void DrawSerializedValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
         {
+            // When the value mode is changed from dynamic to serialized, FindProperties hasn't executed yet and _valueProperty is null until the next frame.
+            if (_valueProperty == null)
+            {
+                return;
+            }
+
             _valueProperty.serializedObject.Update();
 
             EditorGUI.BeginChangeCheck();

@@ -1,6 +1,9 @@
 ﻿namespace ExtEvents.Editor
 {
     using System;
+    using System.Linq;
+    using System.Reflection;
+    using GenericUnityObjects.Editor;
     using SolidUtilities.Editor.Helpers;
     using SolidUtilities.Extensions;
     using UnityEditor;
@@ -18,8 +21,24 @@
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var linesNum = 2 + property.FindPropertyRelative(nameof(SerializedResponse._serializedArguments)).arraySize;
-            return EditorGUIUtility.singleLineHeight * linesNum + LinePadding * (linesNum);
+            return (EditorGUIUtility.singleLineHeight + LinePadding) * 2 + GetSerializedArgsHeight(property);
+        }
+
+        private static float GetSerializedArgsHeight(SerializedProperty property)
+        {
+            if (!MemberInfoDrawer.HasMember(property))
+                return 0f;
+
+            float serializedArgumentsHeights = 0f;
+
+            var serializedArgsArray = property.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+
+            for (int i = 0; i < serializedArgsArray.arraySize; i++)
+            {
+                serializedArgumentsHeights += EditorGUI.GetPropertyHeight(serializedArgsArray.GetArrayElementAtIndex(i));
+            }
+
+            return serializedArgumentsHeights;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -43,13 +62,18 @@
             else
             {
                 var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
-                var newTarget = EditorGUI.ObjectField(targetRect, targetProp.objectReferenceValue, typeof(Object), true);
+                var newTarget = GenericObjectDrawer.ObjectField(targetRect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
                 if (targetProp.objectReferenceValue != newTarget)
                 {
-                    targetProp.objectReferenceValue = newTarget;
-                    Debug.Log(newTarget is GameObject);
-                    // TODO if gameObject, open a generic menu to specify the component.
+                    if (newTarget is GameObject gameObject)
+                    {
+                        DrawComponentDropdown(targetProp, gameObject);
+                    }
+                    else
+                    {
+                        targetProp.objectReferenceValue = newTarget;
+                    }
                 }
             }
 
@@ -69,6 +93,38 @@
                 var argumentProp = argumentsArray.GetArrayElementAtIndex(i);
                 EditorGUI.PropertyField(currentRect, argumentProp, GUIContentHelper.Temp(paramNames[i]));
             }
+        }
+
+        private void DrawComponentDropdown(SerializedProperty targetProperty, GameObject gameObject)
+        {
+            var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector)).ToList();
+            var menu = new GenericMenu();
+            menu.allowDuplicateNames = true;
+
+            foreach (Component component in components)
+            {
+                var componentType = component.GetType();
+                var componentMenu = componentType.GetCustomAttribute<AddComponentMenu>();
+
+                string componentName;
+
+                if (componentMenu != null && ! string.IsNullOrEmpty(componentMenu.componentMenu))
+                {
+                    componentName = componentMenu.componentMenu.GetSubstringAfterLast('/');
+                }
+                else
+                {
+                    componentName = ObjectNames.NicifyVariableName(componentType.Name);
+                }
+
+                menu.AddItem(new GUIContent(componentName), false, comp =>
+                {
+                    targetProperty.objectReferenceValue = (Object) comp;
+                    targetProperty.serializedObject.ApplyModifiedProperties();
+                }, component);
+            }
+
+            menu.ShowAsContext();
         }
 
         private void DrawCallState(Rect rect, SerializedProperty responseProp)

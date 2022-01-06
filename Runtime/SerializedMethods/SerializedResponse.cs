@@ -38,7 +38,7 @@
         private EfficientInvoker _invokable;
         private object _objectTarget;
 
-        private BindingFlags Flags => BindingFlags.Public | (_isStatic ? BindingFlags.Static : BindingFlags.Instance);
+        private BindingFlags Flags => BindingFlags.Public | (_isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         public SerializedResponse()
         {
