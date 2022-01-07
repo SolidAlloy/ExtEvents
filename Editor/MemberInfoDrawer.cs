@@ -5,11 +5,12 @@
     using System.Linq;
     using System.Reflection;
     using JetBrains.Annotations;
+    using SolidUtilities;
     using SolidUtilities.Editor.Extensions;
     using SolidUtilities.Editor.Helpers;
-    using SolidUtilities.Extensions;
     using TypeReferences;
     using TypeReferences.Editor.Util;
+    using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
 
@@ -37,8 +38,9 @@
         public static bool HasMember(SerializedProperty responseProperty)
         {
             var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
+            string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
             var declaringType = GetDeclaringType(responseProperty, isStatic);
-            return TryGetMemberName(declaringType, responseProperty, isStatic, out _, out _);
+            return GetMemberName(declaringType, responseProperty, isStatic, currentMemberName, out _) != null;
         }
 
         public static void Draw(Rect rect, SerializedProperty responseProperty, out List<string> argNames)
@@ -48,16 +50,22 @@
 
             var previousGuiColor = GUI.backgroundColor;
 
-            if (!TryGetMemberName(declaringType, responseProperty, isStatic, out string memberName, out argNames))
+            string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
+
+            var memberInfo = GetMemberName(declaringType, responseProperty, isStatic, currentMemberName, out argNames);
+
+            if (memberInfo == null)
             {
                 GUI.backgroundColor = Color.red;
             }
 
+            string popupLabel = string.IsNullOrEmpty(currentMemberName) ? "No Function" : (memberInfo != null ? currentMemberName : currentMemberName + " {Missing}");
+
             using (new EditorGUI.DisabledGroupScope(declaringType == null))
             {
-                if (EditorGUI.DropdownButton(rect, GUIContentHelper.Temp(memberName), FocusType.Passive))
+                if (EditorGUI.DropdownButton(rect, GUIContentHelper.Temp(popupLabel), FocusType.Passive))
                 {
-                    ShowMenu(rect, declaringType, responseProperty, isStatic);
+                    ShowMenu(rect, declaringType, responseProperty, !isStatic, memberInfo);
                 }
             }
 
@@ -80,37 +88,33 @@
             return Type.GetType(declaringTypeName);
         }
 
-        private static void ShowMenu(Rect rect, Type declaringType, SerializedProperty responseProperty, bool isStatic)
+        private static void ShowMenu(Rect rect, Type declaringType, SerializedProperty responseProperty, bool isInstance, MemberInfo memberInfo)
         {
             if (declaringType == null)
                 return;
 
             var eventParamTypes = GetEventParamTypes(responseProperty.GetParent().GetParent());
 
-            var menu = new GenericMenu();
+            var menuItems = new List<DropdownItem<MemberInfo>>();
 
-            AddStaticMethods(menu, declaringType, responseProperty, eventParamTypes);
+            menuItems.AddRange(FindStaticMethods(declaringType, responseProperty, eventParamTypes));
 
-            if (!isStatic)
-                AddInstanceMethods(menu, declaringType, responseProperty, eventParamTypes);
+            if (isInstance)
+                menuItems.AddRange(FindInstanceMethods(declaringType, responseProperty, eventParamTypes));
 
-            AddStaticProperties(menu, declaringType, responseProperty, eventParamTypes);
+            menuItems.AddRange(FindStaticProperties(declaringType, responseProperty, eventParamTypes));
 
-            if (!isStatic)
-                AddInstanceProperties(menu, declaringType, responseProperty, eventParamTypes);
+            if (isInstance)
+                menuItems.AddRange(FindInstanceProperties(declaringType, responseProperty, eventParamTypes));
 
-            AddStaticFields(menu, declaringType, responseProperty, eventParamTypes);
+            menuItems.AddRange(FindStaticFields(declaringType, responseProperty, eventParamTypes));
 
-            if (!isStatic)
-                AddInstanceFields(menu, declaringType, responseProperty, eventParamTypes);
+            if (isInstance)
+                menuItems.AddRange(FindInstanceFields(declaringType, responseProperty, eventParamTypes));
 
-            if (menu.GetItemCount() == 0)
-            {
-                menu.AddDisabledItem(new GUIContent("No methods found"));
-            }
-
-            // menu.DropDown(rect);
-            menu.ShowAsContext();
+            var tree = new DropdownTree<MemberInfo>(menuItems, memberInfo, memberInfo => OnMemberChosen(memberInfo, responseProperty), sortItems: true);
+            tree.ExpandAllFolders();
+            DropdownWindow.Create(tree, DropdownWindowType.Context);
         }
 
         public static Type[] GetEventParamTypes(SerializedProperty extEventProperty)
@@ -123,22 +127,12 @@
             return eventType.GenericTypeArguments;
         }
 
-        private static bool TryGetMemberName(Type declaringType, SerializedProperty responseProperty, bool isStatic, out string memberName, out List<string> argNames)
+        private static MemberInfo GetMemberName(Type declaringType, SerializedProperty responseProperty, bool isStatic, string currentMemberName, out List<string> argNames)
         {
-            string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
-
-            if (string.IsNullOrEmpty(currentMemberName))
+            if (string.IsNullOrEmpty(currentMemberName) || declaringType == null)
             {
-                memberName = "No Function";
                 argNames = null;
-                return true;
-            }
-
-            if (declaringType == null)
-            {
-                memberName = currentMemberName + " {Missing}";
-                argNames = null;
-                return false;
+                return null;
             }
 
             var serializedArgs = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
@@ -146,22 +140,14 @@
 
             if (argTypes == null)
             {
-                memberName = currentMemberName + " {Missing}";
                 argNames = null;
-                return false;
+                return null;
             }
 
             var flags = BindingFlags.Public | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
             var memberTypeProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberType));
 
-            if (!HasMember(declaringType, currentMemberName, flags, memberTypeProp, argTypes, out argNames))
-            {
-                memberName = currentMemberName + " {Missing}";
-                return false;
-            }
-
-            memberName = currentMemberName;
-            return true;
+            return GetMember(declaringType, currentMemberName, flags, memberTypeProp, argTypes, out argNames);
         }
 
         private static Type[] GetTypesFromSerializedArgs(SerializedProperty serializedArgs)
@@ -178,7 +164,7 @@
             return types;
         }
 
-        private static bool HasMember([NotNull] Type declaringType, string name, BindingFlags flags, SerializedProperty memberTypeProp, Type[] argTypes, out List<string> argNames)
+        private static MemberInfo GetMember([NotNull] Type declaringType, string name, BindingFlags flags, SerializedProperty memberTypeProp, Type[] argTypes, out List<string> argNames)
         {
             var memberType = (MemberType) memberTypeProp.enumValueIndex;
 
@@ -186,7 +172,7 @@
             {
                 var method = declaringType.GetMethod(name, flags, null, CallingConventions.Any, argTypes, null);
                 argNames = method?.GetParameters().Select(param => param.Name).ToList();
-                return method != null;
+                return method;
             }
 
             var returnType = argTypes[0];
@@ -194,57 +180,65 @@
             // The following code tries to search for a field if the property was not found, and vice versa. If the field was switched to property, it changes the member type.
             if (memberType is MemberType.Property)
             {
-                if (HasProperty(declaringType, name, flags, returnType))
+                MemberInfo member = GetProperty(declaringType, name, flags, returnType);
+
+                if (member != null)
                 {
                     argNames = new List<string> { name };
-                    return true;
+                    return member;
                 }
 
-                if (HasField(declaringType, name, flags, returnType))
+                member = GetField(declaringType, name, flags, returnType);
+
+                if (member != null)
                 {
                     memberTypeProp.enumValueIndex = (int) MemberType.Field;
                     argNames = new List<string> { name };
-                    return true;
+                    return member;
                 }
 
                 argNames = null;
-                return false;
+                return null;
             }
 
             if (memberType is MemberType.Field)
             {
-                if (HasField(declaringType, name, flags, returnType))
+                MemberInfo member = GetField(declaringType, name, flags, returnType);
+
+                if (member != null)
                 {
                     argNames = new List<string> { name };
-                    return true;
+                    return member;
                 }
 
-                if (HasProperty(declaringType, name, flags, returnType))
+                member = GetProperty(declaringType, name, flags, returnType);
+
+                if (member != null)
                 {
                     memberTypeProp.enumValueIndex = (int) MemberType.Property;
                     argNames = new List<string> { name };
-                    return true;
+                    return member;
                 }
 
                 argNames = null;
-                return false;
+                return null;
             }
 
             throw new NotImplementedException();
         }
 
-        private static bool HasProperty([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
+        private static PropertyInfo GetProperty([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
         {
-            return declaringType.GetProperty(name, flags, null, returnType, Type.EmptyTypes, null) != null;
+            return declaringType.GetProperty(name, flags, null, returnType, Type.EmptyTypes, null);
         }
 
-        private static bool HasField([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
+        private static FieldInfo GetField([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
         {
             var fieldInfo = declaringType.GetField(name, flags);
-            return fieldInfo != null && fieldInfo.FieldType == returnType;
+            return (fieldInfo != null && fieldInfo.FieldType == returnType) ? fieldInfo : null;
         }
 
-        private static void AddStaticMethods(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindStaticMethods(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         { // the method cannot be used if it contains at least one argument that is not serializable nor it is passed from the event.
             var staticMethods = declaringType.GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(method =>
@@ -255,19 +249,23 @@
                 })
                 .ToList();
 
-            if (staticMethods.Count == 0)
-                return;
+            return staticMethods.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(staticMethods, responseProp, "Static Methods", GetMethodNames(staticMethods));
+        }
 
-            const string folderName = "Static Methods";
+        private static DropdownItem<MemberInfo>[] GetDropdownItemsFromMemberInfos(IReadOnlyList<MemberInfo> memberInfos, SerializedProperty responseProp, string folderName, string[] customMemberNames = null)
+        {
+            var menuElements = new DropdownItem<MemberInfo>[memberInfos.Count];
 
-            string[] names = GetMethodNames(staticMethods);
-            Array.Sort(names, StringComparer.Ordinal);
-
-            for (int i = 0; i < names.Length; i++)
+            for (int i = 0; i < menuElements.Length; i++)
             {
-                string methodName = names[i];
-                menu.AddItem(new GUIContent(folderName + "/" + methodName), false, OnMemberChosen, new MenuElement(responseProp, staticMethods[i]));
+                var memberInfo = memberInfos[i];
+                string memberName = customMemberNames?[i] ?? memberInfo.Name;
+                menuElements[i] = new DropdownItem<MemberInfo>(memberInfo, folderName + "/" + memberName, searchName: memberName);
             }
+
+            return menuElements;
         }
 
         private static bool IsMethodPure(MethodInfo method)
@@ -279,7 +277,7 @@
                    method.HasAttribute<System.Diagnostics.Contracts.PureAttribute>();
         }
 
-        private static void AddInstanceMethods(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindInstanceMethods(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         {
             var instanceMethods = declaringType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(method =>
@@ -290,36 +288,20 @@
                 })
                 .ToList();
 
-            if (instanceMethods.Count == 0)
-                return;
-
-            const string folderName = "Instance Methods";
-
-            var methodsAndNames = instanceMethods
-                .Zip(GetMethodNames(instanceMethods), (method, name) => (method, name))
-                .OrderBy(methodAndName => methodAndName.name, StringComparer.Ordinal).ToList();
-
-            foreach ((var method, var name) in methodsAndNames)
-            {
-                menu.AddItem(new GUIContent(folderName + "/" + name), false, OnMemberChosen, new MenuElement(responseProp, method));
-            }
+            return instanceMethods.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(instanceMethods, responseProp, "Instance Methods", GetMethodNames(instanceMethods));
         }
 
-        private static void AddStaticProperties(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindStaticProperties(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         {
             var staticProperties = declaringType.GetProperties(BindingFlags.Public | BindingFlags.Static)
                 .Where(prop => prop.CanWrite && ParamCanBeUsed(prop.PropertyType, eventParamTypes))
-                .Sort().ToList();
+                .ToList();
 
-            if (staticProperties.Count == 0)
-                return;
-
-            const string folderName = "Static Properties";
-
-            foreach (PropertyInfo property in staticProperties)
-            {
-                menu.AddItem(new GUIContent(folderName + "/" + property.Name), false, OnMemberChosen, new MenuElement(responseProp, property));
-            }
+            return staticProperties.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(staticProperties, responseProp, "Static Properties");
         }
 
         private static bool ParamCanBeUsed(Type paramType, Type[] eventParamTypes)
@@ -327,63 +309,41 @@
             return paramType.IsUnitySerializable() || ArgumentTypeIsInList(paramType, eventParamTypes);
         }
 
-        private static void AddInstanceProperties(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindInstanceProperties(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         {
             var instanceProperties = declaringType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => prop.CanWrite && ParamCanBeUsed(prop.PropertyType, eventParamTypes))
-                .Sort().ToList();
+                .ToList();
 
-            if (instanceProperties.Count == 0)
-                return;
-
-            const string folderName = "Instance Properties";
-
-            foreach (PropertyInfo property in instanceProperties)
-            {
-                menu.AddItem(new GUIContent(folderName + "/" + property.Name), false, OnMemberChosen, new MenuElement(responseProp, property));
-            }
+            return instanceProperties.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(instanceProperties, responseProp, "Instance Properties");
         }
 
-        private static void AddStaticFields(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindStaticFields(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         {
             var staticFields = declaringType.GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(field => ParamCanBeUsed(field.FieldType, eventParamTypes))
-                .Sort().ToList();
+                .ToList();
 
-            if (staticFields.Count == 0)
-                return;
-
-            const string folderName = "Static Fields";
-
-            foreach (var field in staticFields)
-            {
-                menu.AddItem(new GUIContent(folderName + "/" + field.Name), false, OnMemberChosen, new MenuElement(responseProp, field));
-            }
+            return staticFields.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(staticFields, responseProp, "Static Fields");
         }
 
-        private static void AddInstanceFields(GenericMenu menu, Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
+        private static DropdownItem<MemberInfo>[] FindInstanceFields(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
         {
             var instanceFields = declaringType.GetFields(BindingFlags.Public | BindingFlags.Instance)
                 .Where(field => ParamCanBeUsed(field.FieldType, eventParamTypes))
-                .Sort().ToList();
+                .ToList();
 
-            if (instanceFields.Count == 0)
-                return;
-
-            const string folderName = "Instance Fields";
-
-            foreach (var field in instanceFields)
-            {
-                menu.AddItem(new GUIContent(folderName + "/" + field.Name), false, OnMemberChosen, new MenuElement(responseProp, field));
-            }
+            return instanceFields.Count == 0
+                ? Array.Empty<DropdownItem<MemberInfo>>()
+                : GetDropdownItemsFromMemberInfos(instanceFields, responseProp, "Instance Fields");
         }
 
-        private static void OnMemberChosen(object menuElement)
+        private static void OnMemberChosen(MemberInfo memberInfo, SerializedProperty responseProperty) // remove reference to responseproperty and leave only memberinfo instead of menuelement
         {
-            var typedElement = (MenuElement) menuElement;
-            var memberInfo = typedElement.MemberInfo;
-            var responseProperty = typedElement.ResponseProperty;
-
             var memberNameProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName));
             var serializedArgsProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
             var memberTypeProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberType));
@@ -447,12 +407,6 @@
             return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType));
         }
 
-        private static IEnumerable<T> Sort<T>(this IEnumerable<T> members)
-            where T : MemberInfo
-        {
-            return members.OrderBy(member => member.Name, StringComparer.Ordinal);
-        }
-
         private static string[] GetMethodNames(List<MethodInfo> methods)
         {
             int methodsCount = methods.Count;
@@ -475,18 +429,6 @@
         private static string Beautify(this string typeName)
         {
             return _builtInTypes.TryGetValue(typeName, out string builtInName) ? builtInName : typeName;
-        }
-
-        private class MenuElement
-        {
-            public readonly SerializedProperty ResponseProperty;
-            public readonly MemberInfo MemberInfo;
-
-            public MenuElement(SerializedProperty responseProperty, MemberInfo memberInfo)
-            {
-                ResponseProperty = responseProperty;
-                MemberInfo = memberInfo;
-            }
         }
     }
 }

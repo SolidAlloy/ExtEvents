@@ -1,11 +1,13 @@
 ﻿namespace ExtEvents.Editor
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using GenericUnityObjects.Editor;
     using SolidUtilities.Editor.Helpers;
-    using SolidUtilities.Extensions;
+    using SolidUtilities;
+    using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
     using UnityEngine.Events;
@@ -97,9 +99,8 @@
 
         private void DrawComponentDropdown(SerializedProperty targetProperty, GameObject gameObject)
         {
-            var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector)).ToList();
-            var menu = new GenericMenu();
-            menu.allowDuplicateNames = true;
+            var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
+            var dropdownItems = new List<DropdownItem<Component>>();
 
             foreach (Component component in components)
             {
@@ -117,14 +118,16 @@
                     componentName = ObjectNames.NicifyVariableName(componentType.Name);
                 }
 
-                menu.AddItem(new GUIContent(componentName), false, comp =>
-                {
-                    targetProperty.objectReferenceValue = (Object) comp;
-                    targetProperty.serializedObject.ApplyModifiedProperties();
-                }, component);
+                dropdownItems.Add(new DropdownItem<Component>(component, componentName, EditorGUIUtility.ObjectContent(component, componentType).image));
             }
 
-            menu.ShowAsContext();
+            var tree = new DropdownTree<Component>(dropdownItems, null, component =>
+            {
+                targetProperty.objectReferenceValue = component;
+                targetProperty.serializedObject.ApplyModifiedProperties();
+            });
+
+            DropdownWindow.Create(tree, DropdownWindowType.Context);
         }
 
         private void DrawCallState(Rect rect, SerializedProperty responseProp)
