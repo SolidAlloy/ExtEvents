@@ -6,8 +6,7 @@
     using System.Reflection;
     using JetBrains.Annotations;
     using SolidUtilities;
-    using SolidUtilities.Editor.Extensions;
-    using SolidUtilities.Editor.Helpers;
+    using SolidUtilities.Editor;
     using TypeReferences;
     using TypeReferences.Editor.Util;
     using UnityDropdown.Editor;

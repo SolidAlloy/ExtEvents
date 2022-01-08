@@ -4,7 +4,7 @@ namespace Test
     using ExtEvents;
     using ExtEvents.Editor;
     using Sirenix.OdinInspector;
-    using SolidUtilities.Editor.Extensions;
+    using SolidUtilities.Editor;
     using SolidUtilities;
     using SolidUtilities.UnityEditorInternals;
     using UnityEditor;

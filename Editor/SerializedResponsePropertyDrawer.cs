@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using GenericUnityObjects.Editor;
-    using SolidUtilities.Editor.Helpers;
+    using SolidUtilities.Editor;
     using SolidUtilities;
     using UnityDropdown.Editor;
     using UnityEditor;

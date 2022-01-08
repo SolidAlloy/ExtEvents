@@ -4,8 +4,7 @@
     using System.Collections.Generic;
     using System.Reflection;
     using SolidUtilities.Editor;
-    using SolidUtilities.Editor.Extensions;
-    using SolidUtilities.Editor.Helpers;
+    using SolidUtilities.Editor.PropertyDrawers;
     using SolidUtilities.UnityEditorInternals;
     using TypeReferences;
     using UnityEditor;
