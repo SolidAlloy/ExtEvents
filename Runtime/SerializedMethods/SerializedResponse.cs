@@ -28,7 +28,7 @@
         [SerializeField] internal Object _target;
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" }, ExcludeNone = true)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
+        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
 
         [SerializeField] private BuiltResponse _builtResponse;
 

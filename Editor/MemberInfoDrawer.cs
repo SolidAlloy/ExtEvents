@@ -64,7 +64,7 @@
             {
                 if (EditorGUI.DropdownButton(rect, GUIContentHelper.Temp(popupLabel), FocusType.Passive))
                 {
-                    ShowMenu(rect, declaringType, responseProperty, !isStatic, memberInfo);
+                    ShowMenu(declaringType, responseProperty, !isStatic, memberInfo);
                 }
             }
 
@@ -87,7 +87,7 @@
             return Type.GetType(declaringTypeName);
         }
 
-        private static void ShowMenu(Rect rect, Type declaringType, SerializedProperty responseProperty, bool isInstance, MemberInfo memberInfo)
+        private static void ShowMenu(Type declaringType, SerializedProperty responseProperty, bool isInstance, MemberInfo currentMember)
         {
             if (declaringType == null)
                 return;
@@ -111,9 +111,14 @@
             if (isInstance)
                 menuItems.AddRange(FindInstanceFields(declaringType, responseProperty, eventParamTypes));
 
-            var tree = new DropdownTree<MemberInfo>(menuItems, memberInfo, memberInfo => OnMemberChosen(memberInfo, responseProperty), sortItems: true);
-            tree.ExpandAllFolders();
-            DropdownWindow.Create(tree, DropdownWindowType.Context);
+            var itemToSelect = menuItems.Find(menuItem => menuItem.Value == currentMember);
+
+            if (itemToSelect != null)
+                itemToSelect.IsSelected = true;
+
+            var dropdownMenu = new DropdownMenu<MemberInfo>(menuItems, selectedMember => OnMemberChosen(selectedMember, responseProperty), sortItems: true);
+            dropdownMenu.ExpandAllFolders();
+            dropdownMenu.ShowAsContext();
         }
 
         public static Type[] GetEventParamTypes(SerializedProperty extEventProperty)

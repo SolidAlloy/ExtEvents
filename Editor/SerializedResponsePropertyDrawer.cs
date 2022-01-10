@@ -5,8 +5,8 @@
     using System.Linq;
     using System.Reflection;
     using GenericUnityObjects.Editor;
-    using SolidUtilities.Editor;
     using SolidUtilities;
+    using SolidUtilities.Editor;
     using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
@@ -121,13 +121,13 @@
                 dropdownItems.Add(new DropdownItem<Component>(component, componentName, EditorGUIUtility.ObjectContent(component, componentType).image));
             }
 
-            var tree = new DropdownTree<Component>(dropdownItems, null, component =>
+            var tree = new DropdownMenu<Component>(dropdownItems, component =>
             {
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
             });
 
-            DropdownWindow.Create(tree, DropdownWindowType.Context);
+            tree.ShowAsContext();
         }
 
         private void DrawCallState(Rect rect, SerializedProperty responseProp)
