@@ -53,7 +53,7 @@
 
             var memberInfo = GetMemberName(declaringType, responseProperty, isStatic, currentMemberName, out argNames);
 
-            if (memberInfo == null)
+            if (memberInfo == null && ! string.IsNullOrEmpty(currentMemberName))
             {
                 GUI.backgroundColor = Color.red;
             }
@@ -83,7 +83,7 @@
                 return target.GetType();
             }
 
-            var declaringTypeName = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference.TypeNameAndAssembly)}").stringValue;
+            var declaringTypeName = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             return Type.GetType(declaringTypeName);
         }
 
@@ -160,7 +160,7 @@
 
             for (int i = 0; i < types.Length; i++)
             {
-                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference.TypeNameAndAssembly)}").stringValue);
+                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
                 if (types[i] == null)
                     return null;
             }
