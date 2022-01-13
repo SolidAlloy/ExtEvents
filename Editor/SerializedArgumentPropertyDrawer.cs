@@ -201,7 +201,7 @@
         private static Type GetTypeFromProperty(SerializedProperty argProperty)
         {
             var typeNameAndAssembly = argProperty
-                .FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference.TypeNameAndAssembly)}")
+                .FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}")
                 .stringValue;
             var type = Type.GetType(typeNameAndAssembly);
             Assert.IsNotNull(type);

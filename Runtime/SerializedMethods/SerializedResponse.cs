@@ -29,10 +29,10 @@
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
         [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
-
         [SerializeField] private BuiltResponse _builtResponse;
 
-        [NonSerialized] private bool _initialized;
+        [NonSerialized] internal bool _initialized;
+
         private object[] _arguments;
 
         private EfficientInvoker _invokable;
@@ -79,7 +79,23 @@
                 return;
             }
 
-            _invokable?.Invoke(_objectTarget, _arguments); // TODO: log a warning optionally
+            if (_invokable != null)
+            {
+                _invokable.Invoke(_objectTarget, _arguments);
+                return;
+            }
+
+            LogInvocationWarning();
+        }
+
+        private void LogInvocationWarning()
+        {
+            if (!PackageSettings.ShowInvocationWarning)
+                return;
+
+            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target?.GetType().Name;
+            string memberType = _memberType.ToString().ToLower();
+            Debug.LogWarning($"Tried to invoke a response to an event but the {memberType} {typeName}.{_memberName} is missing.");
         }
 
         private void Initialize()
