@@ -7,6 +7,7 @@
     using GenericUnityObjects.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
+    using TypeReferences;
     using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
@@ -17,6 +18,8 @@
     public class SerializedResponsePropertyDrawer : PropertyDrawer
     {
         private const float LinePadding = 2f;
+
+        private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo> _previousResponseValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo>();
 
         private static GUIStyle _dropdownStyle;
         private static GUIStyle DropdownStyle => _dropdownStyle ??= new GUIStyle(EditorStyles.miniPullDown) { alignment = TextAnchor.MiddleCenter };
@@ -84,17 +87,76 @@
             // When member name is changed, we need to get memberinfo and set types of serialized arguments
             MemberInfoDrawer.Draw(currentRect, property, out var paramNames);
 
-            var argumentsArray = property.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+            bool argumentsChanged = DrawArguments(property, paramNames, currentRect);
+
+            ReinitializeIfChanged(property, argumentsChanged);
+        }
+
+        private void ReinitializeIfChanged(SerializedProperty responseProperty, bool argumentsChanged)
+        {
+            if (argumentsChanged || MemberHasChanged(responseProperty))
+            {
+                responseProperty.serializedObject.ApplyModifiedProperties();
+                var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProperty);
+                response._initialized = false;
+            }
+        }
+
+        private bool DrawArguments(SerializedProperty responseProperty, List<string> paramNames, Rect rect)
+        {
+            var argumentsArray = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
 
             if (paramNames == null || paramNames.Count < argumentsArray.arraySize)
-                return;
+                return false;
+
+            EditorGUI.BeginChangeCheck();
 
             for (int i = 0; i < argumentsArray.arraySize; i++)
             {
-                currentRect.y += EditorGUIUtility.singleLineHeight + LinePadding;
+                rect.y += EditorGUIUtility.singleLineHeight + LinePadding;
                 var argumentProp = argumentsArray.GetArrayElementAtIndex(i);
-                EditorGUI.PropertyField(currentRect, argumentProp, GUIContentHelper.Temp(paramNames[i]));
+                EditorGUI.PropertyField(rect, argumentProp, GUIContentHelper.Temp(paramNames[i]));
             }
+
+            return EditorGUI.EndChangeCheck();
+        }
+
+        private static bool MemberHasChanged(SerializedProperty responseProperty)
+        {
+            string currentType = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+            Object currentTarget = responseProperty.FindPropertyRelative(nameof(SerializedResponse._target)).objectReferenceValue;
+            string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
+
+            var serializedObject = responseProperty.serializedObject;
+            var propertyPath = responseProperty.propertyPath;
+
+            if (!_previousResponseValues.TryGetValue((serializedObject, propertyPath), out var responseInfo))
+            {
+                _previousResponseValues.Add((serializedObject, propertyPath), new SerializedResponseInfo(currentType, currentTarget, currentMemberName));
+                return false;
+            }
+
+            bool infoChanged = false;
+
+            if (currentType != responseInfo.TypeName)
+            {
+                infoChanged = true;
+                responseInfo.TypeName = currentType;
+            }
+
+            if (currentTarget != responseInfo.Target)
+            {
+                infoChanged = true;
+                responseInfo.Target = currentTarget;
+            }
+
+            if (currentMemberName != responseInfo.MemberName)
+            {
+                infoChanged = true;
+                responseInfo.MemberName = currentMemberName;
+            }
+
+            return infoChanged;
         }
 
         private void DrawComponentDropdown(SerializedProperty targetProperty, GameObject gameObject)
@@ -174,6 +236,20 @@
                 UnityEventCallState.Off => "Off",
                 _ => throw new NotImplementedException()
             };
+        }
+
+        private class SerializedResponseInfo
+        {
+            public string TypeName;
+            public Object Target;
+            public string MemberName;
+
+            public SerializedResponseInfo(string typeName, Object target, string memberName)
+            {
+                TypeName = typeName;
+                Target = target;
+                MemberName = memberName;
+            }
         }
     }
 }
