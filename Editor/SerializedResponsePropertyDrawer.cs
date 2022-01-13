@@ -26,7 +26,8 @@
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return (EditorGUIUtility.singleLineHeight + LinePadding) * 2 + GetSerializedArgsHeight(property);
+            const int constantLinesCount = 2;
+            return (EditorGUIUtility.singleLineHeight + LinePadding) * constantLinesCount + GetSerializedArgsHeight(property);
         }
 
         private static float GetSerializedArgsHeight(SerializedProperty property)
@@ -49,47 +50,48 @@
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
-
             currentRect.y += LinePadding;
-
             (var callStateRect, var targetRect) = currentRect.CutVertically(50f);
-
             callStateRect.width -= 10f;
 
             DrawCallState(callStateRect, property);
 
             bool isStatic = property.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
 
-            if (isStatic)
-            {
-                EditorGUI.PropertyField(targetRect, property.FindPropertyRelative(nameof(SerializedResponse._type)), GUIContent.none);
-            }
-            else
-            {
-                var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
-                var newTarget = GenericObjectDrawer.ObjectField(targetRect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
-
-                if (targetProp.objectReferenceValue != newTarget)
-                {
-                    if (newTarget is GameObject gameObject)
-                    {
-                        DrawComponentDropdown(targetProp, gameObject);
-                    }
-                    else
-                    {
-                        targetProp.objectReferenceValue = newTarget;
-                    }
-                }
-            }
+            DrawTypeField(property, targetRect, isStatic);
 
             currentRect.y += EditorGUIUtility.singleLineHeight + LinePadding;
 
-            // When member name is changed, we need to get memberinfo and set types of serialized arguments
+            // When member name is changed, we need to get memberInfo and set types of serialized arguments
             MemberInfoDrawer.Draw(currentRect, property, out var paramNames);
 
             bool argumentsChanged = DrawArguments(property, paramNames, currentRect);
 
             ReinitializeIfChanged(property, argumentsChanged);
+        }
+
+        private void DrawTypeField(SerializedProperty property, Rect rect, bool isStatic)
+        {
+            if (isStatic)
+            {
+                EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(SerializedResponse._type)), GUIContent.none);
+                return;
+            }
+
+            var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
+            var newTarget = GenericObjectDrawer.ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
+
+            if (targetProp.objectReferenceValue != newTarget)
+            {
+                if (newTarget is GameObject gameObject)
+                {
+                    DrawComponentDropdown(targetProp, gameObject);
+                }
+                else
+                {
+                    targetProp.objectReferenceValue = newTarget;
+                }
+            }
         }
 
         private void ReinitializeIfChanged(SerializedProperty responseProperty, bool argumentsChanged)

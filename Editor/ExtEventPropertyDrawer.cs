@@ -1,48 +1,83 @@
 ﻿namespace ExtEvents.Editor
 {
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
     using SolidUtilities.Editor;
+    using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
     using UnityEditorInternal;
     using UnityEngine;
+    using UnityEngine.Assertions;
     using UnityEngine.Events;
 
     [CustomPropertyDrawer(typeof(BaseExtEvent), true)]
     public class ExtEventPropertyDrawer : PropertyDrawer
     {
-        // TODO: check if SerializedProperty is saved between draw calls, so that we can use it in a dictionary
+        private static readonly Dictionary<(SerializedObject, string), ExtEventInfo> _extEventInfoCache =
+            new Dictionary<(SerializedObject, string), ExtEventInfo>();
+
         private static readonly Dictionary<(SerializedObject, string), ReorderableList> _listCache =
             new Dictionary<(SerializedObject, string), ReorderableList>();
 
+        public static ExtEventInfo CurrentEventInfo { get; private set; }
+
+        private static Action<ReorderableList> _clearCache;
+        private static Action<ReorderableList> ClearCache
+        {
+            get
+            {
+                if (_clearCache == null)
+                {
+                    var clearCacheMethod = typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic);
+                    Assert.IsNotNull(clearCacheMethod);
+                    _clearCache = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), clearCacheMethod);
+                }
+
+                return _clearCache;
+            }
+        }
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var reorderableList = GetList(property, label);
+            var responsesProperty = property.FindPropertyRelative(nameof(ExtEvent._responses));
+            var reorderableList = GetList(responsesProperty, label);
             return reorderableList.GetHeight();
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var reorderableList = GetList(property, label);
+            var responsesProperty = property.FindPropertyRelative(nameof(ExtEvent._responses));
+            CurrentEventInfo = GetExtEventInfo(property);
+            var reorderableList = GetList(responsesProperty, label);
             reorderableList.DoList(position);
         }
 
-        public static void ClearListCache(SerializedProperty responseProperty)
+        public static void ClearListCache(SerializedProperty responsesArrayProp)
         {
-            var extEventProperty = responseProperty.GetParent().GetParent();
-            var list = GetList(extEventProperty, null);
-            var clearCacheMethod = typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic);
-            clearCacheMethod.Invoke(list, null);
+            var list = GetList(responsesArrayProp, null);
+            ClearCache(list);
         }
 
-        private static ReorderableList GetList(SerializedProperty property, GUIContent label)
+        private static ExtEventInfo GetExtEventInfo(SerializedProperty extEventProperty)
         {
-            if (_listCache.TryGetValue((property.serializedObject, property.propertyPath), out var list))
+            var serializedObject = extEventProperty.serializedObject;
+            var propertyPath = extEventProperty.propertyPath;
+
+            if (_extEventInfoCache.TryGetValue((serializedObject, propertyPath), out var eventInfo))
+                return eventInfo;
+
+            eventInfo = new ExtEventInfo(GetArgNames(extEventProperty), GetEventParamTypes(extEventProperty));
+            _extEventInfoCache.Add((extEventProperty.serializedObject, extEventProperty.propertyPath), eventInfo);
+            return eventInfo;
+        }
+
+        private static ReorderableList GetList(SerializedProperty responsesProperty, GUIContent label)
+        {
+            if (_listCache.TryGetValue((responsesProperty.serializedObject, responsesProperty.propertyPath), out var list))
                 return list;
 
-            var responsesProperty = property.FindPropertyRelative(nameof(ExtEvent._responses));
-
-            var reorderableList = new ReorderableList(property.serializedObject, responsesProperty)
+            var reorderableList = new ReorderableList(responsesProperty.serializedObject, responsesProperty)
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect, label),
                 drawElementCallback = (rect, index, _, _) =>
@@ -58,8 +93,7 @@
                 }
             };
 
-            _listCache.Add((property.serializedObject, property.propertyPath), reorderableList);
-
+            _listCache.Add((responsesProperty.serializedObject, responsesProperty.propertyPath), reorderableList);
             return reorderableList;
         }
 
@@ -81,6 +115,49 @@
             }
 
             responsesProperty.serializedObject.ApplyModifiedProperties();
+        }
+
+        private static string[] GetArgNames(SerializedProperty extEventProperty)
+        {
+            (var fieldInfo, var extEventType) = extEventProperty.GetFieldInfoAndType();
+            int argumentsCount = extEventType.GenericTypeArguments.Length;
+            string[] attributeArgNames = fieldInfo.GetCustomAttribute<EventArgumentsAttribute>()?.ArgumentNames ??
+                                         Array.Empty<string>();
+            var argNames = new string[argumentsCount];
+
+            Array.Copy(attributeArgNames, argNames, Mathf.Min(attributeArgNames.Length, argNames.Length));
+
+            if (argNames.Length > attributeArgNames.Length)
+            {
+                for (int i = attributeArgNames.Length; i < argNames.Length; i++)
+                {
+                    argNames[i] = $"Arg{i+1}";
+                }
+            }
+
+            return argNames;
+        }
+
+        private static Type[] GetEventParamTypes(SerializedProperty extEventProperty)
+        {
+            var eventType = extEventProperty.GetObjectType();
+
+            if (!eventType.IsGenericType)
+                return Type.EmptyTypes;
+
+            return eventType.GenericTypeArguments;
+        }
+    }
+
+    public class ExtEventInfo
+    {
+        public readonly string[] ArgNames;
+        public readonly Type[] ParamTypes;
+
+        public ExtEventInfo(string[] argNames, Type[] paramTypes)
+        {
+            ArgNames = argNames;
+            ParamTypes = paramTypes;
         }
     }
 }

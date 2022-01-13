@@ -39,7 +39,7 @@
             var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
             string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
             var declaringType = GetDeclaringType(responseProperty, isStatic);
-            return GetMemberName(declaringType, responseProperty, isStatic, currentMemberName, out _) != null;
+            return GetMemberInfo(declaringType, responseProperty, isStatic, currentMemberName) != null;
         }
 
         public static void Draw(Rect rect, SerializedProperty responseProperty, out List<string> argNames)
@@ -51,7 +51,16 @@
 
             string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
 
-            var memberInfo = GetMemberName(declaringType, responseProperty, isStatic, currentMemberName, out argNames);
+            var memberInfo = GetMemberInfo(declaringType, responseProperty, isStatic, currentMemberName);
+
+            if (memberInfo != null)
+            {
+                argNames = memberInfo is MethodInfo method ? method.GetParameters().Select(param => param.Name).ToList() : new List<string> { currentMemberName };
+            }
+            else
+            {
+                argNames = null;
+            }
 
             if (memberInfo == null && ! string.IsNullOrEmpty(currentMemberName))
             {
@@ -92,24 +101,24 @@
             if (declaringType == null)
                 return;
 
-            var eventParamTypes = GetEventParamTypes(responseProperty.GetParent().GetParent());
-
             var menuItems = new List<DropdownItem<MemberInfo>>();
 
-            menuItems.AddRange(FindStaticMethods(declaringType, responseProperty, eventParamTypes));
+            var paramTypes = ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes;
+
+            menuItems.AddRange(FindStaticMethods(declaringType, responseProperty, paramTypes));
 
             if (isInstance)
-                menuItems.AddRange(FindInstanceMethods(declaringType, responseProperty, eventParamTypes));
+                menuItems.AddRange(FindInstanceMethods(declaringType, responseProperty, paramTypes));
 
-            menuItems.AddRange(FindStaticProperties(declaringType, responseProperty, eventParamTypes));
-
-            if (isInstance)
-                menuItems.AddRange(FindInstanceProperties(declaringType, responseProperty, eventParamTypes));
-
-            menuItems.AddRange(FindStaticFields(declaringType, responseProperty, eventParamTypes));
+            menuItems.AddRange(FindStaticProperties(declaringType, responseProperty, paramTypes));
 
             if (isInstance)
-                menuItems.AddRange(FindInstanceFields(declaringType, responseProperty, eventParamTypes));
+                menuItems.AddRange(FindInstanceProperties(declaringType, responseProperty, paramTypes));
+
+            menuItems.AddRange(FindStaticFields(declaringType, responseProperty, paramTypes));
+
+            if (isInstance)
+                menuItems.AddRange(FindInstanceFields(declaringType, responseProperty, paramTypes));
 
             var itemToSelect = menuItems.Find(menuItem => menuItem.Value == currentMember);
 
@@ -121,37 +130,26 @@
             dropdownMenu.ShowAsContext();
         }
 
-        public static Type[] GetEventParamTypes(SerializedProperty extEventProperty)
-        {
-            var eventType = extEventProperty.GetObjectType();
-
-            if (!eventType.IsGenericType)
-                return Type.EmptyTypes;
-
-            return eventType.GenericTypeArguments;
-        }
-
-        private static MemberInfo GetMemberName(Type declaringType, SerializedProperty responseProperty, bool isStatic, string currentMemberName, out List<string> argNames)
+        private static MemberInfo GetMemberInfo(Type declaringType, SerializedProperty responseProperty, bool isStatic, string currentMemberName)
         {
             if (string.IsNullOrEmpty(currentMemberName) || declaringType == null)
-            {
-                argNames = null;
                 return null;
-            }
 
             var serializedArgs = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
             var argTypes = GetTypesFromSerializedArgs(serializedArgs);
 
             if (argTypes == null)
-            {
-                argNames = null;
                 return null;
-            }
 
-            var flags = BindingFlags.Public | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
             var memberTypeProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberType));
+            var memberType = (MemberType) memberTypeProp.enumValueIndex;
 
-            return GetMember(declaringType, currentMemberName, flags, memberTypeProp, argTypes, out argNames);
+            var memberInfo = MemberInfoCache.GetItem(declaringType, currentMemberName, isStatic, memberType, argTypes, out var newMemberType);
+
+            if (memberType != newMemberType)
+                memberTypeProp.enumValueIndex = (int) newMemberType;
+
+            return memberInfo;
         }
 
         private static Type[] GetTypesFromSerializedArgs(SerializedProperty serializedArgs)
@@ -166,80 +164,6 @@
             }
 
             return types;
-        }
-
-        private static MemberInfo GetMember([NotNull] Type declaringType, string name, BindingFlags flags, SerializedProperty memberTypeProp, Type[] argTypes, out List<string> argNames)
-        {
-            var memberType = (MemberType) memberTypeProp.enumValueIndex;
-
-            if (memberType is MemberType.Method)
-            {
-                var method = declaringType.GetMethod(name, flags, null, CallingConventions.Any, argTypes, null);
-                argNames = method?.GetParameters().Select(param => param.Name).ToList();
-                return method;
-            }
-
-            var returnType = argTypes[0];
-
-            // The following code tries to search for a field if the property was not found, and vice versa. If the field was switched to property, it changes the member type.
-            if (memberType is MemberType.Property)
-            {
-                MemberInfo member = GetProperty(declaringType, name, flags, returnType);
-
-                if (member != null)
-                {
-                    argNames = new List<string> { name };
-                    return member;
-                }
-
-                member = GetField(declaringType, name, flags, returnType);
-
-                if (member != null)
-                {
-                    memberTypeProp.enumValueIndex = (int) MemberType.Field;
-                    argNames = new List<string> { name };
-                    return member;
-                }
-
-                argNames = null;
-                return null;
-            }
-
-            if (memberType is MemberType.Field)
-            {
-                MemberInfo member = GetField(declaringType, name, flags, returnType);
-
-                if (member != null)
-                {
-                    argNames = new List<string> { name };
-                    return member;
-                }
-
-                member = GetProperty(declaringType, name, flags, returnType);
-
-                if (member != null)
-                {
-                    memberTypeProp.enumValueIndex = (int) MemberType.Property;
-                    argNames = new List<string> { name };
-                    return member;
-                }
-
-                argNames = null;
-                return null;
-            }
-
-            throw new NotImplementedException();
-        }
-
-        private static PropertyInfo GetProperty([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
-        {
-            return declaringType.GetProperty(name, flags, null, returnType, Type.EmptyTypes, null);
-        }
-
-        private static FieldInfo GetField([NotNull] Type declaringType, string name, BindingFlags flags, Type returnType)
-        {
-            var fieldInfo = declaringType.GetField(name, flags);
-            return (fieldInfo != null && fieldInfo.FieldType == returnType) ? fieldInfo : null;
         }
 
         private static DropdownItem<MemberInfo>[] FindStaticMethods(Type declaringType, SerializedProperty responseProp, Type[] eventParamTypes)
@@ -354,8 +278,6 @@
 
             memberNameProp.stringValue = memberInfo.Name;
 
-            var eventParamTypes = GetEventParamTypes(responseProperty.GetParent().GetParent());
-
             if (memberInfo is MethodInfo method)
             {
                 memberTypeProp.enumValueIndex = (int) MemberType.Method;
@@ -367,7 +289,7 @@
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     var argProp = serializedArgsProp.GetArrayElementAtIndex(i);
-                    InitializeArgumentProperty(argProp, parameters[i].ParameterType, eventParamTypes);
+                    InitializeArgumentProperty(argProp, parameters[i].ParameterType);
                 }
             }
             else if (memberInfo is PropertyInfo property)
@@ -376,7 +298,7 @@
 
                 serializedArgsProp.arraySize = 1;
                 var argProp = serializedArgsProp.GetArrayElementAtIndex(0);
-                InitializeArgumentProperty(argProp, property.PropertyType, eventParamTypes);
+                InitializeArgumentProperty(argProp, property.PropertyType);
             }
             else if (memberInfo is FieldInfo field)
             {
@@ -384,19 +306,19 @@
 
                 serializedArgsProp.arraySize = 1;
                 var argProp = serializedArgsProp.GetArrayElementAtIndex(0);
-                InitializeArgumentProperty(argProp, field.FieldType, eventParamTypes);
+                InitializeArgumentProperty(argProp, field.FieldType);
             }
 
             responseProperty.serializedObject.ApplyModifiedProperties();
-            ExtEventPropertyDrawer.ClearListCache(responseProperty);
+            ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent());
         }
 
-        private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type, Type[] eventParamTypes)
+        private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)
         {
             var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(SerializedArgument.Type)));
             serializedTypeRef.SetType(type);
 
-            int matchingParamIndex = Array.FindIndex(eventParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
+            int matchingParamIndex = Array.FindIndex(ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
             bool matchingParamFound = matchingParamIndex != -1;
 
             argumentProp.FindPropertyRelative(nameof(SerializedArgument.IsSerialized)).boolValue = !matchingParamFound;

@@ -2,10 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
     using SolidUtilities.Editor;
     using SolidUtilities.Editor.PropertyDrawers;
-    using SolidUtilities.UnityEditorInternals;
     using TypeReferences;
     using UnityEditor;
     using UnityEngine;
@@ -66,15 +64,11 @@
 
         private void DrawDynamicValue(SerializedProperty property, Rect valueRect)
         {
-            // argument => argumentsArray => serializedResponse => serializedResponseArray => extEvent
-            var extEventProp = property.GetParent().GetParent().GetParent().GetParent();
-
-            var argNames = GetArgNames(extEventProp);
             var indexProp = property.FindPropertyRelative(nameof(SerializedArgument.Index));
+            var argNames = ExtEventPropertyDrawer.CurrentEventInfo.ArgNames;
             var currentArgName = argNames[indexProp.intValue];
 
-            var paramTypes = MemberInfoDrawer.GetEventParamTypes(extEventProp);
-            var matchingArgNames = GetMatchingArgNames(argNames, paramTypes, GetTypeFromProperty(property));
+            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes, GetTypeFromProperty(property));
 
             using (new EditorGUI.DisabledGroupScope(matchingArgNames.Count == 1))
             {
@@ -114,27 +108,6 @@
             }
 
             menu.ShowAsContext();
-        }
-
-        private string[] GetArgNames(SerializedProperty extEventProperty)
-        {
-            (var fieldInfo, var extEventType) = extEventProperty.GetFieldInfoAndType();
-            int argumentsCount = extEventType.GenericTypeArguments.Length;
-            string[] attributeArgNames = fieldInfo.GetCustomAttribute<EventArgumentsAttribute>()?.ArgumentNames ??
-                                         Array.Empty<string>();
-            var argNames = new string[argumentsCount];
-
-            Array.Copy(attributeArgNames, argNames, Mathf.Min(attributeArgNames.Length, argNames.Length));
-
-            if (argNames.Length > attributeArgNames.Length)
-            {
-                for (int i = attributeArgNames.Length; i < argNames.Length; i++)
-                {
-                    argNames[i] = $"Arg{i+1}";
-                }
-            }
-
-            return argNames;
         }
 
         private void DrawSerializedValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
@@ -206,7 +179,6 @@
             var type = Type.GetType(typeNameAndAssembly);
             Assert.IsNotNull(type);
             return type;
-
         }
     }
 }
