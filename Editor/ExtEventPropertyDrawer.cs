@@ -40,16 +40,14 @@
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var responsesProperty = property.FindPropertyRelative(nameof(ExtEvent._responses));
-            var reorderableList = GetList(responsesProperty, label);
+            var reorderableList = GetList(property, label);
             return reorderableList.GetHeight();
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var responsesProperty = property.FindPropertyRelative(nameof(ExtEvent._responses));
             CurrentEventInfo = GetExtEventInfo(property);
-            var reorderableList = GetList(responsesProperty, label);
+            var reorderableList = GetList(property, label);
             reorderableList.DoList(position);
         }
 
@@ -72,12 +70,14 @@
             return eventInfo;
         }
 
-        private static ReorderableList GetList(SerializedProperty responsesProperty, GUIContent label)
+        private static ReorderableList GetList(SerializedProperty extEventProperty, GUIContent label)
         {
-            if (_listCache.TryGetValue((responsesProperty.serializedObject, responsesProperty.propertyPath), out var list))
+            if (_listCache.TryGetValue((extEventProperty.serializedObject, extEventProperty.propertyPath), out var list))
                 return list;
 
-            var reorderableList = new ReorderableList(responsesProperty.serializedObject, responsesProperty)
+            var responsesProperty = extEventProperty.FindPropertyRelative(nameof(ExtEvent._responses));
+
+            var reorderableList = new ReorderableList(extEventProperty.serializedObject, responsesProperty)
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect, label),
                 drawElementCallback = (rect, index, _, _) =>
@@ -93,7 +93,7 @@
                 }
             };
 
-            _listCache.Add((responsesProperty.serializedObject, responsesProperty.propertyPath), reorderableList);
+            _listCache.Add((extEventProperty.serializedObject, extEventProperty.propertyPath), reorderableList);
             return reorderableList;
         }
 
