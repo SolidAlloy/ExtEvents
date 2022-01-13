@@ -30,20 +30,57 @@
             return declaringType.GetMethod(_memberName, Flags, null, CallingConventions.Any, argumentTypes, null);
         }
 
-        private FieldInfo GetField(Type declaringType, Type returnType)
+        private MemberInfo GetField(Type declaringType, Type returnType)
         {
             if (string.IsNullOrEmpty(_memberName))
                 return null;
 
-            var fieldInfo = declaringType.GetField(_memberName, Flags);
-            return fieldInfo?.FieldType == returnType ? fieldInfo : null;
+            var fieldInfo = GetFieldImpl(declaringType);
+
+            if (fieldInfo != null)
+                return fieldInfo.FieldType == returnType ? fieldInfo : null;
+
+            // Check if the field was changed to property without changing its name.
+            var property = GetPropertyImpl(declaringType, returnType);
+
+            if (property != null)
+            {
+                // This won't be saved in play mode, but we can't do anything with it. This is a serialized POCO, and it has no way to know which UnityEngine Object it belongs to.
+                // However, the type will be changed to property when building the project, so it won't affect performance in build.
+                _memberType = MemberType.Property;
+            }
+
+            return property;
         }
 
-        private PropertyInfo GetProperty(Type declaringType, Type returnType)
+        private MemberInfo GetProperty(Type declaringType, Type returnType)
         {
             if (string.IsNullOrEmpty(_memberName))
                 return null;
 
+            var property = GetPropertyImpl(declaringType, returnType);
+
+            if (property != null)
+                return property;
+
+            var fieldInfo = GetFieldImpl(declaringType);
+
+            if (fieldInfo != null)
+            {
+                _memberType = MemberType.Field;
+                return fieldInfo.FieldType == returnType ? fieldInfo : null;
+            }
+
+            return null;
+        }
+
+        private FieldInfo GetFieldImpl(Type declaringType)
+        {
+            return declaringType.GetField(_memberName, Flags);
+        }
+
+        private MemberInfo GetPropertyImpl(Type declaringType, Type returnType)
+        {
             return declaringType.GetProperty(_memberName, Flags, null, returnType, Type.EmptyTypes, null);
         }
     }
