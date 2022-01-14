@@ -64,7 +64,7 @@
 
             if (memberInfo == null && ! string.IsNullOrEmpty(currentMemberName))
             {
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = new Color(1f, 0f, 0f, .5f);
             }
 
             string popupLabel = string.IsNullOrEmpty(currentMemberName) ? "No Function" : (memberInfo != null ? currentMemberName : currentMemberName + " {Missing}");
@@ -318,7 +318,12 @@
             var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(SerializedArgument.Type)));
             serializedTypeRef.SetType(type);
 
-            int matchingParamIndex = Array.FindIndex(ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
+            // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
+            // not in the middle of drawing ext events but rather after drawing all the events.
+            // argument => arguments array => response => response array => ext event.
+            var extEventInfo = ExtEventPropertyDrawer.GetExtEventInfo(argumentProp.GetParent().GetParent().GetParent().GetParent());
+
+            int matchingParamIndex = Array.FindIndex(extEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
             bool matchingParamFound = matchingParamIndex != -1;
 
             argumentProp.FindPropertyRelative(nameof(SerializedArgument.IsSerialized)).boolValue = !matchingParamFound;
