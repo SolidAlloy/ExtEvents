@@ -98,7 +98,7 @@
             Debug.LogWarning($"Tried to invoke a response to an event but the {memberType} {typeName}.{_memberName} is missing.");
         }
 
-        private void Initialize()
+        public void Initialize()
         {
             if (_builtResponse == null)
             {

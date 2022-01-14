@@ -1,10 +1,19 @@
 ﻿namespace ExtEvents
 {
     using System;
+    using UnityEngine;
 
     [Serializable]
-    public class BaseExtEvent
+    public abstract class BaseExtEvent
     {
+        [SerializeField] internal SerializedResponse[] _responses;
 
+        public void Initialize()
+        {
+            for (int index = 0; index < _responses.Length; index++)
+            {
+                _responses[index].Initialize();
+            }
+        }
     }
 }

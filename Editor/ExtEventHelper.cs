@@ -8,7 +8,7 @@
 
     public static class ExtEventHelper
     {
-        public static IEnumerable<(SerializedProperty extEventProperty, ExtEvent extEvent)> FindExtEvents(Object obj)
+        public static IEnumerable<(SerializedProperty extEventProperty, BaseExtEvent extEvent)> FindExtEvents(Object obj)
         {
             var serializedObject = new SerializedObject(obj);
             var prop = serializedObject.GetIterator();
@@ -18,17 +18,17 @@
 
             do
             {
-                if (prop.name != nameof(ExtEvent._responses) || prop.GetObjectType() != typeof(SerializedResponse[]))
+                if (prop.name != nameof(BaseExtEvent._responses) || prop.GetObjectType() != typeof(SerializedResponse[]))
                     continue;
 
                 var extEventProperty = prop.GetParent();
-                var extEvent = extEventProperty.GetObject<ExtEvent>();
+                var extEvent = extEventProperty.GetObject<BaseExtEvent>();
                 yield return (extEventProperty, extEvent);
             }
             while (prop.NextVisible(true));
         }
 
-        public static void BuildResponses(SerializedProperty extEventProperty, ExtEvent extEvent)
+        public static void BuildResponses(SerializedProperty extEventProperty, BaseExtEvent extEvent)
         {
             // We need to do it before a build, then delete the assemblies
             for (int index = 0; index < extEvent._responses.Length; index++)
@@ -71,7 +71,7 @@
                 var serializedObject = new SerializedObject(targetObject);
                 string propertyPath = PersistentStorage.GetData<string>("BuiltResponsePath");
                 var property = serializedObject.FindProperty(propertyPath);
-                var responses = property.FindPropertyRelative(nameof(ExtEvent._responses));
+                var responses = property.FindPropertyRelative(nameof(BaseExtEvent._responses));
                 var response = responses.GetArrayElementAtIndex(PersistentStorage.GetData<int>("ResponseIndex"));
                 var builtResponseField = response.FindPropertyRelative("_builtResponse");
                 builtResponseField.objectReferenceValue = scriptableObject;

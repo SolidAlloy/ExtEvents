@@ -7,8 +7,6 @@
     [Serializable]
     public class ExtEvent : BaseExtEvent
     {
-        [SerializeField] internal SerializedResponse[] _responses;
-
         public IReadOnlyList<Action> DynamicListeners { get; }
         public IReadOnlyList<Action> PersistentListeners { get; } // maybe not a list of actions
 

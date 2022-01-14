@@ -7,8 +7,6 @@
     [Serializable]
     public class ExtEvent<T1, T2> : BaseExtEvent
     {
-        [SerializeField] private SerializedResponse[] _responses;
-
         private readonly object[] _arguments = new object[2];
 
         public IReadOnlyList<Action<T1, T2>> DynamicListeners { get; }
