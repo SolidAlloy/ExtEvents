@@ -51,13 +51,13 @@
             reorderableList.DoList(position);
         }
 
-        public static void ClearListCache(SerializedProperty responsesArrayProp)
+        public static void ClearListCache(SerializedProperty extEventProp)
         {
-            var list = GetList(responsesArrayProp, null);
+            var list = GetList(extEventProp, null);
             ClearCache(list);
         }
 
-        private static ExtEventInfo GetExtEventInfo(SerializedProperty extEventProperty)
+        public static ExtEventInfo GetExtEventInfo(SerializedProperty extEventProperty)
         {
             var serializedObject = extEventProperty.serializedObject;
             var propertyPath = extEventProperty.propertyPath;

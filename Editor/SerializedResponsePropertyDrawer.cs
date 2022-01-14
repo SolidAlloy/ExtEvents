@@ -44,6 +44,8 @@
                 serializedArgumentsHeights += EditorGUI.GetPropertyHeight(serializedArgsArray.GetArrayElementAtIndex(i));
             }
 
+            serializedArgumentsHeights += LinePadding * serializedArgsArray.arraySize;
+
             return serializedArgumentsHeights;
         }
 

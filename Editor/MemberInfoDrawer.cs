@@ -310,7 +310,7 @@
             }
 
             responseProperty.serializedObject.ApplyModifiedProperties();
-            ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent());
+            ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent().GetParent());
         }
 
         private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)
