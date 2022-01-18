@@ -12,24 +12,14 @@
     using UnityEditor;
 #endif
 
-    public enum MemberType { Field, Property, Method }
-
     [Serializable]
     public partial class SerializedResponse
     {
-        // link to serialized member
-        // serialized field for any argument of the action
-        // enum for the argument field whether it is dynamic or serialized
-        // there can be up to three arguments on a response and all of them need to have the ability of a serializedField
-        // let's try to think of a solution for responses with one serialized argument at least. How does UnityEvent solve it?
-        // Unity just lists all possible argument values in a structure.
-        // I can use JsonUtility to convert serialized fields to string and back, and store the type of fields. If performance needs to be considered, add a bunch of fields for common types like Unity does.
         [SerializeField] internal SerializedArgument[] _serializedArguments;
         [SerializeField] internal Object _target;
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new []{ "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
-        [SerializeField] private BuiltResponse _builtResponse;
+        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
 
         [NonSerialized] internal bool _initialized;
 
@@ -73,12 +63,6 @@
         {
             FillWithDynamicArgs(args);
 
-            if (_builtResponse != null)
-            {
-                _builtResponse.Invoke(_objectTarget, _arguments);
-                return;
-            }
-
             if (_invokable != null)
             {
                 _invokable.Invoke(_objectTarget, _arguments);
@@ -90,25 +74,26 @@
 
         private void LogInvocationWarning()
         {
+#if UNITY_EDITOR
             if (!PackageSettings.ShowInvocationWarning)
                 return;
+#endif
 
-            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target?.GetType().Name;
-            string memberType = _memberType.ToString().ToLower();
-            Debug.LogWarning($"Tried to invoke a response to an event but the {memberType} {typeName}.{_memberName} is missing.");
+            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target?.GetType().Name ?? "Unknown_Type";
+            bool isProperty = _methodName.IsPropertySetter();
+            string memberName = isProperty ? "property" : "method";
+            string methodName = isProperty ? $"{_methodName.Substring(4)} setter" : _methodName;
+            Debug.LogWarning($"Tried to invoke a response to an event but the {memberName} {typeName}.{methodName} is missing.");
         }
 
         public void Initialize()
         {
-            if (_builtResponse == null)
-            {
-                var types = GetArgumentTypes();
-                var declaringType = _isStatic ? _type.Type : _target.GetType();
+            var types = GetArgumentTypes();
+            var declaringType = _isStatic ? _type.Type : _target.GetType();
 
-                if (types != null && declaringType != null)
-                {
-                    _invokable = GetInvokable(declaringType, types);
-                }
+            if (types != null && declaringType != null)
+            {
+                _invokable = GetInvokable(declaringType, types);
             }
 
             _objectTarget = GetTarget();

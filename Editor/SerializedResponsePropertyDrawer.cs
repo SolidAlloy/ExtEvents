@@ -32,7 +32,7 @@
 
         private static float GetSerializedArgsHeight(SerializedProperty property)
         {
-            if (!MemberInfoDrawer.HasMember(property))
+            if (!MethodInfoDrawer.HasMethod(property))
                 return 0f;
 
             float serializedArgumentsHeights = 0f;
@@ -64,8 +64,8 @@
 
             currentRect.y += EditorGUIUtility.singleLineHeight + LinePadding;
 
-            // When member name is changed, we need to get memberInfo and set types of serialized arguments
-            MemberInfoDrawer.Draw(currentRect, property, out var paramNames);
+            // When method name is changed, we need to get methodInfo and set types of serialized arguments
+            MethodInfoDrawer.Draw(currentRect, property, out var paramNames);
 
             bool argumentsChanged = DrawArguments(property, paramNames, currentRect);
 
@@ -98,7 +98,7 @@
 
         private void ReinitializeIfChanged(SerializedProperty responseProperty, bool argumentsChanged)
         {
-            if (argumentsChanged || MemberHasChanged(responseProperty))
+            if (argumentsChanged || MethodHasChanged(responseProperty))
             {
                 responseProperty.serializedObject.ApplyModifiedProperties();
                 var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProperty);
@@ -125,18 +125,18 @@
             return EditorGUI.EndChangeCheck();
         }
 
-        private static bool MemberHasChanged(SerializedProperty responseProperty)
+        private static bool MethodHasChanged(SerializedProperty responseProperty)
         {
             string currentType = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             Object currentTarget = responseProperty.FindPropertyRelative(nameof(SerializedResponse._target)).objectReferenceValue;
-            string currentMemberName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._memberName)).stringValue;
+            string currentMethodName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName)).stringValue;
 
             var serializedObject = responseProperty.serializedObject;
             var propertyPath = responseProperty.propertyPath;
 
             if (!_previousResponseValues.TryGetValue((serializedObject, propertyPath), out var responseInfo))
             {
-                _previousResponseValues.Add((serializedObject, propertyPath), new SerializedResponseInfo(currentType, currentTarget, currentMemberName));
+                _previousResponseValues.Add((serializedObject, propertyPath), new SerializedResponseInfo(currentType, currentTarget, currentMethodName));
                 return false;
             }
 
@@ -154,10 +154,10 @@
                 responseInfo.Target = currentTarget;
             }
 
-            if (currentMemberName != responseInfo.MemberName)
+            if (currentMethodName != responseInfo.MethodName)
             {
                 infoChanged = true;
-                responseInfo.MemberName = currentMemberName;
+                responseInfo.MethodName = currentMethodName;
             }
 
             return infoChanged;
@@ -246,13 +246,13 @@
         {
             public string TypeName;
             public Object Target;
-            public string MemberName;
+            public string MethodName;
 
-            public SerializedResponseInfo(string typeName, Object target, string memberName)
+            public SerializedResponseInfo(string typeName, Object target, string methodName)
             {
                 TypeName = typeName;
                 Target = target;
-                MemberName = memberName;
+                MethodName = methodName;
             }
         }
     }
