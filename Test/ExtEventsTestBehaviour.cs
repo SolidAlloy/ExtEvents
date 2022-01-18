@@ -1,12 +1,11 @@
+#if UNITY_EDITOR
 namespace Test
 {
-    using System;
     using ExtEvents;
     using ExtEvents.Editor;
     using Sirenix.OdinInspector;
-    using SolidUtilities.Editor;
     using SolidUtilities;
-    using SolidUtilities.UnityEditorInternals;
+    using SolidUtilities.Editor;
     using UnityEditor;
     using UnityEditor.SceneManagement;
     using UnityEngine;
@@ -15,19 +14,13 @@ namespace Test
     {
         [SerializeField] private int _iterationCount = 1_000_000;
         [SerializeField] private SceneAsset _scene;
+        [SerializeField] private GameObject _prefab;
 
         public ExtEvent VoidEvent;
 
         public ExtEvent[] Events;
 
         public string[] EmptyArray;
-
-        [Button]
-        public void Build()
-        {
-            var serializedObject = new SerializedObject(this);
-            ExtEventHelper.BuildResponses(serializedObject.FindProperty(nameof(VoidEvent)), VoidEvent);
-        }
 
         [Button]
         public void FindOnScene()
@@ -50,6 +43,47 @@ namespace Test
             }
 
             EditorSceneManager.CloseScene(scene, true);
+        }
+
+        [Button]
+        public void TestBuildAnalyzer()
+        {
+            var foundObjects = new BuildAnalyzer.FoundObjects();
+
+            foreach (SerializedObject serializedObject in BuildAnalyzer.GetAssetsInBuild(foundObjects))
+            {
+                // Debug.Log(serializedObject.targetObject.name);
+            }
+
+            foreach (string prefabPath in foundObjects.Prefabs)
+            {
+                Debug.Log(prefabPath);
+            }
+
+            foreach (string scriptableObjectName in foundObjects.ScriptableObjectNames)
+            {
+                Debug.Log(scriptableObjectName);
+            }
+        }
+
+        [Button]
+        public void TestCrossReference()
+        {
+            var foundObjects = new BuildAnalyzer.FoundObjects();
+            foreach (SerializedObject serializedObject in BuildAnalyzer.GetSerializedObjectsFromGameObject(_prefab, foundObjects))
+            {
+                //
+            }
+
+            foreach (string prefabPath in foundObjects.Prefabs)
+            {
+                Debug.Log(prefabPath);
+            }
+
+            foreach (string scriptableObjectName in foundObjects.ScriptableObjectNames)
+            {
+                Debug.Log(scriptableObjectName);
+            }
         }
 
         [Button]
@@ -90,3 +124,4 @@ namespace Test
         }
     }
 }
+#endif
