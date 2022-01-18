@@ -14,7 +14,7 @@
         {
             for (int index = 0; index < _responses.Length; index++)
             {
-                _responses[index].Invoke(Array.Empty<object>());
+                _responses[index].Invoke(null);
             }
         }
 

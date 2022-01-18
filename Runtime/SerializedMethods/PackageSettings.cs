@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-namespace ExtEvents
+﻿namespace ExtEvents
 {
     using System.IO;
     using UnityEditor;
@@ -37,4 +36,3 @@ namespace ExtEvents
         }
     }
 }
-#endif

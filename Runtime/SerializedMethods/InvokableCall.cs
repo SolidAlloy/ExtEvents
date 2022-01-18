@@ -23,7 +23,14 @@
         [Preserve]
         public InvokableActionCall(object target, MethodInfo method) : base(target, method)
         {
-            _delegate = (Action) Delegate.CreateDelegate(typeof(Action), target, method);
+            if (method.IsStatic)
+            {
+                _delegate = (Action) Delegate.CreateDelegate(typeof(Action), method);
+            }
+            else
+            {
+                _delegate = (Action) Delegate.CreateDelegate(typeof(Action), target, method);
+            }
         }
 
         [Preserve]

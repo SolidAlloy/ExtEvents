@@ -102,7 +102,7 @@
             {
                 responseProperty.serializedObject.ApplyModifiedProperties();
                 var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProperty);
-                response._initialized = false;
+                response._initializationComplete = false;
             }
         }
 

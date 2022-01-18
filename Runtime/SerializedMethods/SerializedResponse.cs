@@ -1,16 +1,15 @@
 ﻿namespace ExtEvents
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using JetBrains.Annotations;
     using TypeReferences;
     using UnityEngine;
     using UnityEngine.Events;
     using Object = UnityEngine.Object;
-
-#if UNITY_EDITOR
-    using UnityEditor;
-#endif
 
     [Serializable]
     public partial class SerializedResponse
@@ -21,102 +20,110 @@
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
         [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
 
-        [NonSerialized] internal bool _initialized;
+        [NonSerialized] internal bool _initializationComplete;
+        [NonSerialized] private bool _initializationSuccessful;
 
         private object[] _arguments;
 
-        private EfficientInvoker _invokable;
-        private object _objectTarget;
+        private BaseInvokableCall _invokableCall;
 
         private BindingFlags Flags => BindingFlags.Public | (_isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         public SerializedResponse()
         {
-            _initialized = false;
+            _initializationComplete = false;
         }
 
-        public void Invoke([NotNull] object[] args)
+        public void Invoke([CanBeNull] object[] args)
         {
-            if (_callState == UnityEventCallState.Off)
-                return;
+            // If no function is chosen, exit without any warnings.
+            if (_callState == UnityEventCallState.Off || string.IsNullOrEmpty(_methodName))
+                 return;
 
 #if UNITY_EDITOR
-            if (_callState == UnityEventCallState.RuntimeOnly && !EditorApplication.isPlaying)
+            if (_callState == UnityEventCallState.RuntimeOnly && !Application.isPlaying)
                 return;
-    #endif
+#endif
 
-            if (_initialized)
+            if (_initializationComplete)
             {
-                InvokeImpl(args);
+                if (_initializationSuccessful)
+                    InvokeImpl(args);
+
                 return;
             }
 
-            Initialize();
-            _initialized = true;
+            _initializationSuccessful = Initialize();
+            _initializationComplete = true;
             InvokeImpl(args);
         }
 
-        // TODO remove
-        public MethodInfo GetMethod() => GetMethod(_isStatic ? _type.Type : _target.GetType(), GetArgumentTypes());
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvokeImpl(object[] args)
         {
             FillWithDynamicArgs(args);
-
-            if (_invokable != null)
-            {
-                _invokable.Invoke(_objectTarget, _arguments);
-                return;
-            }
-
-            LogInvocationWarning();
+            _invokableCall.Invoke(_arguments);
         }
 
-        private void LogInvocationWarning()
+        public bool Initialize()
+        {
+            var declaringType = GetDeclaringType();
+
+            if (declaringType == null)
+                return false;
+            
+            var argumentTypes = GetArgumentTypes();
+
+            if (argumentTypes == null)
+                return false;
+            
+            var target = _isStatic ? null : _target;
+            _invokableCall = GetInvokableCall(declaringType, argumentTypes, target);
+
+            if (_invokableCall == null)
+            {
+                LogMethodInfoWarning();
+                return false;
+            }
+
+            _arguments = GetArguments();
+            return true;
+        }
+
+        private Type GetDeclaringType()
+        {
+            if (_isStatic)
+            {
+                if (_type.Type == null)
+                    Logger.LogWarning($"Tried to invoke a response to an event but the declaring type is missing: {_type.TypeNameAndAssembly}");
+
+                return _type.Type;
+            }
+
+            if (_target is null) 
+                Logger.LogWarning("Tried to invoke a response to an event but the target is missing");
+
+            return _target?.GetType();
+        }
+        
+        private void LogMethodInfoWarning()
         {
 #if UNITY_EDITOR
             if (!PackageSettings.ShowInvocationWarning)
                 return;
 #endif
 
-            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target?.GetType().Name ?? "Unknown_Type";
+            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target.GetType().Name;
             bool isProperty = _methodName.IsPropertySetter();
             string memberName = isProperty ? "property" : "method";
             string methodName = isProperty ? $"{_methodName.Substring(4)} setter" : _methodName;
-            Debug.LogWarning($"Tried to invoke a response to an event but the {memberName} {typeName}.{methodName} is missing.");
+            Logger.LogWarning($"Tried to invoke a response to an event but the {memberName} {typeName}.{methodName} is missing.");
         }
 
-        public void Initialize()
-        {
-            var types = GetArgumentTypes();
-            var declaringType = _isStatic ? _type.Type : _target.GetType();
-
-            if (types != null && declaringType != null)
-            {
-                _invokable = GetInvokable(declaringType, types);
-            }
-
-            _objectTarget = GetTarget();
-            _arguments = GetArguments();
-        }
-
-        private object GetTarget()
-        {
-            if (!_isStatic)
-            {
-                if (_target != null)
-                    return _target;
-
-                Debug.LogWarning("Trying to invoke the response but the target is null");
-                return null;
-            }
-
-            return null;
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillWithDynamicArgs(object[] args)
         {
-            if (args.Length == 0)
+            if (args == null)
                 return;
 
             for (int i = 0; i < _arguments.Length; i++)
@@ -149,6 +156,15 @@
             return arguments;
         }
 
+        private IEnumerable<string> GetNullArgumentTypeNames()
+        {
+            foreach (var argument in _serializedArguments)
+            {
+                if (argument.Type.Type == null)
+                    yield return argument.Type.TypeNameAndAssembly;
+            }
+        }
+
         private Type[] GetArgumentTypes()
         {
             var types = new Type[_serializedArguments.Length];
@@ -159,6 +175,9 @@
 
                 if (types[i] == null)
                 {
+                    if (PackageSettings.ShowInvocationWarning)
+                        Logger.LogWarning($"Tried to invoke a response to an event but some of the argument types are missing: {string.Join(", ", GetNullArgumentTypeNames().Select(TypeReference.GetTypeNameFromNameAndAssembly))}.");
+                    
                     return null;
                 }
             }
