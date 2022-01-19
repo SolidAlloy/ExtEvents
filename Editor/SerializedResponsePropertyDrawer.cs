@@ -83,16 +83,19 @@
             var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
             var newTarget = GenericObjectDrawer.ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
-            if (targetProp.objectReferenceValue != newTarget)
+            if (targetProp.objectReferenceValue == newTarget) return;
+            
+            if (newTarget is GameObject gameObject)
             {
-                if (newTarget is GameObject gameObject)
-                {
-                    DrawComponentDropdown(targetProp, gameObject);
-                }
-                else
-                {
-                    targetProp.objectReferenceValue = newTarget;
-                }
+                DrawComponentDropdown(targetProp, gameObject);
+            }
+            else if (newTarget is Component || newTarget is ScriptableObject)
+            {
+                targetProp.objectReferenceValue = newTarget;
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot assign an object of type {newTarget.GetType()} to the target field. Only GameObjects, Components, and ScriptableObjects can be assigned.");
             }
         }
 
