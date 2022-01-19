@@ -7,6 +7,10 @@
     public abstract class BaseExtEvent
     {
         [SerializeField] internal SerializedResponse[] _responses;
+        
+#if UNITY_EDITOR
+        [SerializeField] internal bool Expanded = true;
+#endif
 
         public void Initialize()
         {

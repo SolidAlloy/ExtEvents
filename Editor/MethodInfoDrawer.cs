@@ -260,7 +260,7 @@
             }
 
             SerializedResponsePropertyDrawer.Reinitialize(responseProperty);
-            ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent().GetParent());
+            ExtEventPropertyDrawer.ResetListCache(responseProperty.GetParent().GetParent());
         }
 
         private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)

@@ -6,9 +6,7 @@
     using SolidUtilities.Editor;
     using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
-    using UnityEditorInternal;
     using UnityEngine;
-    using UnityEngine.Assertions;
     using UnityEngine.Events;
 
     [CustomPropertyDrawer(typeof(BaseExtEvent), true)]
@@ -17,62 +15,25 @@
         private static readonly Dictionary<(SerializedObject, string), ExtEventInfo> _extEventInfoCache =
             new Dictionary<(SerializedObject, string), ExtEventInfo>();
 
-        private static readonly Dictionary<(SerializedObject, string), ReorderableList> _listCache =
-            new Dictionary<(SerializedObject, string), ReorderableList>();
+        private static readonly Dictionary<(SerializedObject, string), FoldoutList> _listCache =
+            new Dictionary<(SerializedObject, string), FoldoutList>();
 
         public static ExtEventInfo CurrentEventInfo { get; private set; }
 
-        private static Action<ReorderableList> _clearCache;
-        private static Action<ReorderableList> ClearCache
-        {
-            get
-            {
-                if (_clearCache == null)
-                {
-                    var clearCacheMethod = typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic);
-                    Assert.IsNotNull(clearCacheMethod);
-                    _clearCache = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), clearCacheMethod);
-                }
-
-                return _clearCache;
-            }
-        }
-        
-        private static Action<ReorderableList> _cacheIfNeeded;
-        private static Action<ReorderableList> CacheIfNeeded
-        {
-            get
-            {
-                if (_cacheIfNeeded == null)
-                {
-                    var cachedIfNeededMethod = typeof(ReorderableList).GetMethod("CacheIfNeeded", BindingFlags.Instance | BindingFlags.NonPublic);
-                    Assert.IsNotNull(cachedIfNeededMethod);
-                    _cacheIfNeeded = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), cachedIfNeededMethod);
-                }
-
-                return _cacheIfNeeded;
-            }
-        }
-
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var reorderableList = GetList(property, label);
+            var reorderableList = GetList(property, label.text);
             return reorderableList.GetHeight();
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             CurrentEventInfo = GetExtEventInfo(property);
-            var reorderableList = GetList(property, label);
+            var reorderableList = GetList(property, label.text);
             reorderableList.DoList(position);
         }
 
-        public static void ClearListCache(SerializedProperty extEventProp)
-        {
-            var list = GetList(extEventProp, null);
-            ClearCache(list);
-            CacheIfNeeded(list);
-        }
+        public static void ResetListCache(SerializedProperty extEventProp) => GetList(extEventProp, null).ResetCache();
 
         public static ExtEventInfo GetExtEventInfo(SerializedProperty extEventProperty)
         {
@@ -87,25 +48,22 @@
             return eventInfo;
         }
 
-        private static ReorderableList GetList(SerializedProperty extEventProperty, GUIContent label)
+        private static FoldoutList GetList(SerializedProperty extEventProperty, string label)
         {
             if (_listCache.TryGetValue((extEventProperty.serializedObject, extEventProperty.propertyPath), out var list))
                 return list;
 
             var responsesProperty = extEventProperty.FindPropertyRelative(nameof(ExtEvent._responses));
 
-            var reorderableList = new ReorderableList(extEventProperty.serializedObject, responsesProperty)
+            var reorderableList = new FoldoutList(responsesProperty, label, extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)))
             {
-                drawHeaderCallback = rect => EditorGUI.LabelField(rect, label),
-                drawElementCallback = (rect, index, _, _) =>
-                    EditorGUI.PropertyField(rect, responsesProperty.GetArrayElementAtIndex(index)),
-                elementHeightCallback = index =>
-                    EditorGUI.GetPropertyHeight(responsesProperty.GetArrayElementAtIndex(index)),
-                onAddDropdownCallback = (_, _) =>
+                DrawElementCallback = (rect, index) => EditorGUI.PropertyField(rect, responsesProperty.GetArrayElementAtIndex(index)),
+                ElementHeightCallback = index => EditorGUI.GetPropertyHeight(responsesProperty.GetArrayElementAtIndex(index)),
+                OnAddDropdownCallback = () =>
                 {
                     var menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Instance"), false, () => AddResponse(responsesProperty, false));
-                    menu.AddItem(new GUIContent("Static"), false, () => AddResponse(responsesProperty, true));
+                    menu.AddItem(new GUIContent("Static"), false, () => AddResponse(responsesProperty, true)); 
                     menu.ShowAsContext();
                 }
             };

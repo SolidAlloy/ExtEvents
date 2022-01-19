@@ -120,7 +120,7 @@
             else if (newTarget is Component || newTarget is ScriptableObject || newTarget is null)
             {
                 targetProp.objectReferenceValue = newTarget;
-                ExtEventPropertyDrawer.ClearListCache(property.GetParent().GetParent());
+                ExtEventPropertyDrawer.ResetListCache(property.GetParent().GetParent());
             }
             else
             {
@@ -220,7 +220,7 @@
             {
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
-                ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent().GetParent());
+                ExtEventPropertyDrawer.ResetListCache(responseProperty.GetParent().GetParent());
             });
 
             tree.ShowAsContext();
