@@ -69,7 +69,10 @@
 
             bool argumentsChanged = DrawArguments(property, paramNames, currentRect);
 
-            ReinitializeIfChanged(property, argumentsChanged);
+            if (argumentsChanged || MethodHasChanged(property))
+            {
+                Reinitialize(property);
+            }
         }
 
         private void DrawTypeField(SerializedProperty property, Rect rect, bool isStatic)
@@ -83,7 +86,8 @@
             var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
             var newTarget = GenericObjectDrawer.ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
-            if (targetProp.objectReferenceValue == newTarget) return;
+            if (targetProp.objectReferenceValue == newTarget) 
+                return;
             
             if (newTarget is GameObject gameObject)
             {
@@ -99,14 +103,11 @@
             }
         }
 
-        private void ReinitializeIfChanged(SerializedProperty responseProperty, bool argumentsChanged)
+        public static void Reinitialize(SerializedProperty responseProp)
         {
-            if (argumentsChanged || MethodHasChanged(responseProperty))
-            {
-                responseProperty.serializedObject.ApplyModifiedProperties();
-                var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProperty);
-                response._initializationComplete = false;
-            }
+            responseProp.serializedObject.ApplyModifiedProperties();
+            var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProp);
+            response._initializationComplete = false;
         }
 
         private bool DrawArguments(SerializedProperty responseProperty, List<string> paramNames, Rect rect)

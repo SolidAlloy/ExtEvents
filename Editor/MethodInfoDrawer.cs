@@ -119,7 +119,7 @@
             if (itemToSelect != null)
                 itemToSelect.IsSelected = true;
 
-            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(selectedMethod, responseProperty), sortItems: true);
+            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, responseProperty), sortItems: true);
             dropdownMenu.ExpandAllFolders();
             dropdownMenu.ShowAsContext();
         }
@@ -202,13 +202,16 @@
             return paramType.IsUnitySerializable() || ArgumentTypeIsInList(paramType, eventParamTypes);
         }
 
-        private static void OnMethodChosen(MethodInfo methodInfo, SerializedProperty responseProperty)
+        private static void OnMethodChosen(MethodInfo previousMethod, MethodInfo newMethod, SerializedProperty responseProperty)
         {
+            if (previousMethod == newMethod)
+                return;
+            
             var methodNameProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName));
             var serializedArgsProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
 
-            methodNameProp.stringValue = methodInfo.Name;
-            var parameters = methodInfo.GetParameters();
+            methodNameProp.stringValue = newMethod.Name;
+            var parameters = newMethod.GetParameters();
             serializedArgsProp.arraySize = parameters.Length;
 
             for (int i = 0; i < parameters.Length; i++)
@@ -217,7 +220,7 @@
                 InitializeArgumentProperty(argProp, parameters[i].ParameterType);
             }
 
-            responseProperty.serializedObject.ApplyModifiedProperties();
+            SerializedResponsePropertyDrawer.Reinitialize(responseProperty);
             ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent().GetParent());
         }
 
