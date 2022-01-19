@@ -91,11 +91,12 @@
             
             if (newTarget is GameObject gameObject)
             {
-                DrawComponentDropdown(targetProp, gameObject);
+                DrawComponentDropdown(property, targetProp, gameObject);
             }
-            else if (newTarget is Component || newTarget is ScriptableObject)
+            else if (newTarget is Component || newTarget is ScriptableObject || newTarget is null)
             {
                 targetProp.objectReferenceValue = newTarget;
+                ExtEventPropertyDrawer.ClearListCache(property.GetParent().GetParent());
             }
             else
             {
@@ -167,7 +168,7 @@
             return infoChanged;
         }
 
-        private void DrawComponentDropdown(SerializedProperty targetProperty, GameObject gameObject)
+        private void DrawComponentDropdown(SerializedProperty responseProperty, SerializedProperty targetProperty, GameObject gameObject)
         {
             var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
             var dropdownItems = new List<DropdownItem<Component>>();
@@ -195,6 +196,7 @@
             {
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
+                ExtEventPropertyDrawer.ClearListCache(responseProperty.GetParent().GetParent());
             });
 
             tree.ShowAsContext();
