@@ -37,6 +37,22 @@
                 return _clearCache;
             }
         }
+        
+        private static Action<ReorderableList> _cacheIfNeeded;
+        private static Action<ReorderableList> CacheIfNeeded
+        {
+            get
+            {
+                if (_cacheIfNeeded == null)
+                {
+                    var cachedIfNeededMethod = typeof(ReorderableList).GetMethod("CacheIfNeeded", BindingFlags.Instance | BindingFlags.NonPublic);
+                    Assert.IsNotNull(cachedIfNeededMethod);
+                    _cacheIfNeeded = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), cachedIfNeededMethod);
+                }
+
+                return _cacheIfNeeded;
+            }
+        }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -55,6 +71,7 @@
         {
             var list = GetList(extEventProp, null);
             ClearCache(list);
+            CacheIfNeeded(list);
         }
 
         public static ExtEventInfo GetExtEventInfo(SerializedProperty extEventProperty)
