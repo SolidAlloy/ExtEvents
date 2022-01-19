@@ -12,6 +12,7 @@
     using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
+    using UnityEngine.UI;
 
     public static class MethodInfoDrawer
     {
@@ -109,19 +110,57 @@
 
             var paramTypes = ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes;
 
-            menuItems.AddRange(FindStaticMethods(declaringType, paramTypes));
-
             if (isInstance)
                 menuItems.AddRange(FindInstanceMethods(declaringType, paramTypes));
+            
+            menuItems.AddRange(FindStaticMethods(declaringType, paramTypes));
+            
+            SortItems(menuItems);
             
             var itemToSelect = menuItems.Find(menuItem => menuItem.Value == currentMethod);
 
             if (itemToSelect != null)
                 itemToSelect.IsSelected = true;
 
-            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, responseProperty), sortItems: true);
+            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, responseProperty));
             dropdownMenu.ExpandAllFolders();
             dropdownMenu.ShowAsContext();
+        }
+
+        private static void SortItems(List<DropdownItem<MethodInfo>> items)
+        {
+            items.Sort((x, y) =>
+            {
+                // The order of folders is following:
+                // - Instance Properties
+                // - Instance Methods
+                // - Static Properties
+                // - Static Methods
+                // The method names are sorted alphabetically.
+                
+                var xFolder = x.Path.GetSubstringBefore('/');
+                var yFolder = y.Path.GetSubstringBefore('/');
+
+                // If folders are the same, run an alphabetic comparison on method names
+                if (xFolder == yFolder)
+                    return string.Compare(x.Path.GetSubstringAfterLast('/'), y.Path.GetSubstringAfterLast('/'), StringComparison.Ordinal);
+
+                var xFirstWord = xFolder.GetSubstringBefore(' ');
+                var yFirstWord = yFolder.GetSubstringBefore(' ');
+
+                // If the first words are different, Static must be lower in the list than Instance.
+                if (xFirstWord != yFirstWord)
+                    return xFirstWord == "Static" ? 1 : -1;
+
+                var xLastWord = xFolder.GetSubstringAfterLast(' ');
+                var yLastWord = yFolder.GetSubstringAfterLast(' ');
+
+                // If the first words are equal, but last words differ, Methods must be lower in the list than Properties.
+                if (xLastWord != yLastWord)
+                    return xLastWord == "Methods" ? 1 : -1;
+
+                return 0;
+            });
         }
 
         private static MethodInfo GetMethodInfo(Type declaringType, SerializedProperty responseProperty, bool isStatic, string currentMethodName)
