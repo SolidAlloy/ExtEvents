@@ -53,10 +53,12 @@
         {
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
             currentRect.y += LinePadding;
-            (var callStateRect, var targetRect) = currentRect.CutVertically(50f);
+            
+            var callStateProp = property.FindPropertyRelative(nameof(SerializedResponse._callState));
+            (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
             callStateRect.width -= 10f;
 
-            DrawCallState(callStateRect, property);
+            DrawCallState(callStateRect, callStateProp);
 
             bool isStatic = property.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
 
@@ -73,6 +75,28 @@
             {
                 Reinitialize(property);
             }
+        }
+        
+        private static void DrawCallState(Rect rect, SerializedProperty callStateProp)
+        {
+            if (!EditorGUI.DropdownButton(rect, GetCallStateContent((UnityEventCallState) callStateProp.enumValueIndex), FocusType.Passive, EditorStyles.miniPullDown))
+                return;
+
+            var menu = new GenericMenu();
+
+            foreach (UnityEventCallState state in Enum.GetValues(typeof(UnityEventCallState)))
+            {
+                menu.AddItem(
+                    new GUIContent(GetCallStateFullName(state)),
+                    callStateProp.enumValueIndex == (int) state,
+                    () =>
+                    {
+                        callStateProp.enumValueIndex = (int) state;
+                        callStateProp.serializedObject.ApplyModifiedProperties();
+                    });
+            }
+
+            menu.ShowAsContext();
         }
 
         private void DrawTypeField(SerializedProperty property, Rect rect, bool isStatic)
@@ -202,42 +226,29 @@
             tree.ShowAsContext();
         }
 
-        private void DrawCallState(Rect rect, SerializedProperty responseProp)
-        {
-            var callStateProp = responseProp.FindPropertyRelative(nameof(SerializedResponse._callState));
-
-            if (!EditorGUI.DropdownButton(rect, GUIContentHelper.Temp(GetCallStateShortName((UnityEventCallState) callStateProp.enumValueIndex)), FocusType.Passive, DropdownStyle))
-                return;
-
-            var menu = new GenericMenu();
-
-            foreach (UnityEventCallState state in Enum.GetValues(typeof(UnityEventCallState)))
-            {
-                menu.AddItem(
-                    new GUIContent(GetCallStateFullName(state)),
-                    callStateProp.enumValueIndex == (int) state,
-                    () =>
-                    {
-                        callStateProp.enumValueIndex = (int) state;
-                        callStateProp.serializedObject.ApplyModifiedProperties();
-                    });
-            }
-
-            menu.ShowAsContext();
-        }
-
-        private string GetCallStateShortName(UnityEventCallState callState)
+        private static float GetCallStateWidth(UnityEventCallState callState)
         {
             return callState switch
             {
-                UnityEventCallState.EditorAndRuntime => "E|R",
-                UnityEventCallState.RuntimeOnly => "R",
-                UnityEventCallState.Off => "Off",
+                UnityEventCallState.EditorAndRuntime => 58f,
+                UnityEventCallState.RuntimeOnly => 48f,
+                UnityEventCallState.Off => 58f,
                 _ => throw new NotImplementedException()
             };
         }
 
-        private string GetCallStateFullName(UnityEventCallState callState)
+        private static GUIContent GetCallStateContent(UnityEventCallState callState)
+        {
+            return callState switch
+            {
+                UnityEventCallState.EditorAndRuntime => GUIContentHelper.Temp("E|R", Icons.EditorRuntime),
+                UnityEventCallState.RuntimeOnly => GUIContentHelper.Temp("R", Icons.Runtime),
+                UnityEventCallState.Off => GUIContentHelper.Temp("Off", Icons.Off),
+                _ => throw new NotImplementedException()
+            };
+        }
+
+        private static string GetCallStateFullName(UnityEventCallState callState)
         {
             return callState switch
             {
@@ -259,6 +270,54 @@
                 TypeName = typeName;
                 Target = target;
                 MethodName = methodName;
+            }
+        }
+
+        private static class Icons
+        {
+            private static Texture _offIcon;
+
+            public static Texture Off
+            {
+                get
+                {
+                    if (_offIcon == null)
+                    {
+                        _offIcon = EditorGUIUtility.IconContent("sv_icon_dot6_sml").image;
+                    }
+
+                    return _offIcon;
+                }
+            }
+        
+            private static Texture _editorRuntimeIcon;
+
+            public static Texture EditorRuntime
+            {
+                get
+                {
+                    if (_editorRuntimeIcon == null)
+                    {
+                        _editorRuntimeIcon = EditorGUIUtility.IconContent("sv_icon_dot4_sml").image;
+                    }
+
+                    return _editorRuntimeIcon;
+                }
+            }
+        
+            private static Texture _runtimeIcon;
+
+            public static Texture Runtime
+            {
+                get
+                {
+                    if (_runtimeIcon == null)
+                    {
+                        _runtimeIcon = EditorGUIUtility.IconContent("sv_icon_dot3_sml").image;
+                    }
+
+                    return _runtimeIcon;
+                }
             }
         }
     }
