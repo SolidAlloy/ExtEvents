@@ -193,13 +193,13 @@
 
         private static IEnumerable<DropdownItem<MethodInfo>> FindStaticMethods(Type declaringType, Type[] eventParamTypes)
         {
-            var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.Static);
+            var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             return GetDropdownItems(staticMethods, "Static");
         }
         
         private static IEnumerable<DropdownItem<MethodInfo>> FindInstanceMethods(Type declaringType, Type[] eventParamTypes)
         {
-            var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.Instance);
+            var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             return GetDropdownItems(staticMethods, "Instance");
         }
 
@@ -221,10 +221,25 @@
             return declaringType.GetMethods(bindingFlags)
                 .Where(method =>
                 {
-                    return !method.Name.IsPropertyGetter()
+                    return IsEligibleByVisibility(method) 
+                           && !method.Name.IsPropertyGetter()
                            && !IsMethodPure(method) 
                            && method.GetParameters().All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
                 });
+        }
+
+        private static bool IsEligibleByVisibility(MethodInfo method)
+        {
+            if (method.IsPublic)
+                return true;
+            
+            if (method.IsAssembly && EditorPackageSettings.IncludeInternalMethods)
+                return true;
+
+            if ((method.IsPrivate || method.IsFamily) && EditorPackageSettings.IncludePrivateMethods)
+                return true;
+
+            return method.HasAttribute<ExtEventListener>();
         }
 
         private static bool IsMethodPure(MethodInfo method)

@@ -1,10 +1,17 @@
 ﻿namespace ExtEvents.Editor
 {
     using System.Collections.Generic;
+    using SolidUtilities.Editor;
     using UnityEditor;
 
     public static class PackageSettingsDrawer
     {
+        private const string IncludeInternalMethodsLabel = "Include internal methods";
+        private const string IncludeInternalMethodsTooltip = "Include internal methods and properties in the methods dropdown when choosing a listener in ExtEvent?";
+        
+        private const string IncludePrivateMethodsLabel = "Include private methods";
+        private const string IncludePrivateMethodsTooltip = "Include private and protected methods and properties in the methods dropdown when choosing a listener in ExtEvent?";
+        
         private static SerializedObject _serializedObject;
 
         [SettingsProvider]
@@ -18,6 +25,14 @@
         }
 
         private static void OnGUI(string searchContext)
+        {
+            DrawSerializedObject();
+            
+            EditorPackageSettings.IncludeInternalMethods = EditorGUILayout.Toggle(GUIContentHelper.Temp(IncludeInternalMethodsLabel, IncludeInternalMethodsTooltip), EditorPackageSettings.IncludeInternalMethods);
+            EditorPackageSettings.IncludePrivateMethods = EditorGUILayout.Toggle(GUIContentHelper.Temp(IncludePrivateMethodsLabel, IncludePrivateMethodsTooltip), EditorPackageSettings.IncludePrivateMethods);
+        }
+
+        private static void DrawSerializedObject()
         {
             _serializedObject ??= new SerializedObject(PackageSettings.Instance);
 

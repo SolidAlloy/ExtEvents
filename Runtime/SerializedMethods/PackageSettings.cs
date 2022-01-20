@@ -6,6 +6,8 @@
 
     internal class PackageSettings : ScriptableObject
     {
+        public const string PackageName = "com.solidalloy.ext-events";
+        
         private const string FolderPath = "Assets/Plugins/ExtEvents/Resources";
         private const string AssetName = "ExtEvents_PackageSettings";
 

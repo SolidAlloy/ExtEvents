@@ -21,9 +21,6 @@
 
         private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo> _previousResponseValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo>();
 
-        private static GUIStyle _dropdownStyle;
-        private static GUIStyle DropdownStyle => _dropdownStyle ??= new GUIStyle(EditorStyles.miniPullDown) { alignment = TextAnchor.MiddleCenter };
-
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             const int constantLinesCount = 2;
@@ -148,7 +145,8 @@
             {
                 rect.y += EditorGUIUtility.singleLineHeight + LinePadding;
                 var argumentProp = argumentsArray.GetArrayElementAtIndex(i);
-                EditorGUI.PropertyField(rect, argumentProp, GUIContentHelper.Temp(paramNames[i]));
+                string label = EditorPackageSettings.NicifyArgumentNames ? ObjectNames.NicifyVariableName(paramNames[i]) : paramNames[i];
+                EditorGUI.PropertyField(rect, argumentProp, GUIContentHelper.Temp(label));
             }
 
             return EditorGUI.EndChangeCheck();
