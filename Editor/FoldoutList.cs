@@ -86,7 +86,7 @@
                     _list.draggable = newValue; // When the list is folded, draggable should be set to false. Otherwise, its icon will be drawn.
                     ClearCache(_list);
                 },
-                drawElementCallback = (rect, index, _, _) =>
+                drawElementCallback = (rect, index, _, __) =>
                 {
                     if ( ! expandedProperty.boolValue) 
                         return;
@@ -94,7 +94,7 @@
                     DrawElementCallback(rect, index);
                 },
                 elementHeightCallback = index => expandedProperty.boolValue ? ElementHeightCallback(index) : 0f,
-                onAddDropdownCallback = (_, _) => OnAddDropdownCallback(),
+                onAddDropdownCallback = (_, __) => OnAddDropdownCallback(),
                 drawFooterCallback = rect =>
                 {
                     if (expandedProperty.boolValue)
