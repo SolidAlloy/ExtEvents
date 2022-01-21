@@ -9,8 +9,8 @@
     using UnityEngine;
     using UnityEngine.Assertions;
 
-    [CustomPropertyDrawer(typeof(SerializedArgument))]
-    public class SerializedArgumentPropertyDrawer : DrawerWithModes
+    [CustomPropertyDrawer(typeof(PersistentArgument))]
+    public class PersistentArgumentDrawer : DrawerWithModes
     {
         private static Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedProperty> _valuePropertyCache =
                 new Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedProperty>();
@@ -46,7 +46,7 @@
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             FindProperties(property);
-            ShowChoiceButton = property.FindPropertyRelative(nameof(SerializedArgument._canBeDynamic)).boolValue;
+            ShowChoiceButton = property.FindPropertyRelative(nameof(PersistentArgument._canBeDynamic)).boolValue;
             base.OnGUI(position, property, label);
         }
 
@@ -69,9 +69,9 @@
                 }
             }
 
-            var serializedValue = argumentProperty.FindPropertyRelative(nameof(SerializedArgument._serializedArg)).stringValue;
+            var serializedValue = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg)).stringValue;
 
-            object value = SerializedArgument.GetValue(serializedValue, type);
+            object value = PersistentArgument.GetValue(serializedValue, type);
             Type soType = ScriptableObjectCache.GetClass(type);
             var so = ScriptableObject.CreateInstance(soType);
             var serializedObject = new SerializedObject(so);
@@ -86,8 +86,8 @@
         {
             valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
             var value = valueProperty.GetObject();
-            var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(SerializedArgument._serializedArg));
-            serializedArgProp.stringValue = SerializedArgument.SerializeValue(value, valueProperty.GetObjectType());
+            var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg));
+            serializedArgProp.stringValue = PersistentArgument.SerializeValue(value, valueProperty.GetObjectType());
         }
 
         protected override void DrawValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
@@ -104,11 +104,11 @@
 
         private void DrawDynamicValue(SerializedProperty property, Rect valueRect)
         {
-            var indexProp = property.FindPropertyRelative(nameof(SerializedArgument.Index));
-            var argNames = ExtEventPropertyDrawer.CurrentEventInfo.ArgNames;
+            var indexProp = property.FindPropertyRelative(nameof(PersistentArgument.Index));
+            var argNames = ExtEventDrawer.CurrentEventInfo.ArgNames;
             var currentArgName = argNames[indexProp.intValue];
 
-            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes, GetTypeFromProperty(property));
+            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventDrawer.CurrentEventInfo.ParamTypes, GetTypeFromProperty(property));
 
             using (new EditorGUI.DisabledGroupScope(matchingArgNames.Count == 1))
             {
@@ -170,7 +170,7 @@
 
         private void FindProperties(SerializedProperty property)
         {
-            _isSerialized = property.FindPropertyRelative(nameof(SerializedArgument.IsSerialized));
+            _isSerialized = property.FindPropertyRelative(nameof(PersistentArgument.IsSerialized));
 
             if (_isSerialized.boolValue)
                 _valueProperty = GetValueProperty(property);
@@ -179,7 +179,7 @@
         private static Type GetTypeFromProperty(SerializedProperty argProperty)
         {
             var typeNameAndAssembly = argProperty
-                .FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}")
+                .FindPropertyRelative($"{nameof(PersistentArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}")
                 .stringValue;
             var type = Type.GetType(typeNameAndAssembly);
             Assert.IsNotNull(type);

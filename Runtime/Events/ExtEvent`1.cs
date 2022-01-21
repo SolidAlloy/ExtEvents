@@ -16,9 +16,9 @@
         {
             _arguments[0] = arg;
 
-            for (int index = 0; index < _responses.Length; index++)
+            for (int index = 0; index < _persistentListeners.Length; index++)
             {
-                _responses[index].Invoke(_arguments);
+                _persistentListeners[index].Invoke(_arguments);
             }
         }
 

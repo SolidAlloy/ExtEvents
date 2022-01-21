@@ -12,9 +12,9 @@
     using Object = UnityEngine.Object;
 
     [Serializable]
-    public partial class SerializedResponse
+    public partial class PersistentListener
     {
-        [SerializeField] internal SerializedArgument[] _serializedArguments;
+        [SerializeField] internal PersistentArgument[] _persistentArguments;
         [SerializeField] internal Object _target;
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
@@ -27,7 +27,7 @@
 
         private BaseInvokableCall _invokableCall;
 
-        public SerializedResponse()
+        public PersistentListener()
         {
             _initializationComplete = false;
         }
@@ -95,13 +95,13 @@
             if (_isStatic)
             {
                 if (_type.Type == null)
-                    Logger.LogWarning($"Tried to invoke a response to an event but the declaring type is missing: {_type.TypeNameAndAssembly}");
+                    Logger.LogWarning($"Tried to invoke a listener to an event but the declaring type is missing: {_type.TypeNameAndAssembly}");
 
                 return _type.Type;
             }
 
             if (_target is null) 
-                Logger.LogWarning("Tried to invoke a response to an event but the target is missing");
+                Logger.LogWarning("Tried to invoke a listener to an event but the target is missing");
 
             return _target?.GetType();
         }
@@ -117,7 +117,7 @@
             bool isProperty = _methodName.IsPropertySetter();
             string memberName = isProperty ? "property" : "method";
             string methodName = isProperty ? $"{_methodName.Substring(4)} setter" : _methodName;
-            Logger.LogWarning($"Tried to invoke a response to an event but the {memberName} {typeName}.{methodName} is missing.");
+            Logger.LogWarning($"Tried to invoke a listener to an event but the {memberName} {typeName}.{methodName} is missing.");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,7 +128,7 @@
 
             for (int i = 0; i < _arguments.Length; i++)
             {
-                var serializedArg = _serializedArguments[i];
+                var serializedArg = _persistentArguments[i];
                 
                 if (!serializedArg.IsSerialized)
                     _arguments[i] = args[serializedArg.Index];
@@ -137,14 +137,14 @@
 
         private object[] GetArguments()
         {
-            if (_serializedArguments.Length == 0)
+            if (_persistentArguments.Length == 0)
                 return null;
 
-            var arguments = new object[_serializedArguments.Length];
+            var arguments = new object[_persistentArguments.Length];
 
-            for (int i = 0; i < _serializedArguments.Length; i++)
+            for (int i = 0; i < _persistentArguments.Length; i++)
             {
-                var serializedArg = _serializedArguments[i];
+                var serializedArg = _persistentArguments[i];
 
                 if (serializedArg.IsSerialized)
                 {
@@ -161,7 +161,7 @@
 
         private IEnumerable<string> GetNullArgumentTypeNames()
         {
-            foreach (var argument in _serializedArguments)
+            foreach (var argument in _persistentArguments)
             {
                 if (argument.Type.Type == null)
                     yield return argument.Type.TypeNameAndAssembly;
@@ -170,16 +170,16 @@
 
         private Type[] GetArgumentTypes()
         {
-            var types = new Type[_serializedArguments.Length];
+            var types = new Type[_persistentArguments.Length];
 
-            for (int i = 0; i < _serializedArguments.Length; i++)
+            for (int i = 0; i < _persistentArguments.Length; i++)
             {
-                types[i] = _serializedArguments[i].Type.Type;
+                types[i] = _persistentArguments[i].Type.Type;
 
                 if (types[i] == null)
                 {
                     if (PackageSettings.ShowInvocationWarning)
-                        Logger.LogWarning($"Tried to invoke a response to an event but some of the argument types are missing: {string.Join(", ", GetNullArgumentTypeNames().Select(TypeReference.GetTypeNameFromNameAndAssembly))}.");
+                        Logger.LogWarning($"Tried to invoke a listener to an event but some of the argument types are missing: {string.Join(", ", GetNullArgumentTypeNames().Select(TypeReference.GetTypeNameFromNameAndAssembly))}.");
                     
                     return null;
                 }

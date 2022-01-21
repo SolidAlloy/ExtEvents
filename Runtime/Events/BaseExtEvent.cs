@@ -6,7 +6,7 @@
     [Serializable]
     public abstract class BaseExtEvent
     {
-        [SerializeField] internal SerializedResponse[] _responses;
+        [SerializeField] internal PersistentListener[] _persistentListeners;
         
 #if UNITY_EDITOR
         [SerializeField] internal bool Expanded = true;
@@ -14,9 +14,9 @@
 
         public void Initialize()
         {
-            for (int index = 0; index < _responses.Length; index++)
+            for (int index = 0; index < _persistentListeners.Length; index++)
             {
-                _responses[index].Initialize();
+                _persistentListeners[index].Initialize();
             }
         }
     }

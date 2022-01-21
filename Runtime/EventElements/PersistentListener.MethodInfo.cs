@@ -6,7 +6,7 @@
     using System.Runtime.CompilerServices;
     using UnityEngine;
 
-    public partial class SerializedResponse
+    public partial class PersistentListener
     {
         [SerializeField] internal string _methodName;
         

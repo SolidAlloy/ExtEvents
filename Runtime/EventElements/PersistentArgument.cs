@@ -5,7 +5,7 @@
     using UnityEngine;
 
     [Serializable]
-    public class SerializedArgument
+    public class PersistentArgument
     {
         public int Index;
         public bool IsSerialized;

@@ -11,7 +11,7 @@
         private const string FolderPath = "Assets/Plugins/ExtEvents/Resources";
         private const string AssetName = "ExtEvents_PackageSettings";
 
-        [Tooltip("Whether a warning should be logged when an event is invoked but the response property or method is missing")]
+        [Tooltip("Whether a warning should be logged when an event is invoked but the listener property or method is missing")]
         public bool _showInvocationWarning = true;
         public static bool ShowInvocationWarning => Instance._showInvocationWarning;
 

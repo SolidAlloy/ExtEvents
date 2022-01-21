@@ -14,12 +14,12 @@
     using UnityEngine.Events;
     using Object = UnityEngine.Object;
 
-    [CustomPropertyDrawer(typeof(SerializedResponse))]
-    public class SerializedResponsePropertyDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(PersistentListener))]
+    public class PersistentListenerDrawer : PropertyDrawer
     {
         private const float LinePadding = 2f;
 
-        private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo> _previousResponseValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedResponseInfo>();
+        private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo> _previousListenerValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo>();
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -32,18 +32,18 @@
             if (!MethodInfoDrawer.HasMethod(property))
                 return 0f;
 
-            float serializedArgumentsHeights = 0f;
+            float persistentArgumentsHeights = 0f;
 
-            var serializedArgsArray = property.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+            var serializedArgsArray = property.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
 
             for (int i = 0; i < serializedArgsArray.arraySize; i++)
             {
-                serializedArgumentsHeights += EditorGUI.GetPropertyHeight(serializedArgsArray.GetArrayElementAtIndex(i));
+                persistentArgumentsHeights += EditorGUI.GetPropertyHeight(serializedArgsArray.GetArrayElementAtIndex(i));
             }
 
-            serializedArgumentsHeights += LinePadding * serializedArgsArray.arraySize;
+            persistentArgumentsHeights += LinePadding * serializedArgsArray.arraySize;
 
-            return serializedArgumentsHeights;
+            return persistentArgumentsHeights;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -51,13 +51,13 @@
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
             currentRect.y += LinePadding;
             
-            var callStateProp = property.FindPropertyRelative(nameof(SerializedResponse._callState));
+            var callStateProp = property.FindPropertyRelative(nameof(PersistentListener._callState));
             (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
             callStateRect.width -= 10f;
 
             DrawCallState(callStateRect, callStateProp);
 
-            bool isStatic = property.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
+            bool isStatic = property.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
 
             DrawTypeField(property, targetRect, isStatic);
 
@@ -100,11 +100,11 @@
         {
             if (isStatic)
             {
-                EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(SerializedResponse._type)), GUIContent.none);
+                EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(PersistentListener._type)), GUIContent.none);
                 return;
             }
 
-            var targetProp = property.FindPropertyRelative(nameof(SerializedResponse._target));
+            var targetProp = property.FindPropertyRelative(nameof(PersistentListener._target));
             var newTarget = GenericObjectDrawer.ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
             if (targetProp.objectReferenceValue == newTarget) 
@@ -117,7 +117,7 @@
             else if (newTarget is Component || newTarget is ScriptableObject || newTarget is null)
             {
                 targetProp.objectReferenceValue = newTarget;
-                ExtEventPropertyDrawer.ResetListCache(property.GetParent().GetParent());
+                ExtEventDrawer.ResetListCache(property.GetParent().GetParent());
             }
             else
             {
@@ -125,16 +125,16 @@
             }
         }
 
-        public static void Reinitialize(SerializedProperty responseProp)
+        public static void Reinitialize(SerializedProperty listenerProperty)
         {
-            responseProp.serializedObject.ApplyModifiedProperties();
-            var response = PropertyObjectCache.GetObject<SerializedResponse>(responseProp);
-            response._initializationComplete = false;
+            listenerProperty.serializedObject.ApplyModifiedProperties();
+            var listener = PropertyObjectCache.GetObject<PersistentListener>(listenerProperty);
+            listener._initializationComplete = false;
         }
 
-        private bool DrawArguments(SerializedProperty responseProperty, List<string> paramNames, Rect rect)
+        private bool DrawArguments(SerializedProperty listenerProperty, List<string> paramNames, Rect rect)
         {
-            var argumentsArray = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+            var argumentsArray = listenerProperty.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
 
             if (paramNames == null || paramNames.Count < argumentsArray.arraySize)
                 return false;
@@ -152,45 +152,45 @@
             return EditorGUI.EndChangeCheck();
         }
 
-        private static bool MethodHasChanged(SerializedProperty responseProperty)
+        private static bool MethodHasChanged(SerializedProperty listenerProperty)
         {
-            string currentType = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
-            Object currentTarget = responseProperty.FindPropertyRelative(nameof(SerializedResponse._target)).objectReferenceValue;
-            string currentMethodName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName)).stringValue;
+            string currentType = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+            Object currentTarget = listenerProperty.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
+            string currentMethodName = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
 
-            var serializedObject = responseProperty.serializedObject;
-            var propertyPath = responseProperty.propertyPath;
+            var serializedObject = listenerProperty.serializedObject;
+            var propertyPath = listenerProperty.propertyPath;
 
-            if (!_previousResponseValues.TryGetValue((serializedObject, propertyPath), out var responseInfo))
+            if (!_previousListenerValues.TryGetValue((serializedObject, propertyPath), out var listenerInfo))
             {
-                _previousResponseValues.Add((serializedObject, propertyPath), new SerializedResponseInfo(currentType, currentTarget, currentMethodName));
+                _previousListenerValues.Add((serializedObject, propertyPath), new PersistentListenerInfo(currentType, currentTarget, currentMethodName));
                 return false;
             }
 
             bool infoChanged = false;
 
-            if (currentType != responseInfo.TypeName)
+            if (currentType != listenerInfo.TypeName)
             {
                 infoChanged = true;
-                responseInfo.TypeName = currentType;
+                listenerInfo.TypeName = currentType;
             }
 
-            if (currentTarget != responseInfo.Target)
+            if (currentTarget != listenerInfo.Target)
             {
                 infoChanged = true;
-                responseInfo.Target = currentTarget;
+                listenerInfo.Target = currentTarget;
             }
 
-            if (currentMethodName != responseInfo.MethodName)
+            if (currentMethodName != listenerInfo.MethodName)
             {
                 infoChanged = true;
-                responseInfo.MethodName = currentMethodName;
+                listenerInfo.MethodName = currentMethodName;
             }
 
             return infoChanged;
         }
 
-        private void DrawComponentDropdown(SerializedProperty responseProperty, SerializedProperty targetProperty, GameObject gameObject)
+        private void DrawComponentDropdown(SerializedProperty listenerProperty, SerializedProperty targetProperty, GameObject gameObject)
         {
             var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
             var dropdownItems = new List<DropdownItem<Component>>();
@@ -218,7 +218,7 @@
             {
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
-                ExtEventPropertyDrawer.ResetListCache(responseProperty.GetParent().GetParent());
+                ExtEventDrawer.ResetListCache(listenerProperty.GetParent().GetParent());
             });
 
             tree.ShowAsContext();
@@ -257,13 +257,13 @@
             };
         }
 
-        private class SerializedResponseInfo
+        private class PersistentListenerInfo
         {
             public string TypeName;
             public Object Target;
             public string MethodName;
 
-            public SerializedResponseInfo(string typeName, Object target, string methodName)
+            public PersistentListenerInfo(string typeName, Object target, string methodName)
             {
                 TypeName = typeName;
                 Target = target;

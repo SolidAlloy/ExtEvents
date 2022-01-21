@@ -10,7 +10,7 @@
     using UnityEngine.Events;
 
     [CustomPropertyDrawer(typeof(BaseExtEvent), true)]
-    public class ExtEventPropertyDrawer : PropertyDrawer
+    public class ExtEventDrawer : PropertyDrawer
     {
         private static readonly Dictionary<(SerializedObject, string), ExtEventInfo> _extEventInfoCache =
             new Dictionary<(SerializedObject, string), ExtEventInfo>();
@@ -53,17 +53,17 @@
             if (_listCache.TryGetValue((extEventProperty.serializedObject, extEventProperty.propertyPath), out var list))
                 return list;
 
-            var responsesProperty = extEventProperty.FindPropertyRelative(nameof(ExtEvent._responses));
+            var listenersProperty = extEventProperty.FindPropertyRelative(nameof(ExtEvent._persistentListeners));
 
-            var reorderableList = new FoldoutList(responsesProperty, label, extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)))
+            var reorderableList = new FoldoutList(listenersProperty, label, extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)))
             {
-                DrawElementCallback = (rect, index) => EditorGUI.PropertyField(rect, responsesProperty.GetArrayElementAtIndex(index)),
-                ElementHeightCallback = index => EditorGUI.GetPropertyHeight(responsesProperty.GetArrayElementAtIndex(index)),
+                DrawElementCallback = (rect, index) => EditorGUI.PropertyField(rect, listenersProperty.GetArrayElementAtIndex(index)),
+                ElementHeightCallback = index => EditorGUI.GetPropertyHeight(listenersProperty.GetArrayElementAtIndex(index)),
                 OnAddDropdownCallback = () =>
                 {
                     var menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Instance"), false, () => AddResponse(responsesProperty, false));
-                    menu.AddItem(new GUIContent("Static"), false, () => AddResponse(responsesProperty, true)); 
+                    menu.AddItem(new GUIContent("Instance"), false, () => AddListener(listenersProperty, false));
+                    menu.AddItem(new GUIContent("Static"), false, () => AddListener(listenersProperty, true)); 
                     menu.ShowAsContext();
                 }
             };
@@ -72,24 +72,24 @@
             return reorderableList;
         }
 
-        private static void AddResponse(SerializedProperty responsesProperty, bool isStatic)
+        private static void AddListener(SerializedProperty listenersProperty, bool isStatic)
         {
-            responsesProperty.arraySize++;
-            var lastElement = responsesProperty.GetArrayElementAtIndex(responsesProperty.arraySize - 1);
+            listenersProperty.arraySize++;
+            var lastElement = listenersProperty.GetArrayElementAtIndex(listenersProperty.arraySize - 1);
 
-            var isStaticProp = lastElement.FindPropertyRelative(nameof(SerializedResponse._isStatic));
+            var isStaticProp = lastElement.FindPropertyRelative(nameof(PersistentListener._isStatic));
             isStaticProp.boolValue = isStatic;
 
-            if (responsesProperty.arraySize == 1)
+            if (listenersProperty.arraySize == 1)
             {
-                var callStateProp = lastElement.FindPropertyRelative(nameof(SerializedResponse._callState));
+                var callStateProp = lastElement.FindPropertyRelative(nameof(PersistentListener._callState));
 
                 // This should be set in the class constructor, but it is not called when an element is added through serialized property.
-                // We only need this set for the first element in list. All other responses will copy the value of the previous element.
+                // We only need this set for the first element in list. All other listeners will copy the value of the previous element.
                 callStateProp.enumValueIndex = (int) UnityEventCallState.RuntimeOnly;
             }
 
-            responsesProperty.serializedObject.ApplyModifiedProperties();
+            listenersProperty.serializedObject.ApplyModifiedProperties();
         }
 
         private static string[] GetArgNames(SerializedProperty extEventProperty)

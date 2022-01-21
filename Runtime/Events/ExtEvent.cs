@@ -2,38 +2,32 @@
 {
     using System;
     using System.Collections.Generic;
+    using JetBrains.Annotations;
     using UnityEngine;
 
     [Serializable]
     public class ExtEvent : BaseExtEvent
     {
-        public IReadOnlyList<Action> DynamicListeners { get; }
-        public IReadOnlyList<Action> PersistentListeners { get; } // maybe not a list of actions
+        /// <summary>
+        /// The dynamic listeners list that you can add your listener to.
+        /// </summary>
+        [PublicAPI]
+        public event Action DynamicListeners;
 
         public void Invoke()
         {
-            for (int index = 0; index < _responses.Length; index++)
+            for (int index = 0; index < _persistentListeners.Length; index++)
             {
-                _responses[index].Invoke(null);
+                _persistentListeners[index].Invoke(null);
             }
         }
 
         public void AddPersistentListener(Action action)
         {
-
+            
         }
 
         public void RemovePersistentListener(Action action)
-        {
-
-        }
-
-        public void AddDynamicListener(Action action)
-        {
-
-        }
-
-        public void RemoveDynamicListener(Action action)
         {
 
         }

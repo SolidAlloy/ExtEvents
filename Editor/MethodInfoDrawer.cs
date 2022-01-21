@@ -35,24 +35,24 @@
             { "String", "string" }
         };
 
-        public static bool HasMethod(SerializedProperty responseProperty)
+        public static bool HasMethod(SerializedProperty listenerProperty)
         {
-            var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
-            string currentMethodName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName)).stringValue;
-            var declaringType = GetDeclaringType(responseProperty, isStatic);
-            return GetMethodInfo(declaringType, responseProperty, isStatic, currentMethodName) != null;
+            var isStatic = listenerProperty.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+            string currentMethodName = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
+            var declaringType = GetDeclaringType(listenerProperty, isStatic);
+            return GetMethodInfo(declaringType, listenerProperty, isStatic, currentMethodName) != null;
         }
 
-        public static void Draw(Rect rect, SerializedProperty responseProperty, out List<string> argNames)
+        public static void Draw(Rect rect, SerializedProperty listenerProperty, out List<string> argNames)
         {
-            var isStatic = responseProperty.FindPropertyRelative(nameof(SerializedResponse._isStatic)).boolValue;
-            var declaringType = GetDeclaringType(responseProperty, isStatic);
+            var isStatic = listenerProperty.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+            var declaringType = GetDeclaringType(listenerProperty, isStatic);
 
             var previousGuiColor = GUI.backgroundColor;
 
-            string currentMethodName = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName)).stringValue;
+            string currentMethodName = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
 
-            var methodInfo = GetMethodInfo(declaringType, responseProperty, isStatic, currentMethodName);
+            var methodInfo = GetMethodInfo(declaringType, listenerProperty, isStatic, currentMethodName);
 
             if (methodInfo != null)
             {
@@ -78,18 +78,18 @@
             {
                 if (EditorGUI.DropdownButton(rect, GUIContentHelper.Temp(popupLabel), FocusType.Passive))
                 {
-                    ShowMenu(declaringType, responseProperty, !isStatic, methodInfo);
+                    ShowMenu(declaringType, listenerProperty, !isStatic, methodInfo);
                 }
             }
 
             GUI.backgroundColor = previousGuiColor;
         }
 
-        private static Type GetDeclaringType(SerializedProperty responseProperty, bool isStatic)
+        private static Type GetDeclaringType(SerializedProperty listenerProperty, bool isStatic)
         {
             if (!isStatic)
             {
-                var target = responseProperty.FindPropertyRelative(nameof(SerializedResponse._target)).objectReferenceValue;
+                var target = listenerProperty.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
 
                 if (target == null)
                     return null;
@@ -97,18 +97,18 @@
                 return target.GetType();
             }
 
-            var declaringTypeName = responseProperty.FindPropertyRelative($"{nameof(SerializedResponse._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+            var declaringTypeName = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             return Type.GetType(declaringTypeName);
         }
 
-        private static void ShowMenu(Type declaringType, SerializedProperty responseProperty, bool isInstance, MethodInfo currentMethod)
+        private static void ShowMenu(Type declaringType, SerializedProperty listenerProperty, bool isInstance, MethodInfo currentMethod)
         {
             if (declaringType == null)
                 return;
 
             var menuItems = new List<DropdownItem<MethodInfo>>();
 
-            var paramTypes = ExtEventPropertyDrawer.CurrentEventInfo.ParamTypes;
+            var paramTypes = ExtEventDrawer.CurrentEventInfo.ParamTypes;
 
             if (isInstance)
                 menuItems.AddRange(FindInstanceMethods(declaringType, paramTypes));
@@ -122,7 +122,7 @@
             if (itemToSelect != null)
                 itemToSelect.IsSelected = true;
 
-            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, responseProperty));
+            var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, listenerProperty));
             dropdownMenu.ExpandAllFolders();
             dropdownMenu.ShowAsContext();
         }
@@ -163,12 +163,12 @@
             });
         }
 
-        private static MethodInfo GetMethodInfo(Type declaringType, SerializedProperty responseProperty, bool isStatic, string currentMethodName)
+        private static MethodInfo GetMethodInfo(Type declaringType, SerializedProperty listenerProperty, bool isStatic, string currentMethodName)
         {
             if (string.IsNullOrEmpty(currentMethodName) || declaringType == null)
                 return null;
 
-            var serializedArgs = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+            var serializedArgs = listenerProperty.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
             var argTypes = GetTypesFromSerializedArgs(serializedArgs);
 
             if (argTypes == null)
@@ -183,7 +183,7 @@
 
             for (int i = 0; i < types.Length; i++)
             {
-                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(SerializedArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
+                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
                 if (types[i] == null)
                     return null;
             }
@@ -256,13 +256,13 @@
             return paramType.IsUnitySerializable() || ArgumentTypeIsInList(paramType, eventParamTypes);
         }
 
-        private static void OnMethodChosen(MethodInfo previousMethod, MethodInfo newMethod, SerializedProperty responseProperty)
+        private static void OnMethodChosen(MethodInfo previousMethod, MethodInfo newMethod, SerializedProperty listenerProperty)
         {
             if (previousMethod == newMethod)
                 return;
             
-            var methodNameProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._methodName));
-            var serializedArgsProp = responseProperty.FindPropertyRelative(nameof(SerializedResponse._serializedArguments));
+            var methodNameProp = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName));
+            var serializedArgsProp = listenerProperty.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
 
             methodNameProp.stringValue = newMethod.Name;
             var parameters = newMethod.GetParameters();
@@ -274,35 +274,35 @@
                 InitializeArgumentProperty(argProp, parameters[i].ParameterType);
             }
 
-            SerializedResponsePropertyDrawer.Reinitialize(responseProperty);
-            ExtEventPropertyDrawer.ResetListCache(responseProperty.GetParent().GetParent());
+            PersistentListenerDrawer.Reinitialize(listenerProperty);
+            ExtEventDrawer.ResetListCache(listenerProperty.GetParent().GetParent());
         }
 
         private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)
         {
-            var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(SerializedArgument.Type)));
+            var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument.Type)));
             serializedTypeRef.SetType(type);
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
             // not in the middle of drawing ext events but rather after drawing all the events.
-            // argument => arguments array => response => response array => ext event.
-            var extEventInfo = ExtEventPropertyDrawer.GetExtEventInfo(argumentProp.GetParent().GetParent().GetParent().GetParent());
+            // argument => arguments array => listener => listeners array => ext event.
+            var extEventInfo = ExtEventDrawer.GetExtEventInfo(argumentProp.GetParent().GetParent().GetParent().GetParent());
 
             int matchingParamIndex = Array.FindIndex(extEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
             bool matchingParamFound = matchingParamIndex != -1;
 
-            argumentProp.FindPropertyRelative(nameof(SerializedArgument.IsSerialized)).boolValue = !matchingParamFound;
-            argumentProp.FindPropertyRelative(nameof(SerializedArgument._canBeDynamic)).boolValue = matchingParamFound;
+            argumentProp.FindPropertyRelative(nameof(PersistentArgument.IsSerialized)).boolValue = !matchingParamFound;
+            argumentProp.FindPropertyRelative(nameof(PersistentArgument._canBeDynamic)).boolValue = matchingParamFound;
 
             if (matchingParamFound)
             {
-                argumentProp.FindPropertyRelative(nameof(SerializedArgument.Index)).intValue = matchingParamIndex;
+                argumentProp.FindPropertyRelative(nameof(PersistentArgument.Index)).intValue = matchingParamIndex;
             }
             else
             {
                 // Save the default instance of a value to the string field so that the field is not empty.
-                var valueProperty = SerializedArgumentPropertyDrawer.GetValueProperty(argumentProp);
-                SerializedArgumentPropertyDrawer.SaveValueProperty(argumentProp, valueProperty);
+                var valueProperty = PersistentArgumentDrawer.GetValueProperty(argumentProp);
+                PersistentArgumentDrawer.SaveValueProperty(argumentProp, valueProperty);
             }
         }
 
