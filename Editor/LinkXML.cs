@@ -8,7 +8,7 @@
 
     public class LinkXML
     {
-        private readonly HashSet<Assembly> _assemblies = new HashSet<Assembly>();
+        private readonly Dictionary<string, Assembly> _assemblies = new Dictionary<string, Assembly>();
 
         public void AddMethods(IEnumerable<MethodInfo> methods)
         {
@@ -24,26 +24,22 @@
             // ReSharper disable once PossibleNullReferenceException
             string assemblyName = declaringType.Assembly.GetName().Name;
 
-            var assembly = new Assembly(assemblyName);
-            GetOrAdd(_assemblies, ref assembly);
+            if (!_assemblies.TryGetValue(assemblyName, out var assembly))
+            {
+                assembly = new Assembly(assemblyName);
+                _assemblies.Add(assemblyName, assembly);
+            }
 
-            var type = new ClassType(declaringType.FullName);
-            GetOrAdd(assembly.Types, ref type);
+            string declaringTypeName = declaringType.FullName;
+            // ReSharper disable once AssignNullToNotNullAttribute
+            if (!assembly.Types.TryGetValue(declaringTypeName, out var type))
+            {
+                type = new ClassType(declaringTypeName);
+                assembly.Types.Add(declaringTypeName, type);
+            }
 
             var method = new Method(methodInfo.Name, methodInfo.ReturnType.FullName, GetParameterTypeNames(methodInfo));
             type.Methods.Add(method);
-        }
-
-        private static void GetOrAdd<T>(HashSet<T> items, ref T newItem)
-        {
-            if (items.TryGetValue(newItem, out var existingAssembly))
-            {
-                newItem = existingAssembly;
-            }
-            else
-            {
-                items.Add(newItem);
-            }
         }
 
         public string Generate()
@@ -51,7 +47,7 @@
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("<linker>");
 
-            foreach (var assembly in _assemblies)
+            foreach (var assembly in _assemblies.Values)
             {
                 assembly.Generate(stringBuilder);
             }
@@ -77,7 +73,7 @@
         private class Assembly : IEquatable<Assembly>
         {
             private readonly string _fullName;
-            public readonly HashSet<ClassType> Types = new HashSet<ClassType>();
+            public readonly Dictionary<string, ClassType> Types = new Dictionary<string, ClassType>();
 
             public Assembly(string fullName)
             {
@@ -88,7 +84,7 @@
             {
                 stringBuilder.Append("  <assembly fullname=\"").Append(_fullName).AppendLine("\">");
 
-                foreach (var type in Types)
+                foreach (var type in Types.Values)
                 {
                     type.Generate(stringBuilder);
                 }
