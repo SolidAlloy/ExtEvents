@@ -104,7 +104,7 @@
 
         private void DrawDynamicValue(SerializedProperty property, Rect valueRect)
         {
-            var indexProp = property.FindPropertyRelative(nameof(PersistentArgument.Index));
+            var indexProp = property.FindPropertyRelative(nameof(PersistentArgument._index));
             var argNames = ExtEventDrawer.CurrentEventInfo.ArgNames;
             var currentArgName = argNames[indexProp.intValue];
 
@@ -170,7 +170,7 @@
 
         private void FindProperties(SerializedProperty property)
         {
-            _isSerialized = property.FindPropertyRelative(nameof(PersistentArgument.IsSerialized));
+            _isSerialized = property.FindPropertyRelative(nameof(PersistentArgument._isSerialized));
 
             if (_isSerialized.boolValue)
                 _valueProperty = GetValueProperty(property);
@@ -179,7 +179,7 @@
         private static Type GetTypeFromProperty(SerializedProperty argProperty)
         {
             var typeNameAndAssembly = argProperty
-                .FindPropertyRelative($"{nameof(PersistentArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}")
+                .FindPropertyRelative($"{nameof(PersistentArgument._type)}.{nameof(TypeReference._typeNameAndAssembly)}")
                 .stringValue;
             var type = Type.GetType(typeNameAndAssembly);
             Assert.IsNotNull(type);

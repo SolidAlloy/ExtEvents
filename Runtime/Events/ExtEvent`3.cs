@@ -2,15 +2,22 @@
 {
     using System;
     using System.Collections.Generic;
+    using JetBrains.Annotations;
     using UnityEngine;
 
     [Serializable]
     public class ExtEvent<T1, T2, T3> : BaseExtEvent
     {
         private readonly object[] _arguments = new object[3];
-
-        public IReadOnlyList<Action<T1, T2, T3>> DynamicListeners { get; }
-        public IReadOnlyList<Action<T1, T2, T3>> PersistentListeners { get; }
+        
+        private Type[] _eventParamTypes;
+        protected override Type[] EventParamTypes => _eventParamTypes ??= new Type[] { typeof(T1), typeof(T2), typeof(T3) };
+        
+        /// <summary>
+        /// The dynamic listeners list that you can add your listener to.
+        /// </summary>
+        [PublicAPI]
+        public event Action<T1, T2, T3> DynamicListeners; 
 
         public void Invoke(T1 arg1, T2 arg2, T3 arg3)
         {
@@ -18,30 +25,13 @@
             _arguments[1] = arg2;
             _arguments[2] = arg3;
 
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (int index = 0; index < _persistentListeners.Length; index++)
             {
                 _persistentListeners[index].Invoke(_arguments);
             }
-        }
-
-        public void AddPersistentListener(Action<T1, T2, T3> action)
-        {
-
-        }
-
-        public void RemovePersistentListener(Action<T1, T2, T3> action)
-        {
-
-        }
-
-        public void AddDynamicListener(Action<T1, T2, T3> action)
-        {
-
-        }
-
-        public void RemoveDynamicListener(Action<T1, T2, T3> action)
-        {
-
+            
+            DynamicListeners?.Invoke(arg1, arg2, arg3);
         }
     }
 }

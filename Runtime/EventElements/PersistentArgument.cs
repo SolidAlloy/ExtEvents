@@ -7,9 +7,9 @@
     [Serializable]
     public class PersistentArgument
     {
-        public int Index;
-        public bool IsSerialized;
-        public TypeReference Type;
+        [SerializeField] internal int _index;
+        [SerializeField] internal bool _isSerialized;
+        [SerializeField] internal TypeReference _type;
         [SerializeField] internal string _serializedArg;
         [SerializeField] internal bool _canBeDynamic;
 
@@ -17,11 +17,37 @@
         {
             get
             {
-                if (!IsSerialized)
+                if (!_isSerialized)
                     throw new InvalidOperationException();
 
-                return GetValue(_serializedArg, Type);
+                return GetValue(_serializedArg, _type);
             }
+        }
+        
+        public static PersistentArgument CreateSerialized<T>(T value)
+        {
+            return CreateSerialized(value, typeof(T));
+        }
+
+        public static PersistentArgument CreateSerialized(object value, Type argumentType)
+        {
+            return new PersistentArgument
+            {
+                _isSerialized = false,
+                _type = argumentType,
+                _serializedArg = SerializeValue(value, argumentType)
+            };
+        }
+
+        public static PersistentArgument CreateDynamic(int eventArgumentIndex, Type argumentType)
+        {
+            return new PersistentArgument
+            {
+                _isSerialized = false,
+                _type = argumentType,
+                _index = eventArgumentIndex,
+                _canBeDynamic = true
+            };
         }
 
         public static object GetValue(string serializedArg, Type valueType)

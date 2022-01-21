@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using JetBrains.Annotations;
     using UnityEngine;
 
     [Serializable]
@@ -9,37 +10,26 @@
     {
         private readonly object[] _arguments = new object[1];
 
-        public IReadOnlyList<Action<T>> DynamicListeners { get; }
-        public IReadOnlyList<Action<T>> PersistentListeners { get; }
+        private Type[] _eventParamTypes;
+        protected override Type[] EventParamTypes => _eventParamTypes ??= new Type[] { typeof(T) };
+
+        /// <summary>
+        /// The dynamic listeners list that you can add your listener to.
+        /// </summary>
+        [PublicAPI]
+        public event Action<T> DynamicListeners; 
 
         public void Invoke(T arg)
         {
             _arguments[0] = arg;
 
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (int index = 0; index < _persistentListeners.Length; index++)
             {
                 _persistentListeners[index].Invoke(_arguments);
             }
-        }
-
-        public void AddPersistentListener(Action<T> action)
-        {
-
-        }
-
-        public void RemovePersistentListener(Action<T> action)
-        {
-
-        }
-
-        public void AddDynamicListener(Action<T> action)
-        {
-
-        }
-
-        public void RemoveDynamicListener(Action<T> action)
-        {
-
+            
+            DynamicListeners?.Invoke(arg);
         }
     }
 }

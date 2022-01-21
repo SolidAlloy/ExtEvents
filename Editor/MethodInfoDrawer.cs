@@ -97,7 +97,7 @@
                 return target.GetType();
             }
 
-            var declaringTypeName = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+            var declaringTypeName = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._staticType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             return Type.GetType(declaringTypeName);
         }
 
@@ -183,7 +183,7 @@
 
             for (int i = 0; i < types.Length; i++)
             {
-                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument.Type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
+                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
                 if (types[i] == null)
                     return null;
             }
@@ -219,41 +219,7 @@
         {
             // the method cannot be used if it contains at least one argument that is not serializable nor it is passed from the event.
             return declaringType.GetMethods(bindingFlags)
-                .Where(method =>
-                {
-                    return IsEligibleByVisibility(method) 
-                           && !method.Name.IsPropertyGetter()
-                           && !IsMethodPure(method) 
-                           && method.GetParameters().All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
-                });
-        }
-
-        private static bool IsEligibleByVisibility(MethodInfo method)
-        {
-            if (method.IsPublic)
-                return true;
-            
-            if (method.IsAssembly && EditorPackageSettings.IncludeInternalMethods)
-                return true;
-
-            if ((method.IsPrivate || method.IsFamily) && EditorPackageSettings.IncludePrivateMethods)
-                return true;
-
-            return method.HasAttribute<ExtEventListener>();
-        }
-
-        private static bool IsMethodPure(MethodInfo method)
-        {
-            if (method.ReturnType == typeof(void))
-                return false;
-
-            return method.HasAttribute<PureAttribute>() ||
-                   method.HasAttribute<System.Diagnostics.Contracts.PureAttribute>();
-        }
-
-        private static bool ParamCanBeUsed(Type paramType, Type[] eventParamTypes)
-        {
-            return paramType.IsUnitySerializable() || ArgumentTypeIsInList(paramType, eventParamTypes);
+                .Where(method => ExtEventHelper.MethodIsEligible(method, eventParamTypes, EditorPackageSettings.IncludeInternalMethods, EditorPackageSettings.IncludePrivateMethods));
         }
 
         private static void OnMethodChosen(MethodInfo previousMethod, MethodInfo newMethod, SerializedProperty listenerProperty)
@@ -280,7 +246,7 @@
 
         private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)
         {
-            var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument.Type)));
+            var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._type)));
             serializedTypeRef.SetType(type);
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
@@ -291,12 +257,12 @@
             int matchingParamIndex = Array.FindIndex(extEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
             bool matchingParamFound = matchingParamIndex != -1;
 
-            argumentProp.FindPropertyRelative(nameof(PersistentArgument.IsSerialized)).boolValue = !matchingParamFound;
+            argumentProp.FindPropertyRelative(nameof(PersistentArgument._isSerialized)).boolValue = !matchingParamFound;
             argumentProp.FindPropertyRelative(nameof(PersistentArgument._canBeDynamic)).boolValue = matchingParamFound;
 
             if (matchingParamFound)
             {
-                argumentProp.FindPropertyRelative(nameof(PersistentArgument.Index)).intValue = matchingParamIndex;
+                argumentProp.FindPropertyRelative(nameof(PersistentArgument._index)).intValue = matchingParamIndex;
             }
             else
             {
@@ -304,11 +270,6 @@
                 var valueProperty = PersistentArgumentDrawer.GetValueProperty(argumentProp);
                 PersistentArgumentDrawer.SaveValueProperty(argumentProp, valueProperty);
             }
-        }
-
-        private static bool ArgumentTypeIsInList(Type argType, Type[] eventParamTypes)
-        {
-            return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType));
         }
 
         private static string GetParamNames(MethodInfo methodInfo)

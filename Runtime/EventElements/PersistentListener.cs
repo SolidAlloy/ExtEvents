@@ -18,7 +18,7 @@
         [SerializeField] internal Object _target;
         [SerializeField] internal bool _isStatic;
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
+        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _staticType; // TODO: remove includeAdditionalAssemblies
 
         [NonSerialized] internal bool _initializationComplete = false;
         [NonSerialized] private bool _initializationSuccessful = false;
@@ -27,9 +27,14 @@
 
         private BaseInvokableCall _invokableCall;
 
-        public PersistentListener()
+        internal PersistentListener(string methodName, bool isStatic, Object target, UnityEventCallState callState, Type staticType, PersistentArgument[] persistentArguments)
         {
-            _initializationComplete = false;
+            _methodName = methodName;
+            _isStatic = isStatic;
+            _target = target;
+            _callState = callState;
+            _staticType = staticType;
+            _persistentArguments = persistentArguments;
         }
 
         public void Invoke([CanBeNull] object[] args)
@@ -94,10 +99,10 @@
         {
             if (_isStatic)
             {
-                if (_type.Type == null)
-                    Logger.LogWarning($"Tried to invoke a listener to an event but the declaring type is missing: {_type.TypeNameAndAssembly}");
+                if (_staticType.Type == null)
+                    Logger.LogWarning($"Tried to invoke a listener to an event but the declaring type is missing: {_staticType.TypeNameAndAssembly}");
 
-                return _type.Type;
+                return _staticType.Type;
             }
 
             if (_target is null) 
@@ -113,7 +118,7 @@
                 return;
 #endif
 
-            string typeName = _isStatic ? _type.TypeNameAndAssembly : _target.GetType().Name;
+            string typeName = _isStatic ? _staticType.TypeNameAndAssembly : _target.GetType().Name;
             bool isProperty = _methodName.IsPropertySetter();
             string memberName = isProperty ? "property" : "method";
             string methodName = isProperty ? $"{_methodName.Substring(4)} setter" : _methodName;
@@ -130,8 +135,8 @@
             {
                 var serializedArg = _persistentArguments[i];
                 
-                if (!serializedArg.IsSerialized)
-                    _arguments[i] = args[serializedArg.Index];
+                if (!serializedArg._isSerialized)
+                    _arguments[i] = args[serializedArg._index];
             }
         }
 
@@ -146,7 +151,7 @@
             {
                 var serializedArg = _persistentArguments[i];
 
-                if (serializedArg.IsSerialized)
+                if (serializedArg._isSerialized)
                 {
                     arguments[i] = serializedArg.Value;
                 }
@@ -163,8 +168,8 @@
         {
             foreach (var argument in _persistentArguments)
             {
-                if (argument.Type.Type == null)
-                    yield return argument.Type.TypeNameAndAssembly;
+                if (argument._type.Type == null)
+                    yield return argument._type.TypeNameAndAssembly;
             }
         }
 
@@ -174,7 +179,7 @@
 
             for (int i = 0; i < _persistentArguments.Length; i++)
             {
-                types[i] = _persistentArguments[i].Type.Type;
+                types[i] = _persistentArguments[i]._type.Type;
 
                 if (types[i] == null)
                 {

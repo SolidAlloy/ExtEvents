@@ -100,7 +100,7 @@
         {
             if (isStatic)
             {
-                EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(PersistentListener._type)), GUIContent.none);
+                EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(PersistentListener._staticType)), GUIContent.none);
                 return;
             }
 
@@ -154,7 +154,7 @@
 
         private static bool MethodHasChanged(SerializedProperty listenerProperty)
         {
-            string currentType = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+            string currentType = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._staticType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             Object currentTarget = listenerProperty.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
             string currentMethodName = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
 

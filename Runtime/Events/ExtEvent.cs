@@ -1,13 +1,13 @@
 ﻿namespace ExtEvents
 {
     using System;
-    using System.Collections.Generic;
     using JetBrains.Annotations;
-    using UnityEngine;
 
     [Serializable]
     public class ExtEvent : BaseExtEvent
     {
+        protected override Type[] EventParamTypes => Type.EmptyTypes;
+        
         /// <summary>
         /// The dynamic listeners list that you can add your listener to.
         /// </summary>
@@ -16,20 +16,13 @@
 
         public void Invoke()
         {
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (int index = 0; index < _persistentListeners.Length; index++)
             {
                 _persistentListeners[index].Invoke(null);
             }
-        }
-
-        public void AddPersistentListener(Action action)
-        {
             
-        }
-
-        public void RemovePersistentListener(Action action)
-        {
-
+            DynamicListeners?.Invoke();
         }
     }
 }
