@@ -17,7 +17,7 @@
 
         private BaseInvokableCall GetInvokableCall(Type declaringType, Type[] paramTypes, object target)
         {
-            var method = GetMethod(declaringType, paramTypes);
+            var method = GetMethod(declaringType, paramTypes, _methodName, GetFlags(_isStatic));
 
             if (method == null)
                 return null;
@@ -30,9 +30,9 @@
             return CreateInvokableCall(invokableCallType, target, method);
         }
 
-        private MethodInfo GetMethod(Type declaringType, Type[] argumentTypes)
+        internal static MethodInfo GetMethod(Type declaringType, Type[] argumentTypes, string methodName, BindingFlags flags)
         {
-            return declaringType.GetMethod(_methodName, Flags, null, CallingConventions.Any, argumentTypes, null);
+            return declaringType.GetMethod(methodName, flags, null, CallingConventions.Any, argumentTypes, null);
         }
 
         private Type GetInvokableCallDefinition(int paramTypesCount, bool isVoid)

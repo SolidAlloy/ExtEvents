@@ -101,8 +101,7 @@
             }
         }
 
-        private static IEnumerable<SerializedObject> GetSerializedObjectsFromPrefab(Object partOfPrefab,
-            FoundObjects foundObjects)
+        private static IEnumerable<SerializedObject> GetSerializedObjectsFromPrefab(Object partOfPrefab, FoundObjects foundObjects)
         {
             var prefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(partOfPrefab);
 

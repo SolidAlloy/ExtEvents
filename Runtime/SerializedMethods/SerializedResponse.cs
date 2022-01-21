@@ -20,14 +20,12 @@
         [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
         [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _type; // TODO: remove includeAdditionalAssemblies
 
-        [NonSerialized] internal bool _initializationComplete;
-        [NonSerialized] private bool _initializationSuccessful;
+        [NonSerialized] internal bool _initializationComplete = false;
+        [NonSerialized] private bool _initializationSuccessful = false;
 
         private object[] _arguments;
 
         private BaseInvokableCall _invokableCall;
-
-        private BindingFlags Flags => BindingFlags.Public | (_isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         public SerializedResponse()
         {
@@ -57,6 +55,8 @@
             _initializationComplete = true;
             InvokeImpl(args);
         }
+        
+        internal static BindingFlags GetFlags(bool isStatic) => BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvokeImpl(object[] args)
@@ -123,12 +123,15 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillWithDynamicArgs(object[] args)
         {
-            if (args == null)
+            if (args == null || _arguments == null)
                 return;
 
             for (int i = 0; i < _arguments.Length; i++)
             {
-                _arguments[i] ??= args[_serializedArguments[i].Index];
+                var serializedArg = _serializedArguments[i];
+                
+                if (!serializedArg.IsSerialized)
+                    _arguments[i] = args[serializedArg.Index];
             }
         }
 

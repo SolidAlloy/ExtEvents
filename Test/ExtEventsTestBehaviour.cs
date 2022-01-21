@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 namespace Test
 {
+    using System.IO;
     using ExtEvents;
     using ExtEvents.Editor;
     using Sirenix.OdinInspector;
@@ -16,34 +17,13 @@ namespace Test
         [SerializeField] private SceneAsset _scene;
         [SerializeField] private GameObject _prefab;
 
+        [SerializeField] private string _linkXmlPath = "Assets/test-link.xml";
+
         public ExtEvent VoidEvent;
 
         public ExtEvent[] Events;
 
         public string[] EmptyArray;
-
-        [Button]
-        public void FindOnScene()
-        {
-            var scenePath = AssetDatabase.GetAssetPath(_scene);
-            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
-            var rootGameObjects = scene.GetRootGameObjects();
-
-            foreach (GameObject rootGameObject in rootGameObjects)
-            {
-                var components = rootGameObject.GetComponentsInChildren<Component>();
-
-                foreach (Component component in components)
-                {
-                    foreach ((var prop, var extEvent) in ExtEventHelper.FindExtEvents(component))
-                    {
-                        Debug.Log($"found prop {prop.propertyPath}, extEvent not null {extEvent != null}");
-                    }
-                }
-            }
-
-            EditorSceneManager.CloseScene(scene, true);
-        }
 
         [Button]
         public void TestBuildAnalyzer()
@@ -64,6 +44,19 @@ namespace Test
             {
                 Debug.Log(scriptableObjectName);
             }
+        }
+
+        [Button]
+        public void TestLinkXml()
+        {
+            var serializedObjects = BuildAnalyzer.GetAssetsInBuild(new BuildAnalyzer.FoundObjects());
+            var properties = ExtEventHelper.FindExtEventProperties(serializedObjects);
+            var methods = ExtEventHelper.GetMethods(properties);
+            var linkXml = new LinkXML();
+            linkXml.AddMethods(methods);
+            string fileContent = linkXml.Generate();
+            File.WriteAllText(_linkXmlPath, fileContent);
+            AssetDatabase.Refresh();
         }
 
         [Button]
