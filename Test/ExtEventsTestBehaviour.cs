@@ -14,70 +14,12 @@ namespace Test
     public class ExtEventsTestBehaviour : MonoBehaviour
     {
         [SerializeField] private int _iterationCount = 1_000_000;
-        [SerializeField] private SceneAsset _scene;
-        [SerializeField] private GameObject _prefab;
-
-        [SerializeField] private string _linkXmlPath = "Assets/test-link.xml";
 
         public ExtEvent VoidEvent;
 
         public ExtEvent[] Events;
 
         public string[] EmptyArray;
-
-        [Button]
-        public void TestBuildAnalyzer()
-        {
-            var foundObjects = new BuildAnalyzer.FoundObjects();
-
-            foreach (SerializedObject serializedObject in BuildAnalyzer.GetAssetsInBuild(foundObjects))
-            {
-                // Debug.Log(serializedObject.targetObject.name);
-            }
-
-            foreach (string prefabPath in foundObjects.Prefabs)
-            {
-                Debug.Log(prefabPath);
-            }
-
-            foreach (string scriptableObjectName in foundObjects.ScriptableObjectNames)
-            {
-                Debug.Log(scriptableObjectName);
-            }
-        }
-
-        [Button]
-        public void TestLinkXml()
-        {
-            var serializedObjects = BuildAnalyzer.GetAssetsInBuild(new BuildAnalyzer.FoundObjects());
-            var properties = ExtEventHelper.FindExtEventProperties(serializedObjects);
-            var methods = ExtEventHelper.GetMethods(properties);
-            var linkXml = new LinkXML();
-            linkXml.AddMethods(methods);
-            string fileContent = linkXml.Generate();
-            File.WriteAllText(_linkXmlPath, fileContent);
-            AssetDatabase.Refresh();
-        }
-
-        [Button]
-        public void TestCrossReference()
-        {
-            var foundObjects = new BuildAnalyzer.FoundObjects();
-            foreach (SerializedObject serializedObject in BuildAnalyzer.GetSerializedObjectsFromGameObject(_prefab, foundObjects))
-            {
-                //
-            }
-
-            foreach (string prefabPath in foundObjects.Prefabs)
-            {
-                Debug.Log(prefabPath);
-            }
-
-            foreach (string scriptableObjectName in foundObjects.ScriptableObjectNames)
-            {
-                Debug.Log(scriptableObjectName);
-            }
-        }
 
         [Button]
         public void Test()
