@@ -50,6 +50,46 @@
             base.OnGUI(position, property, label);
         }
 
+        public static SerializedProperty GetValueProperty(SerializedProperty argumentProperty)
+        {
+            var mainSerializedObject = argumentProperty.serializedObject;
+            var mainPropertyPath = argumentProperty.propertyPath;
+            var type = GetTypeFromProperty(argumentProperty);
+
+            if (_valuePropertyCache.TryGetValue((mainSerializedObject, mainPropertyPath), out var valueProperty))
+            {
+                if (valueProperty.GetObjectType() == type)
+                {
+                    return valueProperty;
+                }
+                else
+                {
+                    _valuePropertyCache.Remove((mainSerializedObject, mainPropertyPath));
+                    return GetValueProperty(argumentProperty);
+                }
+            }
+
+            var serializedValue = argumentProperty.FindPropertyRelative(nameof(SerializedArgument._serializedArg)).stringValue;
+
+            object value = SerializedArgument.GetValue(serializedValue, type);
+            Type soType = ScriptableObjectCache.GetClass(type);
+            var so = ScriptableObject.CreateInstance(soType);
+            var serializedObject = new SerializedObject(so);
+            var soValueField = soType.GetField(nameof(DeserializedValueHolder<int>.Value));
+            soValueField.SetValue(so, value);
+            valueProperty = serializedObject.FindProperty(nameof(DeserializedValueHolder<int>.Value));
+            _valuePropertyCache.Add((mainSerializedObject, mainPropertyPath), valueProperty);
+            return valueProperty;
+        }
+
+        public static void SaveValueProperty(SerializedProperty argumentProperty, SerializedProperty valueProperty)
+        {
+            valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            var value = valueProperty.GetObject();
+            var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(SerializedArgument._serializedArg));
+            serializedArgProp.stringValue = SerializedArgument.SerializeValue(value, valueProperty.GetObjectType());
+        }
+
         protected override void DrawValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
         {
             if (_isSerialized.boolValue)
@@ -124,10 +164,7 @@
             DrawValueProperty(property, valueRect, totalRect, indentLevel);
             if (EditorGUI.EndChangeCheck())
             {
-                _valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-                var value = _valueProperty.GetObject();
-                var serializedArgProp = property.FindPropertyRelative(nameof(SerializedArgument._serializedArg));
-                serializedArgProp.stringValue = SerializedArgument.SerializeValue(value, _valueProperty.GetObjectType());
+                SaveValueProperty(property, _valueProperty);
             }
         }
 
@@ -137,38 +174,6 @@
 
             if (_isSerialized.boolValue)
                 _valueProperty = GetValueProperty(property);
-        }
-
-        private static SerializedProperty GetValueProperty(SerializedProperty mainProperty)
-        {
-            var mainSerializedObject = mainProperty.serializedObject;
-            var mainPropertyPath = mainProperty.propertyPath;
-            var type = GetTypeFromProperty(mainProperty);
-
-            if (_valuePropertyCache.TryGetValue((mainSerializedObject, mainPropertyPath), out var valueProperty))
-            {
-                if (valueProperty.GetObjectType() == type)
-                {
-                    return valueProperty;
-                }
-                else
-                {
-                    _valuePropertyCache.Remove((mainSerializedObject, mainPropertyPath));
-                    return GetValueProperty(mainProperty);
-                }
-            }
-
-            var serializedValue = mainProperty.FindPropertyRelative(nameof(SerializedArgument._serializedArg)).stringValue;
-
-            object value = SerializedArgument.GetValue(serializedValue, type);
-            Type soType = ScriptableObjectCache.GetClass(type);
-            var so = ScriptableObject.CreateInstance(soType);
-            var serializedObject = new SerializedObject(so);
-            var soValueField = soType.GetField(nameof(DeserializedValueHolder<int>.Value));
-            soValueField.SetValue(so, value);
-            valueProperty = serializedObject.FindProperty(nameof(DeserializedValueHolder<int>.Value));
-            _valuePropertyCache.Add((mainSerializedObject, mainPropertyPath), valueProperty);
-            return valueProperty;
         }
 
         private static Type GetTypeFromProperty(SerializedProperty argProperty)

@@ -295,7 +295,15 @@
             argumentProp.FindPropertyRelative(nameof(SerializedArgument._canBeDynamic)).boolValue = matchingParamFound;
 
             if (matchingParamFound)
+            {
                 argumentProp.FindPropertyRelative(nameof(SerializedArgument.Index)).intValue = matchingParamIndex;
+            }
+            else
+            {
+                // Save the default instance of a value to the string field so that the field is not empty.
+                var valueProperty = SerializedArgumentPropertyDrawer.GetValueProperty(argumentProp);
+                SerializedArgumentPropertyDrawer.SaveValueProperty(argumentProp, valueProperty);
+            }
         }
 
         private static bool ArgumentTypeIsInList(Type argType, Type[] eventParamTypes)
