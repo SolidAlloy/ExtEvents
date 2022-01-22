@@ -1,6 +1,6 @@
 ﻿namespace ExtEvents
 {
-    public static class StringExtensions
+    internal static class StringExtensions
     {
         public static bool IsPropertySetter(this string methodName)
         {

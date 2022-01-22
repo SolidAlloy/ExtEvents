@@ -14,6 +14,10 @@
         [PublicAPI]
         public event Action DynamicListeners;
 
+        /// <summary>
+        /// Invokes all listeners of the event.
+        /// </summary>
+        [PublicAPI]
         public void Invoke()
         {
             // ReSharper disable once ForCanBeConvertedToForeach

@@ -6,10 +6,19 @@
 
     // We use [Preserve] a lot here because link.xml cannot be used in a package.
     
+    /// <summary>
+    /// An invokable call constructs a delegate from a method info so that it is invoked efficiently.
+    /// The generic types derived from BaseInvokableCall are constructed at runtime by <see cref="PersistentListener"/>.
+    /// </summary>
     [Preserve]
     public abstract class BaseInvokableCall
     {
-        protected BaseInvokableCall(object target, MethodInfo method) { }
+        public readonly MethodInfo Method;
+
+        protected BaseInvokableCall(object target, MethodInfo method)
+        {
+            Method = method;
+        }
 
         [Preserve]
         public abstract void Invoke(object[] args);

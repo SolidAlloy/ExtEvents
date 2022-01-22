@@ -4,11 +4,34 @@
     using System.Collections.Generic;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using JetBrains.Annotations;
+    using SolidUtilities;
     using UnityEngine;
 
     public partial class PersistentListener
     {
         [SerializeField] internal string _methodName;
+
+        /// <summary>
+        /// The name of the method that is invoked by this listener.
+        /// </summary>
+        [PublicAPI]
+        public string MethodName => _methodName;
+        
+        /// <summary>
+        /// The method info of this listener, or null if the method is not set or missing.
+        /// </summary>
+        [PublicAPI]
+        public MethodInfo MethodInfo
+        {
+            get
+            {
+                if (!_initializationComplete) 
+                    Initialize();
+
+                return _invokableCall?.Method;
+            }
+        }
         
         private static readonly Dictionary<Type, Func<object, MethodInfo, BaseInvokableCall>> _constructorDictionary =
             new Dictionary<Type, Func<object, MethodInfo, BaseInvokableCall>>();
@@ -22,10 +45,16 @@
             if (method == null)
                 return null;
 
-            if (paramTypes.Length == 0)
+            bool isVoid = method.ReturnType == typeof(void);
+            
+            if (paramTypes.Length == 0 && isVoid)
                 return new InvokableActionCall(target, method);
             
-            Type genericTypeDefinition = GetInvokableCallDefinition(paramTypes.Length, method.ReturnType == typeof(void));
+            Type genericTypeDefinition = GetInvokableCallDefinition(paramTypes.Length, isVoid);
+            
+            if (!isVoid)
+                ArrayHelper.Add(ref paramTypes, method.ReturnType);
+
             Type invokableCallType = genericTypeDefinition.MakeGenericType(paramTypes);
             return CreateInvokableCall(invokableCallType, target, method);
         }
@@ -50,9 +79,10 @@
             
             return paramTypesCount switch
             {
-                1 => typeof(InvokableFuncCall<>),
-                2 => typeof(InvokableFuncCall<,>),
-                3 => typeof(InvokableFuncCall<,,>),
+                0 => typeof(InvokableFuncCall<>),
+                1 => typeof(InvokableFuncCall<,>),
+                2 => typeof(InvokableFuncCall<,,>),
+                3 => typeof(InvokableFuncCall<,,,>),
                 _ => throw new NotImplementedException()
             };
         }

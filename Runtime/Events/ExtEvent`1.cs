@@ -1,9 +1,7 @@
 ﻿namespace ExtEvents
 {
     using System;
-    using System.Collections.Generic;
     using JetBrains.Annotations;
-    using UnityEngine;
 
     [Serializable]
     public class ExtEvent<T> : BaseExtEvent
@@ -19,6 +17,10 @@
         [PublicAPI]
         public event Action<T> DynamicListeners;
 
+        /// <summary>
+        /// Invokes all listeners of the event.
+        /// </summary>
+        [PublicAPI]
         public void Invoke(T arg)
         {
             _arguments[0] = arg;

@@ -11,21 +11,48 @@
     using UnityEngine.Events;
     using Object = UnityEngine.Object;
 
+    /// <summary>
+    /// A persistent listener of an <see cref="ExtEvent"/> that contains a method to invoke and a number of serialized arguments.
+    /// Can be configured in ExtEvent's inspector.
+    /// </summary>
     [Serializable]
     public partial class PersistentListener
     {
         [SerializeField] internal PersistentArgument[] _persistentArguments;
+        
+        /// <summary>
+        /// A list of persistent arguments the listener has. Each argument can be either dynamic (passed when the event is invoked) or serialized (set in the editor UI before-hand).
+        /// </summary>
+        [PublicAPI]
         public IReadOnlyList<PersistentArgument> PersistentArguments => _persistentArguments;
 
         [SerializeField] internal Object _target;
+        
+        /// <summary>
+        /// The target object of a listener which method is invoked. For static listeners, it is null.
+        /// </summary>
+        [PublicAPI]
         public Object Target => _target;
 
         [SerializeField] internal bool _isStatic;
+        
+        /// <summary>
+        /// Whether the listener invokes a static or instance method.
+        /// </summary>
+        [PublicAPI]
         public bool IsStatic => _isStatic;
         
+        /// <summary>
+        /// Whether the listener is invoked when the play mode is not entered, or is turned off permanently.
+        /// </summary>
         [SerializeField] public UnityEventCallState CallState = UnityEventCallState.RuntimeOnly;
 
         [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _staticType; // TODO: remove includeAdditionalAssemblies
+
+        /// <summary>
+        /// The declaring type of a static method when the listener is static.
+        /// </summary>
+        [PublicAPI]
         public Type StaticType => _staticType;
 
         [NonSerialized] internal bool _initializationComplete;
@@ -80,6 +107,10 @@
             _invokableCall.Invoke(_arguments);
         }
 
+        /// <summary>
+        /// Prepare the listener for the invocation.
+        /// </summary>
+        /// <returns>Whether the initialization is successful.</returns>
         public bool Initialize()
         {
             var declaringType = GetDeclaringType();
