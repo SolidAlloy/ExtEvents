@@ -199,8 +199,8 @@
         
         private static IEnumerable<DropdownItem<MethodInfo>> FindInstanceMethods(Type declaringType, Type[] eventParamTypes)
         {
-            var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            return GetDropdownItems(staticMethods, "Instance");
+            var instanceMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            return GetDropdownItems(instanceMethods, "Instance");
         }
 
         private static IEnumerable<DropdownItem<MethodInfo>> GetDropdownItems(IEnumerable<MethodInfo> methods, string memberDescription)

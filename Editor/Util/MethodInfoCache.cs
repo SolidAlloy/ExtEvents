@@ -15,7 +15,7 @@
             if (_cache.TryGetValue((type, methodName, argTypes), out var value))
                 return value;
 
-            var flags = BindingFlags.Public | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
             var item = type.GetMethod(methodName, flags, null, CallingConventions.Any, argTypes, null); // TODO: check if we need callingconventions.any
             _cache.Add((type, methodName, argTypes), item);
             return item;

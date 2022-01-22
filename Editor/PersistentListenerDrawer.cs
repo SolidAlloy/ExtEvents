@@ -51,7 +51,7 @@
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
             currentRect.y += LinePadding;
             
-            var callStateProp = property.FindPropertyRelative(nameof(PersistentListener._callState));
+            var callStateProp = property.FindPropertyRelative(nameof(PersistentListener.CallState));
             (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
             callStateRect.width -= 10f;
 

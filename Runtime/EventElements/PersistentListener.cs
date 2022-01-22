@@ -15,36 +15,46 @@
     public partial class PersistentListener
     {
         [SerializeField] internal PersistentArgument[] _persistentArguments;
-        [SerializeField] internal Object _target;
-        [SerializeField] internal bool _isStatic;
-        [SerializeField] internal UnityEventCallState _callState = UnityEventCallState.RuntimeOnly;
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _staticType; // TODO: remove includeAdditionalAssemblies
+        public IReadOnlyList<PersistentArgument> PersistentArguments => _persistentArguments;
 
-        [NonSerialized] internal bool _initializationComplete = false;
-        [NonSerialized] private bool _initializationSuccessful = false;
+        [SerializeField] internal Object _target;
+        public Object Target => _target;
+
+        [SerializeField] internal bool _isStatic;
+        public bool IsStatic => _isStatic;
+        
+        [SerializeField] public UnityEventCallState CallState = UnityEventCallState.RuntimeOnly;
+
+        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _staticType; // TODO: remove includeAdditionalAssemblies
+        public Type StaticType => _staticType;
+
+        [NonSerialized] internal bool _initializationComplete;
+        [NonSerialized] private bool _initializationSuccessful;
 
         private object[] _arguments;
 
         private BaseInvokableCall _invokableCall;
+        
+        private PersistentListener() { }
 
         internal PersistentListener(string methodName, bool isStatic, Object target, UnityEventCallState callState, Type staticType, PersistentArgument[] persistentArguments)
         {
             _methodName = methodName;
             _isStatic = isStatic;
             _target = target;
-            _callState = callState;
+            CallState = callState;
             _staticType = staticType;
             _persistentArguments = persistentArguments;
         }
 
-        public void Invoke([CanBeNull] object[] args)
+        internal void Invoke([CanBeNull] object[] args)
         {
             // If no function is chosen, exit without any warnings.
-            if (_callState == UnityEventCallState.Off || string.IsNullOrEmpty(_methodName))
+            if (CallState == UnityEventCallState.Off || string.IsNullOrEmpty(_methodName))
                  return;
 
 #if UNITY_EDITOR
-            if (_callState == UnityEventCallState.RuntimeOnly && !Application.isPlaying)
+            if (CallState == UnityEventCallState.RuntimeOnly && !Application.isPlaying)
                 return;
 #endif
 
@@ -153,7 +163,7 @@
 
                 if (serializedArg._isSerialized)
                 {
-                    arguments[i] = serializedArg.Value;
+                    arguments[i] = serializedArg._value;
                 }
                 else
                 {

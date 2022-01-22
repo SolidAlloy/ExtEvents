@@ -17,7 +17,7 @@
         /// The dynamic listeners list that you can add your listener to.
         /// </summary>
         [PublicAPI]
-        public event Action<T> DynamicListeners; 
+        public event Action<T> DynamicListeners;
 
         public void Invoke(T arg)
         {

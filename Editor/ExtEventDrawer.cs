@@ -82,7 +82,7 @@
 
             if (listenersProperty.arraySize == 1)
             {
-                var callStateProp = lastElement.FindPropertyRelative(nameof(PersistentListener._callState));
+                var callStateProp = lastElement.FindPropertyRelative(nameof(PersistentListener.CallState));
 
                 // This should be set in the class constructor, but it is not called when an element is added through serialized property.
                 // We only need this set for the first element in list. All other listeners will copy the value of the previous element.

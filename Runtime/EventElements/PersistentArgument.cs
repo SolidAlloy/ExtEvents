@@ -8,22 +8,33 @@
     public class PersistentArgument
     {
         [SerializeField] internal int _index;
+        public int Index => _index;
+        
         [SerializeField] internal bool _isSerialized;
+        public bool IsSerialized => _isSerialized;
+        
         [SerializeField] internal TypeReference _type;
+        public Type Type => _type;
+        
         [SerializeField] internal string _serializedArg;
         [SerializeField] internal bool _canBeDynamic;
+
+        internal object _value => GetValue(_serializedArg, _type);
 
         public object Value
         {
             get
             {
                 if (!_isSerialized)
-                    throw new InvalidOperationException();
+                    throw new Exception("Tried to access a persistent value of an argument but the argument is dynamic");
+
+                if (_type.Type == null || string.IsNullOrEmpty(_serializedArg))
+                    return null;
 
                 return GetValue(_serializedArg, _type);
             }
         }
-        
+
         public static PersistentArgument CreateSerialized<T>(T value)
         {
             return CreateSerialized(value, typeof(T));
@@ -33,7 +44,7 @@
         {
             return new PersistentArgument
             {
-                _isSerialized = false,
+                _isSerialized = true,
                 _type = argumentType,
                 _serializedArg = SerializeValue(value, argumentType)
             };
