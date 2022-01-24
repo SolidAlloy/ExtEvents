@@ -1,14 +1,11 @@
 #if UNITY_EDITOR
 namespace Test
 {
-    using System.IO;
     using ExtEvents;
-    using ExtEvents.Editor;
     using Sirenix.OdinInspector;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
-    using UnityEditor.SceneManagement;
     using UnityEngine;
 
     public class ExtEventsTestBehaviour : MonoBehaviour

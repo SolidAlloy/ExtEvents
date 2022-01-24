@@ -47,7 +47,8 @@
         /// </summary>
         [SerializeField] public UnityEventCallState CallState = UnityEventCallState.RuntimeOnly;
 
-        [SerializeField, TypeOptions(IncludeAdditionalAssemblies = new[] { "Assembly-CSharp" }, ShowNoneElement = false)] internal TypeReference _staticType; // TODO: remove includeAdditionalAssemblies
+        [SerializeField, TypeOptions(ShowAllTypes = true, AllowInternal = true, ShowNoneElement = false)] 
+        internal TypeReference _staticType;
 
         /// <summary>
         /// The declaring type of a static method when the listener is static.
