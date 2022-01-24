@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using GenericUnityObjects.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using TypeReferences;
@@ -13,6 +12,10 @@
     using UnityEngine;
     using UnityEngine.Events;
     using Object = UnityEngine.Object;
+    
+#if GENERIC_UNITY_OBJECTS
+    using GenericUnityObjects.Editor;
+#endif
 
     [CustomPropertyDrawer(typeof(PersistentListener))]
     public class PersistentListenerDrawer : PropertyDrawer
@@ -105,7 +108,14 @@
             }
 
             var targetProp = property.FindPropertyRelative(nameof(PersistentListener._target));
-            var newTarget = GenericObjectDrawer.ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
+
+            var newTarget =
+#if GENERIC_UNITY_OBJECTS
+                GenericObjectDrawer
+#else
+                EditorGUI
+#endif
+                    .ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
             if (targetProp.objectReferenceValue == newTarget) 
                 return;

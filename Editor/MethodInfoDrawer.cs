@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using JetBrains.Annotations;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using TypeReferences;
@@ -12,7 +11,6 @@
     using UnityDropdown.Editor;
     using UnityEditor;
     using UnityEngine;
-    using UnityEngine.UI;
 
     public static class MethodInfoDrawer
     {
