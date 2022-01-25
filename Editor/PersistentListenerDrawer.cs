@@ -202,7 +202,7 @@
 
         private void DrawComponentDropdown(SerializedProperty listenerProperty, SerializedProperty targetProperty, GameObject gameObject)
         {
-            var components = gameObject.GetComponents<Component>().Where(component => !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
+            var components = gameObject.GetComponents<Component>().Where(component => component != null && !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
             var dropdownItems = new List<DropdownItem<Component>>();
 
             foreach (Component component in components)
