@@ -19,6 +19,59 @@
         {
             Method = method;
         }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateAction<T>(object target, MethodInfo method)
+        {
+            return new InvokableActionCall<T>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateAction<T1, T2>(object target, MethodInfo method)
+        {
+            return new InvokableActionCall<T1, T2>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateAction<T1, T2, T3>(object target, MethodInfo method)
+        {
+            return new InvokableActionCall<T1, T2, T3>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateAction<T1, T2, T3, T4>(object target, MethodInfo method)
+        {
+            return new InvokableActionCall<T1, T2, T3, T4>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateFunc<TResult>(object target, MethodInfo method)
+        {
+            return new InvokableFuncCall<TResult>(target, method);
+        }
+        [Preserve]
+        public static BaseInvokableCall CreateFunc<T1, TResult>(object target, MethodInfo method)
+        {
+            return new InvokableFuncCall<T1, TResult>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateFunc<T1, T2, TResult>(object target, MethodInfo method)
+        {
+            return new InvokableFuncCall<T1, T2, TResult>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateFunc<T1, T2, T3, TResult>(object target, MethodInfo method)
+        {
+            return new InvokableFuncCall<T1, T2, T3, TResult>(target, method);
+        }
+        
+        [Preserve]
+        public static BaseInvokableCall CreateFunc<T1, T2, T3, T4, TResult>(object target, MethodInfo method)
+        {
+            return new InvokableFuncCall<T1, T2, T3, T4, TResult>(target, method);
+        }
 
         [Preserve]
         public abstract void Invoke(object[] args);
@@ -42,12 +95,6 @@
             }
         }
 
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableActionCall(target, method);
-        }
-        
         public override void Invoke(object[] args)
         {
             _delegate();
@@ -63,12 +110,6 @@
         public InvokableActionCall(object target, MethodInfo method) : base(target, method)
         {
             _delegate = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), target, method);
-        }
-
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableActionCall<T>(target, method);
         }
 
         public override void Invoke(object[] args)
@@ -88,12 +129,6 @@
             _delegate = (Action<T1, T2>) Delegate.CreateDelegate(typeof(Action<T1, T2>), target, method);
         }
 
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableActionCall<T1, T2>(target, method);
-        }
-
         public override void Invoke(object[] args)
         {
             _delegate((T1) args[0], (T2) args[1]); 
@@ -111,15 +146,26 @@
             _delegate = (Action<T1, T2, T3>) Delegate.CreateDelegate(typeof(Action<T1, T2, T3>), target, method);
         }
 
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
+        public override void Invoke(object[] args)
         {
-            return new InvokableActionCall<T1, T2, T3>(target, method);
+            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+        }
+    }
+    
+    [Preserve]
+    public class InvokableActionCall<T1, T2, T3, T4> : BaseInvokableCall
+    {
+        private readonly Action<T1, T2, T3, T4> _delegate;
+
+        [Preserve]
+        public InvokableActionCall(object target, MethodInfo method) : base(target, method)
+        {
+            _delegate = (Action<T1, T2, T3, T4>) Delegate.CreateDelegate(typeof(Action<T1, T2, T3, T4>), target, method);
         }
 
         public override void Invoke(object[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+            _delegate((T1) args[0], (T2) args[1], (T3) args[2], (T4) args[3]);
         }
     }
 
@@ -132,12 +178,6 @@
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
             _delegate = (Func<TReturn>) Delegate.CreateDelegate(typeof(Func<TReturn>), target, method);
-        }
-
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableFuncCall<TReturn>(target, method);
         }
 
         public override void Invoke(object[] args)
@@ -157,12 +197,6 @@
             _delegate = (Func<T, TReturn>) Delegate.CreateDelegate(typeof(Func<T, TReturn>), target, method);
         }
 
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableFuncCall<T, TReturn>(target, method);
-        }
-
         public override void Invoke(object[] args)
         {
             _delegate((T) args[0]);
@@ -178,12 +212,6 @@
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
             _delegate = (Func<T1, T2, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, TReturn>), target, method);
-        }
-
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
-        {
-            return new InvokableFuncCall<T1, T2, TReturn>(target, method);
         }
 
         public override void Invoke(object[] args)
@@ -203,15 +231,26 @@
             _delegate = (Func<T1, T2, T3, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, T3, TReturn>), target, method);
         }
 
-        [Preserve]
-        public static BaseInvokableCall Create(object target, MethodInfo method)
+        public override void Invoke(object[] args)
         {
-            return new InvokableFuncCall<T1, T2, T3, TReturn>(target, method);
+            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+        }
+    }
+    
+    [Preserve]
+    public class InvokableFuncCall<T1, T2, T3, T4, TReturn> : BaseInvokableCall
+    {
+        private readonly Func<T1, T2, T3, T4, TReturn> _delegate;
+        
+        [Preserve]
+        public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
+        {
+            _delegate = (Func<T1, T2, T3, T4, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, T3, T4, TReturn>), target, method);
         }
 
         public override void Invoke(object[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+            _delegate((T1) args[0], (T2) args[1], (T3) args[2], (T4) args[3]);
         }
     }
 }

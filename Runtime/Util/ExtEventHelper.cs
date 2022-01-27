@@ -26,10 +26,13 @@
         /// <returns>True if the method is eligible.</returns>
         public static bool MethodIsEligible(MethodInfo method, Type[] eventParamTypes, bool allowInternal, bool allowPrivate)
         {
+            var methodParams = method.GetParameters();
+            
             return IsEligibleByVisibility(method, allowInternal, allowPrivate) 
                    && !method.Name.IsPropertyGetter()
-                   && !IsMethodPure(method) 
-                   && method.GetParameters().All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
+                   && !IsMethodPure(method)
+                   && methodParams.Length <= 4
+                   && methodParams.All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
         }
         
         private static bool IsEligibleByVisibility(MethodInfo method, bool allowInternal, bool allowPrivate)
