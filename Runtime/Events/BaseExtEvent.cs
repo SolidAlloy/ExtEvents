@@ -7,6 +7,7 @@
     using SolidUtilities;
     using UnityEngine;
     using UnityEngine.Events;
+    using UnityEngine.Scripting;
     using Object = UnityEngine.Object;
 
     /// <summary>
@@ -23,9 +24,7 @@
         [PublicAPI]
         public IReadOnlyList<PersistentListener> PersistentListeners => _persistentListeners;
 
-#if UNITY_EDITOR
         [SerializeField] internal bool Expanded = true;
-#endif
         
         protected abstract Type[] EventParamTypes { get; }
 
@@ -106,5 +105,11 @@
         /// <returns>Whether the listener was found in the list.</returns>
         [PublicAPI]
         public bool RemovePersistentListener(PersistentListener listener) => ArrayHelper.Remove(ref _persistentListeners, listener);
+        
+        [Preserve]
+        public void Test()
+        {
+            GeneratedCreateMethods.AOTGeneration();
+        }
     }
 }

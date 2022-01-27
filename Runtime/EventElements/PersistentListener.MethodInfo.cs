@@ -57,7 +57,7 @@
             return declaringType.GetMethod(methodName, flags, null, CallingConventions.Any, argumentTypes, null);
         }
 
-        public static class InvokableCallCreator
+        internal static class InvokableCallCreator
         {
             private static readonly Dictionary<int, MethodInfo> _createActionMethods = new Dictionary<int, MethodInfo>();
             private static readonly Dictionary<int, MethodInfo> _createFuncMethods = new Dictionary<int, MethodInfo>();
@@ -88,12 +88,19 @@
                 return isVoid ? CreateActionInvokableCall(paramTypes, target, method) : CreateFuncInvokableCall(paramTypes, target, method);
             }
 
+            public static MethodInfo GetCreateMethod(Type[] paramTypes, bool isVoid)
+            {
+                var createMethodDefinition = isVoid ? _createActionMethods[paramTypes.Length] : _createFuncMethods[paramTypes.Length];
+                return createMethodDefinition.MakeGenericMethod(paramTypes);
+            }
+
             private static BaseInvokableCall CreateActionInvokableCall(Type[] paramTypes, object target, MethodInfo method)
             {
                 if (_createActionCache.TryGetValue(paramTypes, out var createDelegate))
                     return createDelegate(target, method);
 
                 var createMethodDefinition = _createActionMethods[paramTypes.Length];
+                
                 var createMethod = createMethodDefinition.MakeGenericMethod(paramTypes);
                 createDelegate = (Func<object, MethodInfo, BaseInvokableCall>) Delegate.CreateDelegate(typeof(Func<object, MethodInfo, BaseInvokableCall>), createMethod);
                 _createActionCache.Add(paramTypes, createDelegate);

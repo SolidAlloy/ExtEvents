@@ -7,8 +7,9 @@
     internal class PackageSettings : ScriptableObject
     {
         public const string PackageName = "com.solidalloy.ext-events";
+        public const string PluginsPath = "Assets/Plugins/ExtEvents";
         
-        private const string FolderPath = "Assets/Plugins/ExtEvents/Resources";
+        private const string FolderPath = PluginsPath + "/Resources";
         private const string AssetName = "ExtEvents_PackageSettings";
 
         [Tooltip("Whether a warning should be logged when an event is invoked but the listener property or method is missing")]

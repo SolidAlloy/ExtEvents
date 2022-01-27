@@ -1,0 +1,16 @@
+{
+    "name": "ExtEvents.Test",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0a4d547e5130ac2478632a149c923b66"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
