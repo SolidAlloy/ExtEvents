@@ -43,6 +43,18 @@
             set => _includePrivateMethods.value = value;
         }
 
+        private static UserSetting<int> _buildCallbackOrder;
+        public static int BuildCallbackOrder
+        {
+            get
+            {
+                InitializeIfNeeded();
+                return _buildCallbackOrder.value;
+            }
+
+            set => _buildCallbackOrder.value = value;
+        }
+
         private static void InitializeIfNeeded()
         {
             if (_instance != null)
@@ -53,6 +65,7 @@
             _nicifyArgumentNames = new UserSetting<bool>(_instance, nameof(_nicifyArgumentNames), true, SettingsScope.User);
             _includeInternalMethods = new UserSetting<bool>(_instance, nameof(_includeInternalMethods), false, SettingsScope.Project);
             _includePrivateMethods = new UserSetting<bool>(_instance, nameof(_includePrivateMethods), false, SettingsScope.Project);
+            _buildCallbackOrder = new UserSetting<int>(_instance, nameof(_buildCallbackOrder), 0, SettingsScope.Project);
         }
     }
 }

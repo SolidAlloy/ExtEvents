@@ -22,7 +22,25 @@
             }
         }
         
-        public static IEnumerable<SerializedProperty> FindExtEventProperties(SerializedObject serializedObject)
+        public static IEnumerable<MethodInfo> GetMethods(IEnumerable<SerializedProperty> extEventProperties)
+        {
+            foreach (var extEventProperty in extEventProperties)
+            {
+                var responses = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent._persistentListeners));
+
+                int responsesLength = responses.arraySize;
+
+                for (int i = 0; i < responsesLength; i++)
+                {
+                    var method = ResponseHelper.GetMethod(responses.GetArrayElementAtIndex(i));
+
+                    if (method != null)
+                        yield return method;
+                }
+            }
+        }
+
+        private static IEnumerable<SerializedProperty> FindExtEventProperties(SerializedObject serializedObject)
         {
             var prop = serializedObject.GetIterator();
 
@@ -51,24 +69,6 @@
             while (prop.NextVisible(true));
         }
 
-        public static IEnumerable<MethodInfo> GetMethods(IEnumerable<SerializedProperty> extEventProperties)
-        {
-            foreach (var extEventProperty in extEventProperties)
-            {
-                var responses = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent._persistentListeners));
-
-                int responsesLength = responses.arraySize;
-
-                for (int i = 0; i < responsesLength; i++)
-                {
-                    var method = ResponseHelper.GetMethod(responses.GetArrayElementAtIndex(i));
-
-                    if (method != null)
-                        yield return method;
-                }
-            }
-        }
-        
         private static class ResponseHelper
         {
             public static MethodInfo GetMethod(SerializedProperty response)
@@ -103,6 +103,7 @@
                 }
 
                 var target = response.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
+                // ReSharper disable once Unity.NoNullPropagation
                 return target?.GetType();
             }
 

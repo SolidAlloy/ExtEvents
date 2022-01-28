@@ -10,26 +10,31 @@
     using System.Reflection.Emit;
     using GenericUnityObjects.Editor.Util;
     using SolidUtilities;
+    using SolidUtilities.Editor;
     using UnityEditor;
-    using UnityEngine;
-    using UnityEngine.Scripting;
 
-    public static class CreateMethodsGenerator
+    public static class AOTAssemblyGenerator
     {
-        private const string AssemblyName = "z_ExtEvents_GeneratedGenerics";
+        private const string FolderPath = PackageSettings.PluginsPath + "/" + "AOT Generation";
+        private const string AssemblyName = "z_ExtEvents_AOTGeneration";
         
-        public static void GenerateCreateMethodsAssembly()
+        public static void GenerateCreateMethods()
         {
             string dllName = $"{AssemblyName}.dll";
-            string assemblyPath = $"{PackageSettings.PluginsPath}/{dllName}";
-            bool assemblyExists = File.Exists(assemblyPath);
-            
-            if (!Directory.Exists(PackageSettings.PluginsPath))
-                Directory.CreateDirectory(PackageSettings.PluginsPath);
-            
-            CreateAssembly(dllName);
+            string assemblyPath = $"{FolderPath}/{dllName}";
+            bool folderExists = Directory.Exists(FolderPath);
 
-            if (assemblyExists)
+            using var _ = AssetDatabaseHelper.DisabledScope();
+
+            if (!folderExists)
+            {
+                Directory.CreateDirectory(FolderPath);
+                CreateAssemblyDefinition(FolderPath);
+            }
+
+            CreateAssembly(dllName, FolderPath);
+
+            if (folderExists)
             {
                 AssetDatabase.ImportAsset(assemblyPath, ImportAssetOptions.ForceUpdate);
             }
@@ -39,7 +44,24 @@
             }
         }
 
-        private static void CreateAssembly(string dllName)
+        public static void DeleteGeneratedFolder()
+        {
+            if (Directory.Exists(FolderPath))
+                AssetDatabase.DeleteAsset(FolderPath);
+        }
+
+        private static void CreateAssemblyDefinition(string folderPath)
+        {
+            string asmDefPath = $"{folderPath}/ExtEvents.AOTGeneration.asmdef";
+            File.WriteAllText(asmDefPath, AsmDefContent);
+            AssetDatabase.ImportAsset(asmDefPath);
+            
+            string scriptPath = $"{folderPath}/AOTGeneration.cs";
+            File.WriteAllText(scriptPath, ScriptContent);
+            AssetDatabase.ImportAsset(scriptPath);
+        }
+
+        private static void CreateAssembly(string dllName, string folderPath)
         {
             var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
                 new AssemblyName(AssemblyName)
@@ -49,7 +71,7 @@
                     ProcessorArchitecture = ProcessorArchitecture.MSIL,
                     VersionCompatibility = AssemblyVersionCompatibility.SameDomain
                 },
-                AssemblyBuilderAccess.RunAndSave, PackageSettings.PluginsPath);
+                AssemblyBuilderAccess.RunAndSave, folderPath);
             
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
             
@@ -80,15 +102,6 @@
             }
             
             ilGenerator.Emit(OpCodes.Ret);
-
-            AddPreserveAttribute(methodBuilder);
-        }
-
-        private static void AddPreserveAttribute(MethodBuilder methodBuilder)
-        {
-            var preserveConstructor = typeof(PreserveAttribute).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
-            var attributeBuilder = new CustomAttributeBuilder(preserveConstructor, Array.Empty<object>());
-            methodBuilder.SetCustomAttribute(attributeBuilder);
         }
 
         private static IEnumerable<CreateMethod> GetCreateMethods()
@@ -129,6 +142,38 @@
 
             return types;
         }
+        
+        private const string AsmDefContent = @"{
+    ""name"": ""ExtEvents.AOTGeneration"",
+    ""rootNamespace"": ""ExtEvents.AOTGeneration"",
+    ""references"": [],
+    ""includePlatforms"": [],
+    ""excludePlatforms"": [],
+    ""allowUnsafeCode"": false,
+    ""overrideReferences"": true,
+    ""precompiledReferences"": [
+        ""z_ExtEvents_AOTGeneration.dll""
+    ],
+    ""autoReferenced"": false,
+    ""defineConstraints"": [],
+    ""versionDefines"": [],
+    ""noEngineReferences"": false
+}";
+
+        private const string ScriptContent = @"namespace ExtEvents.AOTGeneration
+{
+    using UnityEngine.Scripting;
+
+    public static class AOTGeneration
+    {
+        [Preserve]
+        public static void Generation()
+        {
+            GeneratedCreateMethods.AOTGeneration();
+        }
+    }
+}
+";
 
         private readonly struct CreateMethod : IEquatable<CreateMethod>
         {

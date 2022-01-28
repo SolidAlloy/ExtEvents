@@ -8,7 +8,13 @@ public class ExtEventsBehaviour : MonoBehaviour
     [Button]
     public void Test()
     {
-        CreateMethodsGenerator.GenerateCreateMethodsAssembly();
+        AOTAssemblyGenerator.GenerateCreateMethods();
+    }
+
+    [Button]
+    public void TestDeletion()
+    {
+        AOTAssemblyGenerator.DeleteGeneratedFolder();
     }
 }
 #endif

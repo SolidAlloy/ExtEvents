@@ -3,7 +3,6 @@
     using System.Collections.Generic;
     using UnityEditor;
     using UnityEditor.SceneManagement;
-    using UnityEditor.VersionControl;
     using UnityEngine;
     using UnityEngine.SceneManagement;
 

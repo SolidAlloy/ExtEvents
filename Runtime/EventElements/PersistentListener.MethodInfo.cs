@@ -85,7 +85,17 @@
 
             public static BaseInvokableCall CreateInvokableCall(Type[] paramTypes, bool isVoid, object target, MethodInfo method)
             {
-                return isVoid ? CreateActionInvokableCall(paramTypes, target, method) : CreateFuncInvokableCall(paramTypes, target, method);
+                try
+                {
+                    return isVoid
+                        ? CreateActionInvokableCall(paramTypes, target, method)
+                        : CreateFuncInvokableCall(paramTypes, target, method);
+                }
+                catch (ExecutionEngineException e)
+                {
+                    Debug.LogWarning($"Tried to invoke a method {method} but there was no code generated for it ahead of time.");
+                    return null;
+                }
             }
 
             public static MethodInfo GetCreateMethod(Type[] paramTypes, bool isVoid)
@@ -104,7 +114,7 @@
                 var createMethod = createMethodDefinition.MakeGenericMethod(paramTypes);
                 createDelegate = (Func<object, MethodInfo, BaseInvokableCall>) Delegate.CreateDelegate(typeof(Func<object, MethodInfo, BaseInvokableCall>), createMethod);
                 _createActionCache.Add(paramTypes, createDelegate);
-                return createDelegate(target, method);
+                return createDelegate(target, method); // catch ExecutionEngineException here and report
             }
             
             private static BaseInvokableCall CreateFuncInvokableCall(Type[] paramTypes, object target, MethodInfo method)

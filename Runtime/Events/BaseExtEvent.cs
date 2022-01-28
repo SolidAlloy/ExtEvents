@@ -105,11 +105,5 @@
         /// <returns>Whether the listener was found in the list.</returns>
         [PublicAPI]
         public bool RemovePersistentListener(PersistentListener listener) => ArrayHelper.Remove(ref _persistentListeners, listener);
-        
-        [Preserve]
-        public void Test()
-        {
-            GeneratedCreateMethods.AOTGeneration();
-        }
     }
 }
