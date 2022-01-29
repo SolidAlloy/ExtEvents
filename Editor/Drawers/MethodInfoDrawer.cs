@@ -245,10 +245,18 @@
             foreach (MethodInfo method in methods)
             {
                 bool isProperty = method.Name.IsPropertySetter();
-                string methodName = isProperty ? method.Name.Substring(4) : method.Name + GetParamNames(method);
+                string methodName = GetMethodNameForDropdown(method, isProperty);
                 var memberName = isProperty ? "Properties" : "Methods";
                 yield return new DropdownItem<MethodInfo>(method, $"{memberDescription} {memberName}/{methodName}", searchName: methodName);
             }
+        }
+
+        private static string GetMethodNameForDropdown(MethodInfo method, bool isProperty)
+        {
+            if (isProperty)
+                return $"{method.Name.Substring(4)} ({method.GetParameters()[0].ParameterType.Name.Beautify()})";
+
+            return method.Name + GetParamNames(method);
         }
 
         private static IEnumerable<MethodInfo> GetEligibleMethods(Type declaringType, Type[] eventParamTypes,
@@ -311,7 +319,7 @@
 
         private static string GetParamNames(MethodInfo methodInfo)
         {
-            return $"({string.Join(", ", methodInfo.GetParameters().Select(parameter => parameter.ParameterType.Name.Beautify()))})";
+            return $"({string.Join(", ", methodInfo.GetParameters().Select(parameter => $"{parameter.ParameterType.Name.Beautify()} {parameter.Name}"))})";
         }
 
         private static string Beautify(this string typeName)
