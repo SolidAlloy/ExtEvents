@@ -31,10 +31,9 @@
             return IsEligibleByVisibility(method, allowInternal, allowPrivate) 
                    && !method.Name.IsPropertyGetter()
                    && !IsMethodPure(method)
-                   && methodParams.Length <= 4
-                   && methodParams.All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
+                   && IsEligibleByParameters(methodParams, eventParamTypes);
         }
-        
+
         private static bool IsEligibleByVisibility(MethodInfo method, bool allowInternal, bool allowPrivate)
         {
             if (method.IsPublic)
@@ -56,6 +55,11 @@
 
             return method.HasAttribute<PureAttribute>() ||
                    method.HasAttribute<System.Diagnostics.Contracts.PureAttribute>();
+        }
+
+        private static bool IsEligibleByParameters(ParameterInfo[] parameters, Type[] eventParamTypes)
+        {
+            return parameters.Length <= 4 && parameters.All(param => ParamCanBeUsed(param.ParameterType, eventParamTypes));
         }
 
         private static bool ParamCanBeUsed(Type paramType, Type[] eventParamTypes)

@@ -2,6 +2,7 @@
 {
     using System;
     using UnityEngine;
+    using UnityEngine.Scripting;
 
     /// <summary>
     /// A class that allows to serialize any object through UnityEngine.JsonUtility.
@@ -10,6 +11,7 @@
     /// </summary>
     public abstract class ArgumentHolder
     {
+        [Preserve]
         public abstract object Value { get; }
     }
 
@@ -18,8 +20,11 @@
     {
         [SerializeField] private T _value;
 
+        [Preserve]
         public override object Value => _value;
 
+        public ArgumentHolder() { }
+        
         public ArgumentHolder(T value)
         {
             _value = value;

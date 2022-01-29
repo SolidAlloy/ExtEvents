@@ -12,6 +12,7 @@
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
+    using UnityEngine;
 
     public static class AOTAssemblyGenerator
     {
@@ -76,14 +77,15 @@
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
             
             var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
-            
-            CreateType(typeBuilder, GetCreateMethods());
+
+            GetCodeToGenerate(out var methods, out var argumentTypes);
+            CreateType(typeBuilder, methods, argumentTypes);
             
             typeBuilder.CreateType();
             assemblyBuilder.Save(dllName);
         }
 
-        private static void CreateType(TypeBuilder typeBuilder, IEnumerable<CreateMethod> createMethods)
+        private static void CreateType(TypeBuilder typeBuilder, IEnumerable<CreateMethod> createMethods, IEnumerable<Type> argumentTypes)
         {
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
                 "AOTGeneration",
@@ -100,13 +102,26 @@
                 ilGenerator.EmitCall(OpCodes.Call, PersistentListener.InvokableCallCreator.GetCreateMethod(createMethod.Args, createMethod.IsVoid), null);
                 ilGenerator.Emit(OpCodes.Pop);
             }
+
+            var genericArgs = new Type[1];
+            var throwAwayVariable = ilGenerator.DeclareLocal(typeof(ArgumentHolder));
+
+            foreach (Type argumentType in argumentTypes)
+            {
+                genericArgs[0] = argumentType;
+                var holderType = typeof(ArgumentHolder<>).MakeGenericType(genericArgs);
+                var constructor = holderType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                ilGenerator.Emit(OpCodes.Newobj, constructor);
+                ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
+            }
             
             ilGenerator.Emit(OpCodes.Ret);
         }
 
-        private static IEnumerable<CreateMethod> GetCreateMethods()
+        private static void GetCodeToGenerate(out HashSet<CreateMethod> methods, out HashSet<Type> argumentTypes)
         {
-            var methods = new HashSet<CreateMethod>();
+            methods = new HashSet<CreateMethod>();
+            argumentTypes = new HashSet<Type>();
 
             var serializedObjects = SerializedObjectFinder.GetSerializedObjects();
             var extEventProperties = ExtEventProjectSearcher.FindExtEventProperties(serializedObjects);
@@ -122,13 +137,23 @@
                     ArrayHelper.Add(ref args, methodInfo.ReturnType);
                 }
 
-                if (args.Length == 0 || args.Any(type => type.IsNotPublic))
+                if (args.Length == 0)
                     continue;
 
-                methods.Add(new CreateMethod(isVoid, args));
-            }
+                bool hasValueType = false;
+                
+                foreach (Type argType in args)
+                {
+                    if (!argType.IsValueType)
+                        continue;
 
-            return methods;
+                    hasValueType = true;
+                    argumentTypes.Add(argType);
+                }
+
+                if (hasValueType)
+                    methods.Add(new CreateMethod(isVoid, args));
+            }
         }
         
         private static Type[] GetArgumentTypes(ParameterInfo[] parameters)
