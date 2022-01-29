@@ -96,7 +96,9 @@
 
             _initializationSuccessful = Initialize();
             _initializationComplete = true;
-            InvokeImpl(args);
+            
+            if (_initializationSuccessful)
+                InvokeImpl(args);
         }
         
         internal static BindingFlags GetFlags(bool isStatic) => BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
