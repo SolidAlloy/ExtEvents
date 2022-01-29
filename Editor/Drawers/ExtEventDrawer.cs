@@ -3,11 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using GenericUnityObjects.Editor;
+    using SolidUtilities;
     using SolidUtilities.Editor;
     using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
     using UnityEngine;
     using UnityEngine.Events;
+    using Object = UnityEngine.Object;
 
     [CustomPropertyDrawer(typeof(BaseExtEvent), true)]
     public class ExtEventDrawer : PropertyDrawer
@@ -23,14 +26,81 @@
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var reorderableList = GetList(property, label.text);
-            return reorderableList.GetHeight();
+            return reorderableList.GetHeight() + GetDynamicListenersHeight(property);
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             CurrentEventInfo = GetExtEventInfo(property);
             var reorderableList = GetList(property, label.text);
-            reorderableList.DoList(position);
+            float listHeight = reorderableList.GetHeight();
+            reorderableList.DoList(new Rect(position) { height = listHeight });
+            
+            DrawDynamicListeners(property, position, listHeight);
+        }
+
+        private static float GetDynamicListenersHeight(SerializedProperty property)
+        {
+            bool isEventExpanded = property.FindPropertyRelative(nameof(BaseExtEvent.Expanded)).boolValue;
+
+            if (!isEventExpanded)
+                return 0f;
+
+            var eventObject = PropertyObjectCache.GetObject<BaseExtEvent>(property);
+
+            if (eventObject._dynamicListeners == null)
+                return 0f;
+            
+            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * (property.isExpanded ? eventObject._dynamicListeners.GetInvocationList().Length + 1 : 1); 
+        }
+
+        private static void DrawDynamicListeners(SerializedProperty extEventProperty, Rect totalRect, float listHeight)
+        {
+            bool isEventExpanded = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)).boolValue;
+
+            if (!isEventExpanded)
+                return;
+            
+            var eventObject = PropertyObjectCache.GetObject<BaseExtEvent>(extEventProperty);
+            if (eventObject._dynamicListeners == null)
+                return;
+            
+            Rect currentRect = new Rect(totalRect) { height = EditorGUIUtility.singleLineHeight, y = totalRect.y + listHeight };
+
+            extEventProperty.isExpanded = EditorGUI.Foldout(currentRect, extEventProperty.isExpanded, "Dynamic Listeners");
+
+            if (!extEventProperty.isExpanded)
+                return;
+            
+            foreach (var @delegate in eventObject._dynamicListeners.GetInvocationList())
+            {
+                currentRect.y += EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding;
+                float halfWidth = currentRect.width / 2f;
+                var typeRect = new Rect(currentRect) { width = halfWidth - 10f };
+                var methodRect = new Rect(currentRect) { x = currentRect.x + halfWidth, width = halfWidth };
+
+                string methodName = $"{@delegate.Method.Name}()";
+                if (methodName.StartsWith("<"))
+                    methodName = "Lambda Expression";
+                
+                DrawDynamicType(typeRect, @delegate);
+                EditorGUI.LabelField(methodRect, methodName);
+            }
+        }
+
+        private static void DrawDynamicType(Rect rect, Delegate @delegate)
+        {
+            if (@delegate.Target is Object objectTarget)
+            {
+                using (new EditorGUI.DisabledScope(true))
+                    GenericObjectDrawer.ObjectField(rect, GUIContent.none, objectTarget, objectTarget.GetType(), true);
+
+                return;
+            }
+
+            string typeFullName = @delegate.Method.DeclaringType.FullName;
+            string typeName = typeFullName.EndsWith("<>c") ? typeFullName.Substring(0, typeFullName.Length - 4).GetSubstringAfterLast('.') : typeFullName.GetSubstringAfterLast('.');
+            EditorGUI.LabelField(rect, typeName);
         }
 
         public static void ResetListCache(SerializedProperty extEventProp) => GetList(extEventProp, null).ResetCache();

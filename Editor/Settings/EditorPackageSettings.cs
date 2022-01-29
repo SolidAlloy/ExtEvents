@@ -5,6 +5,8 @@
 
     public static class EditorPackageSettings
     {
+        public const float LinePadding = 2f;
+        
         private static Settings _instance;
 
         private static UserSetting<bool> _nicifyArgumentNames;

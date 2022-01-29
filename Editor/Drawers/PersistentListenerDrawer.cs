@@ -20,14 +20,14 @@
     [CustomPropertyDrawer(typeof(PersistentListener))]
     public class PersistentListenerDrawer : PropertyDrawer
     {
-        private const float LinePadding = 2f;
-
         private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo> _previousListenerValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo>();
+        
+        private Rect _methodRect;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             const int constantLinesCount = 2;
-            return (EditorGUIUtility.singleLineHeight + LinePadding) * constantLinesCount + GetSerializedArgsHeight(property);
+            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * constantLinesCount + GetSerializedArgsHeight(property);
         }
 
         private static float GetSerializedArgsHeight(SerializedProperty property)
@@ -44,18 +44,16 @@
                 persistentArgumentsHeights += EditorGUI.GetPropertyHeight(serializedArgsArray.GetArrayElementAtIndex(i));
             }
 
-            persistentArgumentsHeights += LinePadding * serializedArgsArray.arraySize;
+            persistentArgumentsHeights += EditorPackageSettings.LinePadding * serializedArgsArray.arraySize;
 
             return persistentArgumentsHeights;
         }
 
-        private Rect _methodRect;
-
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
-            currentRect.y += LinePadding;
-            _methodRect = new Rect(currentRect) { y = currentRect.y + EditorGUIUtility.singleLineHeight + LinePadding };
+            currentRect.y += EditorPackageSettings.LinePadding;
+            _methodRect = new Rect(currentRect) { y = currentRect.y + EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding };
             
             var callStateProp = property.FindPropertyRelative(nameof(PersistentListener.CallState));
             (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
@@ -107,7 +105,6 @@
             if (isStatic)
             {
                 EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(PersistentListener._staticType)), GUIContent.none);
-                // todo if changed and no function was chosen before, open method dropdown
                 return;
             }
 
@@ -158,7 +155,7 @@
 
             for (int i = 0; i < argumentsArray.arraySize; i++)
             {
-                rect.y += EditorGUIUtility.singleLineHeight + LinePadding;
+                rect.y += EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding;
                 var argumentProp = argumentsArray.GetArrayElementAtIndex(i);
                 string label = EditorPackageSettings.NicifyArgumentNames ? ObjectNames.NicifyVariableName(paramNames[i]) : paramNames[i];
                 EditorGUI.PropertyField(rect, argumentProp, GUIContentHelper.Temp(label));

@@ -15,7 +15,8 @@
         /// The dynamic listeners list that you can add your listener to.
         /// </summary>
         [PublicAPI]
-        public event Action<T1, T2> DynamicListeners; 
+        public event Action<T1, T2> DynamicListeners;
+        internal override Delegate _dynamicListeners => DynamicListeners;
 
         /// <summary>
         /// Invokes all listeners of the event.

@@ -13,6 +13,7 @@
         /// </summary>
         [PublicAPI]
         public event Action DynamicListeners;
+        internal override Delegate _dynamicListeners => DynamicListeners;
 
         /// <summary>
         /// Invokes all listeners of the event.

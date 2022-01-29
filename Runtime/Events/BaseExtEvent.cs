@@ -28,6 +28,8 @@
         
         protected abstract Type[] EventParamTypes { get; }
 
+        internal abstract Delegate _dynamicListeners { get; }
+
         /// <summary>
         /// Prepares an event for invocation, so that it takes less time to invoke later.
         /// </summary>
