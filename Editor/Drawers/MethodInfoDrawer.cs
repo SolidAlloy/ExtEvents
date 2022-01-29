@@ -10,6 +10,7 @@
     using TypeReferences.Editor.Util;
     using UnityDropdown.Editor;
     using UnityEditor;
+    using UnityEditor.Build.Content;
     using UnityEngine;
 
     public static class MethodInfoDrawer
@@ -43,7 +44,7 @@
 
         public static void Draw(Rect rect, SerializedProperty listenerProperty, out List<string> argNames)
         {
-            var isStatic = listenerProperty.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+            var isStatic = GetIsStatic(listenerProperty);
             var declaringType = GetDeclaringType(listenerProperty, isStatic);
 
             var previousGuiColor = GUI.backgroundColor;
@@ -82,6 +83,36 @@
 
             GUI.backgroundColor = previousGuiColor;
         }
+        
+        private static bool GetIsStatic(SerializedProperty listenerProperty) => listenerProperty.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+
+        public static string GetCurrentMethodName(SerializedProperty listenerProperty)
+        {
+            return listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
+        }
+
+        /// <summary>
+        /// Shows a method dropdown is no method was previously selected.
+        /// Used for decreasing a number of clicks the user must perform to choose a method.
+        /// Once a type or object is chosen, a method dropdown is open.
+        /// </summary>
+        /// <param name="methodRect">The rectangle of the method line.</param>
+        /// <param name="listenerProperty">The listener property.</param>
+        public static void ShowMethodDropdown(Rect methodRect, SerializedProperty listenerProperty)
+        {
+            string currentMethodName = GetCurrentMethodName(listenerProperty);
+
+            if ( ! string.IsNullOrEmpty(currentMethodName))
+                return;
+            
+            bool isStatic = GetIsStatic(listenerProperty);
+            Type declaringType = GetDeclaringType(listenerProperty, isStatic);
+
+            if (declaringType == null)
+                return;
+
+            ShowMenu(declaringType, listenerProperty, !isStatic, null, GUIUtility.GUIToScreenPoint(methodRect.position));
+        }
 
         private static Type GetDeclaringType(SerializedProperty listenerProperty, bool isStatic)
         {
@@ -99,7 +130,7 @@
             return Type.GetType(declaringTypeName);
         }
 
-        private static void ShowMenu(Type declaringType, SerializedProperty listenerProperty, bool isInstance, MethodInfo currentMethod)
+        private static void ShowMenu(Type declaringType, SerializedProperty listenerProperty, bool isInstance, MethodInfo currentMethod, Vector2? buttonPos = null)
         {
             if (declaringType == null)
                 return;
@@ -122,7 +153,15 @@
 
             var dropdownMenu = new DropdownMenu<MethodInfo>(menuItems, selectedMethod => OnMethodChosen(currentMethod, selectedMethod, listenerProperty));
             dropdownMenu.ExpandAllFolders();
-            dropdownMenu.ShowAsContext();
+
+            if (buttonPos == null)
+            {
+                dropdownMenu.ShowAsContext();
+            }
+            else
+            {
+                dropdownMenu.ShowDropdown(buttonPos.Value);
+            }
         }
 
         private static void SortItems(List<DropdownItem<MethodInfo>> items)

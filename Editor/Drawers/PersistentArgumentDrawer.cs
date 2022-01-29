@@ -59,14 +59,10 @@
             if (_valuePropertyCache.TryGetValue((mainSerializedObject, mainPropertyPath), out var valueProperty))
             {
                 if (valueProperty.GetObjectType() == type)
-                {
                     return valueProperty;
-                }
-                else
-                {
-                    _valuePropertyCache.Remove((mainSerializedObject, mainPropertyPath));
-                    return GetValueProperty(argumentProperty);
-                }
+
+                _valuePropertyCache.Remove((mainSerializedObject, mainPropertyPath));
+                return GetValueProperty(argumentProperty);
             }
 
             var serializedValue = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg)).stringValue;

@@ -49,10 +49,13 @@
             return persistentArgumentsHeights;
         }
 
+        private Rect _methodRect;
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
             currentRect.y += LinePadding;
+            _methodRect = new Rect(currentRect) { y = currentRect.y + EditorGUIUtility.singleLineHeight + LinePadding };
             
             var callStateProp = property.FindPropertyRelative(nameof(PersistentListener.CallState));
             (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
@@ -64,7 +67,7 @@
 
             DrawTypeField(property, targetRect, isStatic);
 
-            currentRect.y += EditorGUIUtility.singleLineHeight + LinePadding;
+            currentRect = _methodRect;
 
             // When method name is changed, we need to get methodInfo and set types of serialized arguments
             MethodInfoDrawer.Draw(currentRect, property, out var paramNames);
@@ -104,6 +107,7 @@
             if (isStatic)
             {
                 EditorGUI.PropertyField(rect, property.FindPropertyRelative(nameof(PersistentListener._staticType)), GUIContent.none);
+                // todo if changed and no function was chosen before, open method dropdown
                 return;
             }
 
@@ -128,6 +132,7 @@
             {
                 targetProp.objectReferenceValue = newTarget;
                 ExtEventDrawer.ResetListCache(property.GetParent().GetParent());
+                MethodInfoDrawer.ShowMethodDropdown(_methodRect, property);
             }
             else
             {
@@ -162,7 +167,7 @@
             return EditorGUI.EndChangeCheck();
         }
 
-        private static bool MethodHasChanged(SerializedProperty listenerProperty)
+        private bool MethodHasChanged(SerializedProperty listenerProperty)
         {
             string currentType = listenerProperty.FindPropertyRelative($"{nameof(PersistentListener._staticType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
             Object currentTarget = listenerProperty.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
@@ -183,6 +188,7 @@
             {
                 infoChanged = true;
                 listenerInfo.TypeName = currentType;
+                MethodInfoDrawer.ShowMethodDropdown(_methodRect, listenerProperty);
             }
 
             if (currentTarget != listenerInfo.Target)
@@ -229,6 +235,7 @@
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
                 ExtEventDrawer.ResetListCache(listenerProperty.GetParent().GetParent());
+                MethodInfoDrawer.ShowMethodDropdown(_methodRect, listenerProperty);
             });
 
             tree.ShowAsContext();
