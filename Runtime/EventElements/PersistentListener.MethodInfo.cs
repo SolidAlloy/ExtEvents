@@ -91,7 +91,9 @@
                         ? CreateActionInvokableCall(paramTypes, target, method)
                         : CreateFuncInvokableCall(paramTypes, target, method);
                 }
-                catch (ExecutionEngineException e)
+#pragma warning disable CS0618
+                catch (ExecutionEngineException)
+#pragma warning restore CS0618
                 {
                     Debug.LogWarning($"Tried to invoke a method {method} but there was no code generated for it ahead of time.");
                     return null;
