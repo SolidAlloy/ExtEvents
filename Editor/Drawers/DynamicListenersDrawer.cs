@@ -22,7 +22,7 @@
             if (eventObject._dynamicListeners == null)
                 return 0f;
                 
-            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * (extEventProperty.isExpanded ? eventObject._dynamicListeners.GetInvocationList().Length : 0) + EditorPackageSettings.LinePadding; 
+            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * (extEventProperty.isExpanded ? eventObject._dynamicListeners.GetInvocationList().Length : 0); 
         }
 
         public static void DrawListeners(SerializedProperty extEventProperty, Rect totalRect, float listHeight)
@@ -38,7 +38,7 @@
             if (eventObject._dynamicListeners == null)
                 return;
                 
-            Rect currentRect = new Rect(totalRect) { height = EditorGUIUtility.singleLineHeight, y = totalRect.y + listHeight - EditorGUIUtility.singleLineHeight };
+            Rect currentRect = new Rect(totalRect) { height = EditorGUIUtility.singleLineHeight, y = totalRect.y + listHeight - EditorGUIUtility.singleLineHeight - EditorPackageSettings.LinePadding };
 
             extEventProperty.isExpanded = EditorGUI.Foldout(currentRect, extEventProperty.isExpanded, "Dynamic Listeners", true);
 

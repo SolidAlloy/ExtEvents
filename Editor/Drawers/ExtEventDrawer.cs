@@ -6,6 +6,7 @@
     using SolidUtilities.Editor;
     using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
+    using UnityEditorInternal;
     using UnityEngine;
     using UnityEngine.Events;
 
@@ -51,6 +52,20 @@
             return eventInfo;
         }
 
+        private static FoldoutList.ButtonData GetStaticButton(SerializedProperty listenersProperty)
+        {
+            return new FoldoutList.ButtonData(new Vector2(29f, 16f),
+                new GUIContent(EditorIcons.AddButtonS.Default, "Add static listener"), true,
+                (rect, list) => AddListener(listenersProperty, true));
+        }
+        
+        private static FoldoutList.ButtonData GetInstanceButton(SerializedProperty listenersProperty)
+        {
+            return new FoldoutList.ButtonData(new Vector2(25f, 16f),
+                new GUIContent(EditorIcons.AddButtonI.Default, "Add instance listener"), true,
+                (rect, list) => AddListener(listenersProperty, false));
+        }
+
         private static FoldoutList GetList(SerializedProperty extEventProperty, string label)
         {
             if (_listCache.TryGetValue((extEventProperty.serializedObject, extEventProperty.propertyPath), out var list))
@@ -62,12 +77,10 @@
             {
                 DrawElementCallback = (rect, index) => EditorGUI.PropertyField(rect, listenersProperty.GetArrayElementAtIndex(index)),
                 ElementHeightCallback = index => EditorGUI.GetPropertyHeight(listenersProperty.GetArrayElementAtIndex(index)),
-                OnAddDropdownCallback = () =>
+                DrawFooterCallback = (rect, list) =>
                 {
-                    var menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Instance"), false, () => AddListener(listenersProperty, false));
-                    menu.AddItem(new GUIContent("Static"), false, () => AddListener(listenersProperty, true)); 
-                    menu.ShowAsContext();
+                    // ReorderableList.defaultBehaviours.DrawFooter(rect, list._list);
+                    FoldoutList.DrawFooter(rect, list, GetStaticButton(listenersProperty), GetInstanceButton(listenersProperty), FoldoutList.DefaultRemoveButton);
                 }
             };
 
