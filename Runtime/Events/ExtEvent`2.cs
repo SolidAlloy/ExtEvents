@@ -35,5 +35,23 @@
             
             DynamicListeners?.Invoke(arg1, arg2);
         }
+        
+        public static ExtEvent<T1, T2> operator +(ExtEvent<T1, T2> extEvent, Action<T1, T2> listener)
+        {
+            if (extEvent == null)
+                return null;
+
+            extEvent.DynamicListeners += listener;
+            return extEvent;
+        }
+        
+        public static ExtEvent<T1, T2> operator -(ExtEvent<T1, T2> extEvent, Action<T1, T2> listener)
+        {
+            if (extEvent == null)
+                return null;
+
+            extEvent.DynamicListeners -= listener;
+            return extEvent;
+        }
     }
 }
