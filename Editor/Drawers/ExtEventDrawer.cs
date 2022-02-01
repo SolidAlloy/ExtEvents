@@ -91,10 +91,18 @@
         private static void AddListener(SerializedProperty listenersProperty, bool isStatic)
         {
             listenersProperty.arraySize++;
+            var prevElement = listenersProperty.arraySize == 1f ? null : listenersProperty.GetArrayElementAtIndex(listenersProperty.arraySize - 2);
             var lastElement = listenersProperty.GetArrayElementAtIndex(listenersProperty.arraySize - 1);
 
+            bool? isPrevStatic = prevElement?.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
             var isStaticProp = lastElement.FindPropertyRelative(nameof(PersistentListener._isStatic));
             isStaticProp.boolValue = isStatic;
+
+            // if the previous and new listeners are both static, the new listener will just be a copy of the previous one: with the same type and method.
+            // But if the two listeners have different static values, the method name will show up as missing in the new listener and we don't want that,
+            // so we just set the method to empty so that "No Function" appears in the UI.
+            if (isPrevStatic != null && isPrevStatic.Value != isStatic)
+                lastElement.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue = string.Empty;
 
             if (listenersProperty.arraySize == 1)
             {
