@@ -1,12 +1,15 @@
 ﻿namespace ExtEvents.Editor
 {
     using System;
-    using GenericUnityObjects.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
     using UnityEngine;
     using Object = UnityEngine.Object;
+    
+#if GENERIC_UNITY_OBJECTS
+    using GenericUnityObjects.Editor;
+#endif
 
     public static class DynamicListenersDrawer
     {
@@ -66,8 +69,15 @@
             if (@delegate.Target is Object objectTarget)
             {
                 using (new EditorGUI.DisabledScope(true))
-                    GenericObjectDrawer.ObjectField(rect, GUIContent.none, objectTarget, objectTarget.GetType(), true);
-
+                {
+#if GENERIC_UNITY_OBJECTS
+                    GenericObjectDrawer
+#else
+                    EditorGUI
+#endif
+                        .ObjectField(rect, GUIContent.none, objectTarget, objectTarget.GetType(), true);
+                }
+                
                 return;
             }
 
