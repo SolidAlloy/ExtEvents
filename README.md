@@ -20,6 +20,8 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 
 ## Installation
 
+:heavy_exclamation_mark: Before installing the package, please disable the **Assembly Version Validation** option in **Player Settings**.
+
 ### OpenUPM
 
 Once you have the [OpenUPM cli](https://github.com/openupm/openupm-cli#installation), run the following command:
