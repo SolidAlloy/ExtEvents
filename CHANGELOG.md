@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/SolidAlloy/ExtEvents/compare/1.0.0...1.0.1) (2022-02-03)
+
+
+### Bug Fixes
+
+* Updated the dependencies versions ([bd9468f](https://github.com/SolidAlloy/ExtEvents/commit/bd9468f31e2bc4ee678ec136ed56dc18e100b7f8))
+
 # 1.0.0 (2022-02-03)
 
 
