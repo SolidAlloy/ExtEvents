@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/SolidAlloy/ExtEvents/compare/1.0.2...1.0.3) (2022-02-03)
+
+
+### Bug Fixes
+
+* Fixed the error in console regarding the immutable Changelog file ([c418383](https://github.com/SolidAlloy/ExtEvents/commit/c418383a30b5b0a82512a973f095401bb1d3874c))
+
 ## [1.0.2](https://github.com/SolidAlloy/ExtEvents/compare/1.0.1...1.0.2) (2022-02-03)
 
 
