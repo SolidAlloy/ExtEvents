@@ -8,11 +8,9 @@
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-    using GenericUnityObjects.Editor.Util;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
-    using UnityEngine;
 
     public static class AOTAssemblyGenerator
     {
@@ -41,7 +39,7 @@
             }
             else
             {
-                AssemblyGeneration.ImportAssemblyAsset(assemblyPath, AssemblyGeneration.GetUniqueGUID());
+                AssemblyGeneration.ImportAssemblyAsset(assemblyPath, AssetDatabaseHelper.GetUniqueGUID());
             }
         }
 
