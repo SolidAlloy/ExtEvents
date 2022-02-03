@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/SolidAlloy/ExtEvents/compare/1.0.1...1.0.2) (2022-02-03)
+
+
+### Bug Fixes
+
+* Fixed the package name in package.json ([5eca665](https://github.com/SolidAlloy/ExtEvents/commit/5eca665afc6bc1de4beb7916c81cf9ddc7bb2e73))
+
 ## [1.0.1](https://github.com/SolidAlloy/ExtEvents/compare/1.0.0...1.0.1) (2022-02-03)
 
 
