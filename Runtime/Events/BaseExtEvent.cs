@@ -41,7 +41,7 @@
                 _persistentListeners[index].Initialize();
             }
         }
-        
+
         /// <summary>
         /// Adds a new persistent listener.
         /// </summary>
@@ -59,13 +59,19 @@
         /// reflects the index of an argument in the ExtEvent.Invoke() method.
         /// </param>
         /// <typeparam name="T">The delegate type of the method.</typeparam>
+        /// <exception cref="MethodNotEligibleException">The method passed is not eligible for invoking by <see cref="ExtEvent"/> with these generic arguments.</exception>
+        /// <exception cref="TargetNullException">An instance method was passed but the target is null.</exception>
+        /// <exception cref="ArgumentException">The number of arguments passed does not match the number of parameters the method takes in.</exception>
+        /// <exception cref="ArgumentTypeMismatchException">A type of the argument passed does not match the type of the parameter taken in by the method.</exception>
+        /// <exception cref="ArgumentIndexException">The index of a dynamic argument is either out of range of the arguments passed in ExtEvent.Invoke() or the type of the parameter by this index in ExtEvent.Invoke() does not match the type of the argument.</exception>
+        /// <returns>A new instance of persistent listener.</returns>
         [PublicAPI]
-        public void AddPersistentListener<T>([NotNull] T methodDelegate, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments) 
+        public PersistentListener AddPersistentListener<T>([NotNull] T methodDelegate, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments) 
             where T : Delegate
         {
-            AddPersistentListener(methodDelegate.Method, target, callState, arguments);
+            return AddPersistentListener(methodDelegate.Method, target, callState, arguments);
         }
-        
+
         /// <summary>
         /// Adds a new persistent listener.
         /// </summary>
@@ -83,14 +89,16 @@
         /// reflects the index of an argument in the ExtEvent.Invoke() method.
         /// </param>
         /// <exception cref="MethodNotEligibleException">The method passed is not eligible for invoking by <see cref="ExtEvent"/> with these generic arguments.</exception>
-        /// <exception cref="TargetNullException">The instance method was passed but the target is null.</exception>
+        /// <exception cref="TargetNullException">An instance method was passed but the target is null.</exception>
         /// <exception cref="ArgumentException">The number of arguments passed does not match the number of parameters the method takes in.</exception>
         /// <exception cref="ArgumentTypeMismatchException">A type of the argument passed does not match the type of the parameter taken in by the method.</exception>
         /// <exception cref="ArgumentIndexException">The index of a dynamic argument is either out of range of the arguments passed in ExtEvent.Invoke() or the type of the parameter by this index in ExtEvent.Invoke() does not match the type of the argument.</exception>
-        public void AddPersistentListener([NotNull] MethodInfo method, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
+        /// <returns>A new instance of persistent listener.</returns>
+        public PersistentListener AddPersistentListener([NotNull] MethodInfo method, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
         {
             var persistentListener = ExtEventHelper.CreatePersistentListener(method, target, EventParamTypes, callState, arguments);
             ArrayHelper.Add(ref _persistentListeners, persistentListener);
+            return persistentListener;
         }
 
         /// <summary>

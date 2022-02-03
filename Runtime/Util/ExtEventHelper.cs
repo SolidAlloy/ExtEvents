@@ -86,7 +86,7 @@
         /// <param name="arguments">A list of arguments passed to the method. They can be either serialized (pre-determined at edit time) or dynamic (passed from the ExtEvent).</param>
         /// <returns>An instance of persistent listener.</returns>
         /// <exception cref="MethodNotEligibleException">The method passed is not eligible for invoking by <see cref="ExtEvent"/> with these generic arguments.</exception>
-        /// <exception cref="TargetNullException">The instance method was passed but the target is null.</exception>
+        /// <exception cref="TargetNullException">An instance method was passed but the target is null.</exception>
         /// <exception cref="ArgumentException">The number of arguments passed does not match the number of parameters the method takes in.</exception>
         /// <exception cref="ArgumentTypeMismatchException">A type of the argument passed does not match the type of the parameter taken in by the method.</exception>
         /// <exception cref="ArgumentIndexException">The index of a dynamic argument is either out of range of the arguments passed in ExtEvent.Invoke() or the type of the parameter by this index in ExtEvent.Invoke() does not match the type of the argument.</exception>

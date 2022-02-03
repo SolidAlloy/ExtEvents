@@ -116,7 +116,7 @@
                 var createMethod = createMethodDefinition.MakeGenericMethod(paramTypes);
                 createDelegate = (Func<object, MethodInfo, BaseInvokableCall>) Delegate.CreateDelegate(typeof(Func<object, MethodInfo, BaseInvokableCall>), createMethod);
                 _createActionCache.Add(paramTypes, createDelegate);
-                return createDelegate(target, method); // catch ExecutionEngineException here and report
+                return createDelegate(target, method);
             }
             
             private static BaseInvokableCall CreateFuncInvokableCall(Type[] paramTypes, object target, MethodInfo method)

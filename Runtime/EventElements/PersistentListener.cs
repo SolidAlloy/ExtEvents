@@ -197,7 +197,7 @@
 
                 if (serializedArg._isSerialized)
                 {
-                    arguments[i] = serializedArg._value;
+                    arguments[i] = serializedArg._serializedValue;
                 }
                 else
                 {

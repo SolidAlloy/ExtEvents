@@ -1,7 +1,7 @@
 # ExtEvents
 A better replacement for UnityEvents
 
-ExtEvents is a package that should replace UnityEvents in all your projects and relieve you from all the limitations you felt with UnityEvents.
+ExtEvents is a package that should replace UnityEvents in all your projects and free you from all the limitations you had with UnityEvents.
 
 ### Feature Comparison
 
@@ -14,8 +14,51 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 | Non-public methods         | <span style="color:red">No</span>                            | <span style="color:orange">Yes</span>                        | <span style="color:#0bce00">**Yes (+ flexible options to show/hide such methods)**</span> |
 | Performance                | <span style="color:#0bce00">Fast</span>                      | <span style="color:red">Very Slow</span>                     | <span style="color:#0bce00">**Fast**</span>                  |
 | Method Dropdown            | <span style="color:red">All methods in one GenericMenu list</span> | <span style="color:orange">GenericMenu with a few sub-menus</span> | <span style="color:#0bce00">**Scrollable list with a search field and folders**</span> |
+| Finding renamed types      | <span style="color:red">No</span>                            | <span style="color:red">No</span>                            | <span style="color:#0bce00">**Yes**</span>                   |
 
 ## Installation
+
+### OpenUPM
+
+Once you have the [OpenUPM cli](https://github.com/openupm/openupm-cli#installation), run the following command:
+
+```
+openupm install com.solidalloy.extevents
+```
+
+Or if you don't have it, add the scoped registry to manifest.json with the desired dependency semantic version:
+
+```json
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.solidalloy.util",
+        "com.solidalloy.type.references",
+        "com.solidalloy.unity-dropdown",
+        "com.openupm"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.solidalloy.extevents": "1.0.0"
+  },
+```
+
+
+
+### Git URL
+
+To install the package through Package Manager, do the following:
+
+1. In Unity, open **Window** -> **Package Manager**.
+2. Press the **+** button, choose "**Add package from git URL...**"
+3. Enter "https://github.com/SolidAlloy/SolidUtilities.git" and press **Add**.
+4. Do the same with three more packages:
+   - https://github.com/SolidAlloy/ClassTypeReference-for-Unity.git
+   - https://github.com/SolidAlloy/UnityDropdown.git
+   - https://github.com/SolidAlloy/ExtEvents.git
 
 ## Quick Start
 
@@ -118,9 +161,143 @@ And if we want to pass something else to the method, we can choose another argum
 
 <img src="D:\UnityProjects\Packages Test\Packages\ExtEvents\.images\arg-name-dropdown.png" alt="arg-name-dropdown" style="zoom:80%;" />
 
+Finally, I'll show you that we can serialize any serializable argument, even the custom ones. Let's create it:
+
+```csharp
+public class TestBehaviour : Monobehaviour
+{
+    [SerializeField] private ExtEvent _testEvent;
+    
+    public void MethodWithCustomArg(CustomSerializableClass customArg) { }
+}
+
+[Serializable]
+public class CustomSerializableClass
+{
+    public string StringField;
+    public string IntField;
+}
+```
+
+The  serializable class showed up correctly. And if you create a custom drawer for it, it will work too.
+
+<img src="D:\UnityProjects\Packages Test\Packages\ExtEvents\.images\custom-serializable-arg.png" alt="custom-serializable-arg" style="zoom:80%;" />
+
+## Project Settings and Preferences
+
+### Project Settings
+
+**Show invocation warning** (*true* by default) - Whether a warning should be logged when an event is invoked but the listener property or method is missing.
+
+**Include internal methods** (*false* by default) - Whether to include internal methods and properties in the methods dropdown when choosing a listener in ExtEvent.
+
+**Include private methods** (*false* by default) - Whether to include private and protected methods and properties in the methods dropdown when choosing a listener in ExtEvent.
+
+**Build preprocessor callback order** (*0* by default) - When a build is initiated with IL2CPP and 'Faster runtime' chosen, ExtEvents needs to generate some code for events to work properly. You can change the callback order of the code generation here if it conflicts with other preprocessors.
+
+Note that if you want to include a particular internal or private method into the dropdown, I recommend you use the `[ExtEventListener]` attribute for the method instead, so that the dropdown is not crammed with the methods you wouldn't use in events.
+
+### Preferences
+
+**Nicify arguments names** (*true* by default) - Replace the original argument names (e.g. "currentPlayer") with more readable labels - "Current Player".
+
+## Attributes
+
+**EventArguments** - use this attribute over an ExtEvent field to specify the names of the arguments this event sends out to listeners. This is just for the UI to be more understandable and doesn't affect runtime.
+
+**ExtEventListener** - place it over an internal or private method so that it appears in the method dropdown and users can choose it as a response to an event. This is a better solution than allowing all internal and private methods to show up in the dropdown.
+
+## Method Filtering
+
+Methods and properties of the type you chose are shown in the dropdown, and are divided into folders, where instance and static methods are two separate folders. Fields are not included because invoking them is a big performance hit.
+
+Instance listeners show both their instance and static methods. It is done for convenience, so that you don't need to replace instance listener with a static one if you just need to change the method inside the same type. Static listeners, on the other hand, show only static methods.
+
+When a list of methods is composed, methods that have at least one argument that can't be serialized AND can't be passed from the event (be dynamic) are filtered out of the list.
+
+Only the public methods and properties are shown by default. If you need an internal or private method to show up in the list, mark it with the `ExtEventListener` attribute. Should you want all internal or private methods to be included in the method dropdown, you can enable it in the Project Settings.
+
+Methods that return a value (not void) are also included in the list. But if your method doesn't change the state of the class and just operates on the passed arguments, mark it with the [Pure](https://www.jetbrains.com/help/resharper/Reference__Code_Annotation_Attributes.html#PureAttribute) attribute and it will be excluded from the list. Moreover, it's just a nice way to annotate your code so that the code editor warns you of the incorrect usage of methods.
+
+Finally, a method is not allowed to have more than 4 arguments. This is mainly done to limit the amount of work needed to generate the IL2CPP code, but also in order not to clutter the method lists. It is a general rule of good code design to have no more than 3-4 arguments.
+
+## Warnings
+
+You may encounter a few warnings while working with the package that will help you find the broken events.
+
+> Tried to invoke a listener to an event but the declaring type is missing: {typeName}
+
+Appears when a static method is invoked by the type that contained that method, but the type was removed. By the way, the serialization of target and argument types is backed by [TypeReferences](https://github.com/SolidAlloy/ClassTypeReference-for-Unity). So as long as the file name is the same as the type name, you can rename the type without worrying that a reference to it will be lost.
+
+> Tried to invoke a listener to an event but the target is missing
+
+Appears when an instance method is invoked but the MonoBehaviour or ScriptableObject target went missing.
+
+> Tried to invoke a listener to an event but the method {typeName}.{methodName} is missing.
+
+Means the method signature was not found. It may appear when the method name was removed or its arguments were changed, so the signature is no longer same. If the issue is because of one of the argument types went missing, you will receive the following warning above this one:
+
+> Tried to invoke a listener to an event but some of the argument types are missing: {argTypeName1, argTypeName2, ...}.
+
+> Tried to invoke a method {method} but there was no code generated for it ahead of time.
+
+Means that when the code necessary to invoke listeners was generated before a build, it didn't find this listener, or that you added a new listener to an addressable after the build was made, so the build doesn't have this method signature generated. If it's the first case, you can report it as a bug. You can get more info on this in the [IL2CPP Code Generation](#il2cpp-code-generation) section.
+
+> Tried to invoke a method with a serialized argument of type {valueType} but there was no code generated for it ahead of time.
+
+It's a similar issue but in this case the code for the serialized argument type was not generated because a listener it was in was not found by the code generation algorithm. The reasons for this are the same as the previous case.
+
+## IL2CPP Code Generation
+
+ExtEvents needs to construct generic types/methods through reflection at runtime, that's why it is faster than UltEvents. However, it introduces a few issues for IL2CPP. IL2CPP needs to generate concrete implementation for all generic types/methods that contain value types. That's because IL2CPP needs to know the size of structures that are passed to methods as arguments. For reference types the size is irrelevant as their pointers are passed instead, but different code needs to be generated for each value type. ExtEvents generates the necessary C# code so that it is translated properly by IL2CPP, so you don't need to worry about it. The generation process occurs automatically before an IL2CPP build with "Faster runtime" option enabled. For "Smaller build" option, IL2CPP doesn't generate concrete implementations of generic methods, so there's no generation from the ExtEvents side too.
+
+The above is just implementation details, but it leads to a warning you may receive at runtime: "Tried to invoke a method {method} but there was no code generated for it ahead of time." That means the ExtEvents didn't find your ExtEvent for some reason and didn't include it when generating code for the build. Unless there's a bug in ExtEvents, this warning may only occur in a situation when built the project first, then created a new addressable asset, and used a new listener there that had a new set of arguments that was never used before. The code generation ran before the build, and the build doesn't know of this new set of arguments that was added to an addressable later. So should you stumble upon such a warning, firstly check if your addressables used new listeners.
+
+## Code Stripping
+
+I tested how the code stripping affects the events and I was not able to make Unity strip the methods that were used by ExtEvents, even though they weren't used anywhere else in the code. It might be that IL2CPP finds the method names in serialized assets and doesn't strip them. Nevertheless, if a method you used as a response to an ExtEvent was stripped in build, let me know as I have code to force IL2CPP to not strip those methods, it's just it hasn't been needed yet.
+
+## Rider Integration
+
+You may know that Rider has a cool feature of marking the methods used by UnityEvents and finding which game objects use the method as a response to events. I haven't tried to create a similar plugin because I've never worked with Rider plugins before but I suppose we can take a look at the source code of the Rider plugin [here](https://github.com/JetBrains/resharper-unity) and copy specific parts of it responsible for the UnityEvent features, adapting it for ExtEvents. If anyone can contribute to the project by implementing such a plugin, it would be super cool!
+
+## Working with ExtEvents from code
+
+```csharp
+// You can manage persistent listeners of ExtEvent easily. This is how you can add a new persistent listener:
+_testEvent.AddPersistentListener((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly);
+
+// When creating a persistent listener for a method with arguments, you need to specify whether you want to create dynamic or serialized arguments.
+// In this case, we create a dynamic argument and make it accept a value from the first argument of _testEvent (hence index 0).
+_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, UnityEventCallState.RuntimeOnly, PersistentArgument.CreateDynamic<string>(0));
+
+// Or we can pass a serialized argument with its predetermined value. Note that callState is not a required argument and defaults to RuntimeOnly.
+_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, arguments: PersistentArgument.CreateSerialized("test"));
+
+// When creating a persistent argument for a static method, pass null into the target parameter.
+// The newly created listener returned and you can check its values right away.
+var newListener = _testEvent.AddPersistentListener((Action) EventWithNoArgs, null);
+
+// Or you can access other persistent listeners easily.
+var firstListener = _testEvent.PersistentListeners[0];
+
+// PersistentListener exposes a bunch of read-only properties. If you need to change the listener, remove it from the event and add a new one.
+Debug.Log($"target: {newListener.Target}, method: {newListener.MethodName}");
+
+// Remove listeners like that.
+_testEvent.RemovePersistentListener(newListener);
+_testEvent.RemovePersistentListenerAt(0);
+
+// Also, persistent arguments are exposed, so you can check their values, for example.
+Debug.Log(firstListener.PersistentArguments[0].SerializedValue);
+
+// If you need the changes to persistent listeners to be saved, don't forget to mark the object that contains the event as dirty.
+EditorUtility.SetDirty(this);
+```
+
 ## Performance
 
-The performance of events depends on the number of arguments you pass through them. When invoking a method with 0 arguments, ExtEvent is even faster than UnityEvent! The performance of ExtEvent is less than 2 times lower when building a project with the [faster build time](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/EditorUserBuildSettings-il2CppCodeGeneration.html) setting. The performance of UnityEvent is better in some cases because of how limited its feature set is. You can see that ExtEvents are faster than UltEvents in all cases while providing even more features! Still, performance of ExtEvents should not be your concern until you are performing hundreds of thousands of calls per frame.
+The performance of events depends on the number of arguments you pass through them. When invoking a method with 0 arguments, ExtEvent is even faster than UnityEvent! The performance of ExtEvent is less than 2 times lower when building a project with the [faster build time](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/EditorUserBuildSettings-il2CppCodeGeneration.html) setting. The performance of UnityEvent is better in some cases because of how limited its feature set is. You can see that ExtEvents are faster than UltEvents in all cases while providing even more features! Still, performance of ExtEvents should not be your concern until you are performing hundreds of thousands of calls per frame. Also consider that most of the time you will invoke methods with 0 or 1 arguments which will be faster or on par with UnityEvents.
 
 <img src="D:\UnityProjects\Packages Test\Packages\ExtEvents\.images\performance-graph.png" alt="performance-graph" style="zoom: 67%;" />
 

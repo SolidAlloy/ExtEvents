@@ -38,14 +38,14 @@
         [SerializeField] internal string _serializedArg;
         [SerializeField] internal bool _canBeDynamic;
 
-        internal object _value => GetValue(_serializedArg, _type);
+        internal object _serializedValue => GetValue(_serializedArg, _type);
 
         /// <summary>
         /// The value of the argument if it is serialized.
         /// </summary>
         /// <exception cref="Exception">The argument is not serialized but a dynamic one.</exception>
         [PublicAPI]
-        public object Value
+        public object SerializedValue
         {
             get
             {
@@ -90,6 +90,17 @@
         /// Creates a dynamic argument.
         /// </summary>
         /// <param name="eventArgumentIndex">An index of the argument passed through ExtEvent.Invoke().</param>
+        /// <typeparam name="T">The type of the argument.</typeparam>
+        /// <returns>An instance of the dynamic argument.</returns>
+        public static PersistentArgument CreateDynamic<T>(int eventArgumentIndex)
+        {
+            return CreateDynamic(eventArgumentIndex, typeof(T));
+        }
+
+        /// <summary>
+        /// Creates a dynamic argument.
+        /// </summary>
+        /// <param name="eventArgumentIndex">An index of the argument passed through ExtEvent.Invoke().</param>
         /// <param name="argumentType">The type of the argument.</param>
         /// <returns>An instance of the dynamic argument.</returns>
         public static PersistentArgument CreateDynamic(int eventArgumentIndex, Type argumentType)
@@ -107,7 +118,16 @@
         {
             var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
             var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
-            return argumentHolder?.Value;
+
+            try
+            {
+                return argumentHolder?.Value;
+            }
+            catch (ExecutionEngineException)
+            {
+                Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {valueType} but there was no code generated for it ahead of time.");
+                return null;
+            }
         }
 
         public static string SerializeValue(object value, Type valueType)
