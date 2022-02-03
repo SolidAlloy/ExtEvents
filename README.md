@@ -5,16 +5,16 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 
 ### Feature Comparison
 
-|                            | UnityEvent                                                   | UltEvent                                                     | ExtEvent                                                     |
-| -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Serialized parameter types | <span style="color:red">A small number of types: Object, bool, string, etc.</span> | <span style="color:orange">More types: Enum, Vector2, Rect</span> | <span style="color:#0bce00">**Any serializable parameter shows up in the inspector with the correct UI**</span> |
-| Number of parameters       | <span style="color:red">0 or 1</span>                        | <span style="color:#0bce00">Up to 4</span>                   | <span style="color:#0bce00">**Up to 4**</span>               |
-| Static methods             | <span style="color:red">No</span>                            | <span style="color:#0bce00">Yes</span>                       | <span style="color:#0bce00">**Yes**</span>                   |
-| Non-void methods           | <span style="color:red">No</span>                            | <span style="color:orange">Yes</span>                        | <span style="color:#0bce00">**Yes (+ smart filtration system)**</span> |
-| Non-public methods         | <span style="color:red">No</span>                            | <span style="color:orange">Yes</span>                        | <span style="color:#0bce00">**Yes (+ flexible options to show/hide such methods)**</span> |
-| Performance                | <span style="color:#0bce00">Fast</span>                      | <span style="color:red">Very Slow</span>                     | <span style="color:#0bce00">**Fast**</span>                  |
-| Method Dropdown            | <span style="color:red">All methods in one GenericMenu list</span> | <span style="color:orange">GenericMenu with a few sub-menus</span> | <span style="color:#0bce00">**Scrollable list with a search field and folders**</span> |
-| Finding renamed types      | <span style="color:red">No</span>                            | <span style="color:red">No</span>                            | <span style="color:#0bce00">**Yes**</span>                   |
+|                            | UnityEvent                                              | UltEvent                                  | ExtEvent                                                     |
+| -------------------------- | ------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Serialized parameter types | :x: A small number of types: Object, bool, string, etc. | :warning:More types: Enum, Vector2, Rect  | :white_check_mark: **Any serializable parameter shows up in the inspector with the correct UI** |
+| Number of parameters       | :x: 0 or 1                                              | :white_check_mark: Up to 4                | :white_check_mark: **Up to 4**                               |
+| Static methods             | :x: No                                                  | :white_check_mark: Yes                    | :white_check_mark: **Yes**                                   |
+| Non-void methods           | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ smart filtration system)**       |
+| Non-public methods         | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ flexible options to show/hide such methods)** |
+| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Fast**                                  |
+| Method Dropdown            | :x: All methods in one GenericMenu list                 | :warning:GenericMenu with a few sub-menus | :white_check_mark: **Scrollable list with a search field and folders** |
+| Finding renamed types      | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
 
 ## Installation
 
