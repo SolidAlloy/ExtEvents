@@ -1,6 +1,8 @@
 # ExtEvents
 A better replacement for UnityEvents
 
+[![openupm](https://img.shields.io/npm/v/com.solidalloy.extevents?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.solidalloy.extevents/)
+
 ExtEvents is a package that should replace UnityEvents in all your projects and free you from all the limitations you had with UnityEvents.
 
 ### Feature Comparison
