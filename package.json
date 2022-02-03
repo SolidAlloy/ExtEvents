@@ -4,10 +4,10 @@
   "displayName": "ExtEvents",
   "description": "UnityEvents, but better.",
   "dependencies": {
-    "com.solidalloy.util": "1.33.1",
+    "com.solidalloy.util": "1.35.0",
     "com.unity.settings-manager": "1.0.3",
-    "com.solidalloy.type-references": "2.11.5",
-	"com.solidalloy.unity-dropdown": "1.0.0"
+    "com.solidalloy.type-references": "2.12.0",
+	"com.solidalloy.unity-dropdown": "1.1.0"
   },
   "keywords": [
     "event",
