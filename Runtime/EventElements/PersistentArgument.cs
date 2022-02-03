@@ -123,7 +123,9 @@
             {
                 return argumentHolder?.Value;
             }
+#pragma warning disable CS0618
             catch (ExecutionEngineException)
+#pragma warning restore CS0618
             {
                 Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {valueType} but there was no code generated for it ahead of time.");
                 return null;
