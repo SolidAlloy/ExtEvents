@@ -96,11 +96,11 @@ Drag and drop TestBehaviour into the target field. A dropdown with methods will 
 
 <img src="/.images/add-instance-listener.gif" alt="add-instance-listener" style="zoom:80%;" />
 
-Try choosing EventWithOneArg(). A field for the argument will appear where you will be able to fill in the data:
+Try choosing `EventWithOneArg()`. A field for the argument will appear where you will be able to fill in the data:
 
 <img src="/.images/string-argument.png" alt="string-argument" style="zoom:80%;" />
 
-Let's add a static listener by pressing "+s":
+Let's add a static listener by pressing "**+s**":
 
 <img src="/.images/static-listener.png" alt="static-listener" style="zoom:80%;" />
 
@@ -119,11 +119,11 @@ public class TestBehaviour : Monobehaviour
 
 <img src="/.images/one-dynamic-arg.png" alt="one-dynamic-arg" style="zoom:80%;" />
 
-The argument is shown as dynamic now, so every time you pass a value to _stringEvent, it will be sent to EventWithOneArg(). Should you need it preset in editor, you can switch the argument to serialized:
+The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized:
 
 <img src="/.images/dynamic-serialized-dropdown.png" alt="dynamic-serialized-dropdown" style="zoom:80%;" />
 
-The "Arg1" dropdown is disabled now because there is no other argument that can be passed to 'arg', only the first argument of _stringEvent. But what if we have a choice? Let's imagine we have a player creation menu and want to add the player username to the database:
+The "*Arg1*" dropdown is disabled now because there is no other argument that can be passed to `arg`, only the first argument of `_stringEvent`. But what if we have a choice? Let's imagine we have a player creation menu and want to add the player username to the database:
 
 ```csharp
 public class TestBehaviour : Monobehaviour
@@ -139,7 +139,7 @@ public class TestBehaviour : Monobehaviour
 }
 ```
 
-The _onPlayerCreated has three arguments but we want only one passed to the AddToDatabase method:
+The `_onPlayerCreated` has three arguments but we want only one passed to the `AddToDatabase` method:
 
 <img src="/.images/dynamic-argument-dropdown.png" alt="dynamic-argument-dropdown" style="zoom:80%;" />
 
@@ -193,7 +193,7 @@ The  serializable class showed up correctly. And if you create a custom drawer f
 
 **Include private methods** (*false* by default) - Whether to include private and protected methods and properties in the methods dropdown when choosing a listener in ExtEvent.
 
-**Build preprocessor callback order** (*0* by default) - When a build is initiated with IL2CPP and 'Faster runtime' chosen, ExtEvents needs to generate some code for events to work properly. You can change the callback order of the code generation here if it conflicts with other preprocessors.
+**Build preprocessor callback order** (*0* by default) - When a build is initiated with IL2CPP and '*Faster runtime*' chosen, ExtEvents needs to generate some code for events to work properly. You can change the callback order of the code generation here if it conflicts with other preprocessors.
 
 Note that if you want to include a particular internal or private method into the dropdown, I recommend you use the `[ExtEventListener]` attribute for the method instead, so that the dropdown is not crammed with the methods you wouldn't use in events.
 
