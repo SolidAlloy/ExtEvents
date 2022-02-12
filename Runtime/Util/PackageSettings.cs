@@ -4,7 +4,7 @@
     using UnityEditor;
     using UnityEngine;
 
-    internal class PackageSettings : ScriptableObject
+    public class PackageSettings : ScriptableObject
     {
         public const string PackageName = "com.solidalloy.ext-events";
         public const string PluginsPath = "Assets/Plugins/ExtEvents";
