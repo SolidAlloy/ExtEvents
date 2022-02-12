@@ -67,22 +67,32 @@
             _clearCacheRecursive.Invoke(_list);
         }
 
+        private static bool _triedGetScheduleRemoveField;
         private static FieldInfo _scheduleRemove;
         private bool ScheduleRemove
         {
             get
             {
-                if (_scheduleRemove == null)
+                if (_scheduleRemove == null && !_triedGetScheduleRemoveField)
+                {
                     _scheduleRemove = typeof(ReorderableList).GetField("scheduleRemove", BindingFlags.NonPublic | BindingFlags.Instance);
+                    _triedGetScheduleRemoveField = true;
+                }
 
+                if (_scheduleRemove == null)
+                    return true;
+                
                 return (bool) _scheduleRemove.GetValue(_list);
             }
             set
             {
-                if (_scheduleRemove == null)
+                if (_scheduleRemove == null && !_triedGetScheduleRemoveField)
+                {
                     _scheduleRemove = typeof(ReorderableList).GetField("scheduleRemove", BindingFlags.NonPublic | BindingFlags.Instance);
-
-                _scheduleRemove.SetValue(_list, value);
+                    _triedGetScheduleRemoveField = true;
+                }
+                
+                _scheduleRemove?.SetValue(_list, value);
             }
         }
 
