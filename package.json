@@ -1,6 +1,6 @@
 {
   "name": "com.solidalloy.extevents",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "displayName": "ExtEvents",
   "description": "UnityEvents, but better.",
   "dependencies": {

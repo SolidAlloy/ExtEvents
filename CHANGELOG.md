@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/SolidAlloy/ExtEvents/compare/1.0.3...1.1.0) (2022-02-13)
+
+
+### Bug Fixes
+
+* Fixed NullReferenceException in Unity 2020.2 and earlier ([b86b8b4](https://github.com/SolidAlloy/ExtEvents/commit/b86b8b4189e7d8501d608ce47cc83146ae7b7ad3))
+
+
+### Features
+
+* Made PackageSettings public ([acb4291](https://github.com/SolidAlloy/ExtEvents/commit/acb429188a74a83afc41bfd2a046c1845f322d82))
+
 ## [1.0.3](https://github.com/SolidAlloy/ExtEvents/compare/1.0.2...1.0.3) (2022-02-03)
 
 
