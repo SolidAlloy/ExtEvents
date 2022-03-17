@@ -4,24 +4,13 @@
     using System.Collections.Generic;
     using System.Reflection;
     using SolidUtilities;
+    using SolidUtilities.Editor;
     using TypeReferences;
     using UnityEditor;
     using UnityEngine.Events;
 
     public static class ExtEventProjectSearcher
     {
-        public static IEnumerable<SerializedProperty> FindExtEventProperties(
-            IEnumerable<SerializedObject> serializedObjects)
-        {
-            foreach (var serializedObject in serializedObjects)
-            {
-                foreach (var serializedProperty in FindExtEventProperties(serializedObject))
-                {
-                    yield return serializedProperty;
-                }
-            }
-        }
-        
         public static IEnumerable<MethodInfo> GetMethods(IEnumerable<SerializedProperty> extEventProperties)
         {
             foreach (var extEventProperty in extEventProperties)
@@ -38,35 +27,6 @@
                         yield return method;
                 }
             }
-        }
-
-        private static IEnumerable<SerializedProperty> FindExtEventProperties(SerializedObject serializedObject)
-        {
-            var prop = serializedObject.GetIterator();
-
-            if (!prop.Next(true))
-                yield break;
-
-            do
-            {
-                if (prop.type.GetSubstringBefore('`') != "ExtEvent") 
-                    continue;
-                
-                if (prop.isArray)
-                {
-                    int arrayLength = prop.arraySize;
-
-                    for (int i = 0; i < arrayLength; i++)
-                    {
-                        yield return prop.GetArrayElementAtIndex(i);
-                    }
-                }
-                else
-                {
-                    yield return prop;
-                }
-            }
-            while (prop.NextVisible(true));
         }
 
         private static class ResponseHelper
