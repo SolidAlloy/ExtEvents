@@ -293,6 +293,9 @@
         {
             var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._type)));
             serializedTypeRef.SetType(type);
+            
+            // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user. 
+            serializedTypeRef.SuppressLogs = true;
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
             // not in the middle of drawing ext events but rather after drawing all the events.
