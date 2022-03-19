@@ -95,8 +95,7 @@
             }
 
             _initializationSuccessful = Initialize();
-            _initializationComplete = true;
-            
+
             if (_initializationSuccessful)
                 InvokeImpl(args);
         }
@@ -119,12 +118,18 @@
             var declaringType = GetDeclaringType();
 
             if (declaringType == null)
+            {
+                _initializationComplete = true;
                 return false;
+            }
             
             var argumentTypes = GetArgumentTypes();
 
             if (argumentTypes == null)
+            {
+                _initializationComplete = true;
                 return false;
+            }
             
             var target = _isStatic ? null : _target;
             _invokableCall = GetInvokableCall(declaringType, argumentTypes, target);
@@ -132,10 +137,12 @@
             if (_invokableCall == null)
             {
                 LogMethodInfoWarning();
+                _initializationComplete = true;
                 return false;
             }
 
             _arguments = GetArguments();
+            _initializationComplete = true;
             return true;
         }
 
