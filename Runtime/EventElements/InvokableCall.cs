@@ -2,6 +2,7 @@
 {
     using System;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using UnityEngine.Scripting;
 
     // We use [Preserve] a lot here because link.xml cannot be used in a package.
@@ -74,7 +75,7 @@
         }
 
         [Preserve]
-        public abstract void Invoke(object[] args);
+        public abstract unsafe void Invoke(void*[] args);
     }
 
     [Preserve]
@@ -95,7 +96,7 @@
             }
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
             _delegate();
         }
@@ -112,9 +113,9 @@
             _delegate = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T) args[0]);
+            _delegate(Unsafe.Read<T>(args[0]));
         }
     }
     
@@ -129,9 +130,9 @@
             _delegate = (Action<T1, T2>) Delegate.CreateDelegate(typeof(Action<T1, T2>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1]); 
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1])); 
         }
     }
     
@@ -146,9 +147,9 @@
             _delegate = (Action<T1, T2, T3>) Delegate.CreateDelegate(typeof(Action<T1, T2, T3>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]));
         }
     }
     
@@ -163,9 +164,9 @@
             _delegate = (Action<T1, T2, T3, T4>) Delegate.CreateDelegate(typeof(Action<T1, T2, T3, T4>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2], (T4) args[3]);
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]), Unsafe.Read<T4>(args[3]));
         }
     }
 
@@ -180,7 +181,7 @@
             _delegate = (Func<TReturn>) Delegate.CreateDelegate(typeof(Func<TReturn>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
             _delegate();
         }
@@ -197,9 +198,9 @@
             _delegate = (Func<T, TReturn>) Delegate.CreateDelegate(typeof(Func<T, TReturn>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T) args[0]);
+            _delegate(Unsafe.Read<T>(args[0]));
         }
     }
     
@@ -214,9 +215,9 @@
             _delegate = (Func<T1, T2, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, TReturn>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1]);
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]));
         }
     }
     
@@ -231,9 +232,9 @@
             _delegate = (Func<T1, T2, T3, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, T3, TReturn>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2]);
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]));
         }
     }
     
@@ -248,9 +249,9 @@
             _delegate = (Func<T1, T2, T3, T4, TReturn>) Delegate.CreateDelegate(typeof(Func<T1, T2, T3, T4, TReturn>), target, method);
         }
 
-        public override void Invoke(object[] args)
+        public override unsafe void Invoke(void*[] args)
         {
-            _delegate((T1) args[0], (T2) args[1], (T3) args[2], (T4) args[3]);
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]), Unsafe.Read<T4>(args[3]));
         }
     }
 }

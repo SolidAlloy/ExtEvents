@@ -10,7 +10,6 @@
     using TypeReferences.Editor.Util;
     using UnityDropdown.Editor;
     using UnityEditor;
-    using UnityEditor.Build.Content;
     using UnityEngine;
 
     public static class MethodInfoDrawer

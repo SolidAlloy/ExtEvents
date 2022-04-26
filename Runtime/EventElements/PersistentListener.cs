@@ -59,7 +59,7 @@
         [NonSerialized] internal bool _initializationComplete;
         [NonSerialized] private bool _initializationSuccessful;
 
-        private object[] _arguments;
+        private unsafe void*[] _arguments;
 
         private BaseInvokableCall _invokableCall;
         
@@ -75,7 +75,7 @@
             _persistentArguments = persistentArguments;
         }
 
-        internal void Invoke([CanBeNull] object[] args)
+        internal unsafe void Invoke([CanBeNull] void*[] args)
         {
             // If no function is chosen, exit without any warnings.
             if (CallState == UnityEventCallState.Off || string.IsNullOrEmpty(_methodName))
@@ -103,7 +103,7 @@
         internal static BindingFlags GetFlags(bool isStatic) => BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InvokeImpl(object[] args)
+        private unsafe void InvokeImpl(void*[] args)
         {
             FillWithDynamicArgs(args);
             _invokableCall.Invoke(_arguments);
@@ -141,7 +141,11 @@
                 return false;
             }
 
-            _arguments = GetArguments();
+            unsafe
+            {
+                InitializeArguments();
+            }
+            
             _initializationComplete = true;
             return true;
         }
@@ -177,7 +181,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FillWithDynamicArgs(object[] args)
+        private unsafe void FillWithDynamicArgs(void*[] args)
         {
             if (args == null || _arguments == null)
                 return;
@@ -191,12 +195,13 @@
             }
         }
 
-        private object[] GetArguments()
+        // Setting _arguments inside the method instead of returning it because IL2CPP incorrectly translates a method that returns void*[] into a void method.
+        private unsafe void InitializeArguments()
         {
             if (_persistentArguments.Length == 0)
-                return null;
+                return;
 
-            var arguments = new object[_persistentArguments.Length];
+            _arguments = new void*[_persistentArguments.Length];
 
             for (int i = 0; i < _persistentArguments.Length; i++)
             {
@@ -204,15 +209,15 @@
 
                 if (serializedArg._isSerialized)
                 {
-                    arguments[i] = serializedArg._serializedValue;
+                    // TODO: might be necessary to pin the object, especially if built with Mono.
+                    var serializedValue = serializedArg._serializedValue;
+                    _arguments[i] = Unsafe.AsPointer(ref serializedValue);
                 }
                 else
                 {
-                    arguments[i] = null;
+                    _arguments[i] = null;
                 }
             }
-
-            return arguments;
         }
 
         private IEnumerable<string> GetNullArgumentTypeNames()

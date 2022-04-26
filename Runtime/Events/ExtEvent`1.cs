@@ -1,12 +1,14 @@
 ﻿namespace ExtEvents
 {
     using System;
+    using System.Runtime.CompilerServices;
     using JetBrains.Annotations;
+    using Unity.Collections.LowLevel.Unsafe;
 
     [Serializable]
     public class ExtEvent<T> : BaseExtEvent
     {
-        private readonly object[] _arguments = new object[1];
+        private readonly unsafe void*[] _arguments = new void*[1];
 
         private Type[] _eventParamTypes;
         protected override Type[] EventParamTypes => _eventParamTypes ??= new Type[] { typeof(T) };
@@ -25,12 +27,15 @@
         [PublicAPI]
         public void Invoke(T arg)
         {
-            _arguments[0] = arg;
-
-            // ReSharper disable once ForCanBeConvertedToForeach
-            for (int index = 0; index < _persistentListeners.Length; index++)
+            unsafe
             {
-                _persistentListeners[index].Invoke(_arguments);
+                _arguments[0] = Unsafe.AsPointer(ref arg);
+                
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int index = 0; index < _persistentListeners.Length; index++)
+                {
+                    _persistentListeners[index].Invoke(_arguments);
+                }
             }
             
             DynamicListeners?.Invoke(arg);
