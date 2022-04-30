@@ -13,33 +13,21 @@
     [CustomPropertyDrawer(typeof(PersistentArgument))]
     public class PersistentArgumentDrawer : PropertyDrawer
     {
-        private static GUIStyle _buttonStyle;
-        private static GUIStyle ButtonStyle => _buttonStyle ??= new GUIStyle(GUI.skin.GetStyle("PaneOptions"))
-        {
-            imagePosition = ImagePosition.ImageOnly
-        };
-
-        private static Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedProperty> _valuePropertyCache =
+        private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedProperty> _valuePropertyCache =
                 new Dictionary<(SerializedObject serializedObject, string propertyPath), SerializedProperty>();
 
         private SerializedProperty _valueProperty;
         private SerializedProperty _isSerialized;
         private SerializedProperty _serializedArgProp;
         private bool _showChoiceButton = true;
+        
+        private GUIStyle _buttonStyle;
+        private GUIStyle ButtonStyle => _buttonStyle ?? (_buttonStyle = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold });
 
         private SerializedProperty ExposedProperty => _valueProperty;
 
         private bool ShouldDrawFoldout =>
             _isSerialized.boolValue && _valueProperty.propertyType == SerializedPropertyType.Generic;
-
-        private static readonly string[] _popupOptions = { "Dynamic", "Serialized" };
-        private string[] PopupOptions => _popupOptions;
-
-        private int PopupValue
-        {
-            get => _isSerialized.boolValue ? 1 : 0;
-            set => _isSerialized.boolValue = value == 1;
-        }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -70,7 +58,7 @@
             EditorGUI.indentLevel = 0;
 
             if (_showChoiceButton)
-                PopupValue = DrawButton(buttonRect, PopupValue);
+                DrawChoiceButton(buttonRect);
 
             DrawValue(property, valueRect, fieldRect, previousIndent);
 
@@ -244,8 +232,8 @@
 
             labelAndButtonRect.xMin += EditorGUI.indentLevel * indentWidth;
 
-            (Rect labelRect, Rect buttonRect) =
-                labelAndButtonRect.CutVertically(_showChoiceButton ? ButtonStyle.fixedWidth : 0f, fromRightSide: true);
+            const float choiceButtonWidth = 19f;
+            (Rect labelRect, Rect buttonRect) = labelAndButtonRect.CutVertically(_showChoiceButton ? choiceButtonWidth : 0f, fromRightSide: true);
 
             valueRect.xMin += valueLeftIndent;
             return (labelRect, buttonRect, valueRect);
@@ -280,9 +268,12 @@
             }
         }
 
-        private int DrawButton(Rect buttonRect, int currentValue)
+        private void DrawChoiceButton(Rect buttonRect)
         {
-            return EditorGUI.Popup(buttonRect, currentValue, PopupOptions, ButtonStyle);
+            if (GUI.Button(buttonRect, _isSerialized.boolValue ? "s" : "d", ButtonStyle))
+            {
+                _isSerialized.boolValue = !_isSerialized.boolValue;
+            }
         }
     }
 }
