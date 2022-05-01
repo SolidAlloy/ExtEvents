@@ -22,7 +22,7 @@
         private bool _showChoiceButton = true;
         
         private GUIStyle _buttonStyle;
-        private GUIStyle ButtonStyle => _buttonStyle ?? (_buttonStyle = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold });
+        private GUIStyle ButtonStyle => _buttonStyle ?? (_buttonStyle = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold, alignment = TextAnchor.LowerCenter});
 
         private SerializedProperty ExposedProperty => _valueProperty;
 

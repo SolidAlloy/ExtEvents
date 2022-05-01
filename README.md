@@ -14,7 +14,7 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 | Static methods             | :x: No                                                  | :white_check_mark: Yes                    | :white_check_mark: **Yes**                                   |
 | Non-void methods           | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ smart filtration system)**       |
 | Non-public methods         | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ flexible options to show/hide such methods)** |
-| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Fast**                                  |
+| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Very Fast**                             |
 | Method Dropdown            | :x: All methods in one GenericMenu list                 | :warning:GenericMenu with a few sub-menus | :white_check_mark: **Scrollable list with a search field and folders** |
 | Finding renamed types      | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
 
@@ -124,7 +124,7 @@ public class TestBehaviour : Monobehaviour
 
 <img src="/.images/one-dynamic-arg.png" alt="one-dynamic-arg" style="zoom:80%;" />
 
-The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized:
+The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized by pressing on the **d** button:
 
 <img src="/.images/dynamic-serialized-dropdown.png" alt="dynamic-serialized-dropdown" style="zoom:80%;" />
 
