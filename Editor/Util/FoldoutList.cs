@@ -188,7 +188,7 @@
         private static readonly GUIStyle _footerBackground = "RL Footer";
         private static readonly GUIStyle _preButton = (GUIStyle) "RL FooterButton";
 
-        public static void DrawFooter(Rect buttonsRect, FoldoutList list, params ButtonData[] buttons) // TODO: pass buttons here
+        public static void DrawFooter(Rect buttonsRect, FoldoutList list, params ButtonData[] buttons)
         {
             float rightBorder = buttonsRect.xMax - 10f;
             float leftBorder = rightBorder - 8f - buttons.Sum(button => button.Size.x);
