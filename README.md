@@ -270,24 +270,24 @@ You may know that Rider has a cool feature of marking the methods used by UnityE
 
 ```csharp
 // You can manage persistent listeners of ExtEvent easily. This is how you can add a new persistent listener:
-_testEvent.AddPersistentListener((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly);
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly));
 
 // When creating a persistent listener for a method with arguments, you need to specify whether you want to create dynamic or serialized arguments.
 // In this case, we create a dynamic argument and make it accept a value from the first argument of _testEvent (hence index 0).
-_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, UnityEventCallState.RuntimeOnly, PersistentArgument.CreateDynamic<string>(0));
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action<string>) EventWithOneArg, this, UnityEventCallState.RuntimeOnly, PersistentArgument.CreateDynamic<string>(0)));
 
 // Or we can pass a serialized argument with its predetermined value. Note that callState is not a required argument and defaults to RuntimeOnly.
-_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, arguments: PersistentArgument.CreateSerialized("test"));
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action<string>) EventWithOneArg, this, arguments: PersistentArgument.CreateSerialized("test")));
 
 // When creating a persistent argument for a static method, pass null into the target parameter.
-// The newly created listener returned and you can check its values right away.
-var newListener = _testEvent.AddPersistentListener((Action) EventWithNoArgs, null);
-
-// Or you can access other persistent listeners easily.
-var firstListener = _testEvent.PersistentListeners[0];
+var newListener = PersistentListener.FromStatic((Action) EventWithNoArgs);
+_testEvent.AddPersistentListener(newListener);
 
 // PersistentListener exposes a bunch of read-only properties. If you need to change the listener, remove it from the event and add a new one.
 Debug.Log($"target: {newListener.Target}, method: {newListener.MethodName}");
+
+// You can access other persistent listeners easily.
+var firstListener = _testEvent.PersistentListeners[0];
 
 // Remove listeners like that.
 _testEvent.RemovePersistentListener(newListener);
@@ -297,7 +297,9 @@ _testEvent.RemovePersistentListenerAt(0);
 Debug.Log(firstListener.PersistentArguments[0].SerializedValue);
 
 // If you need the changes to persistent listeners to be saved, don't forget to mark the object that contains the event as dirty.
+#if UNITY_EDITOR
 EditorUtility.SetDirty(this);
+#endif
 ```
 
 ## Performance
