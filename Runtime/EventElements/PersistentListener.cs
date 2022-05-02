@@ -19,7 +19,7 @@
     public partial class PersistentListener
     {
         [SerializeField] internal PersistentArgument[] _persistentArguments;
-        
+
         /// <summary>
         /// A list of persistent arguments the listener has. Each argument can be either dynamic (passed when the event is invoked) or serialized (set in the editor UI before-hand).
         /// </summary>
@@ -27,7 +27,7 @@
         public IReadOnlyList<PersistentArgument> PersistentArguments => _persistentArguments;
 
         [SerializeField] internal Object _target;
-        
+
         /// <summary>
         /// The target object of a listener which method is invoked. For static listeners, it is null.
         /// </summary>
@@ -35,19 +35,19 @@
         public Object Target => _target;
 
         [SerializeField] internal bool _isStatic;
-        
+
         /// <summary>
         /// Whether the listener invokes a static or instance method.
         /// </summary>
         [PublicAPI]
         public bool IsStatic => _isStatic;
-        
+
         /// <summary>
         /// Whether the listener is invoked when the play mode is not entered, or is turned off permanently.
         /// </summary>
         [SerializeField] public UnityEventCallState CallState = UnityEventCallState.RuntimeOnly;
 
-        [SerializeField, TypeOptions(ShowAllTypes = true, AllowInternal = true, ShowNoneElement = false)] 
+        [SerializeField, TypeOptions(ShowAllTypes = true, AllowInternal = true, ShowNoneElement = false)]
         internal TypeReference _staticType;
 
         /// <summary>
@@ -62,15 +62,15 @@
         private unsafe void*[] _arguments;
 
         private BaseInvokableCall _invokableCall;
-        
+
         private PersistentListener() { }
-        
+
         internal PersistentListener([NotNull] MethodInfo method, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
         {
             if (method is null)
                 // ReSharper disable once NotResolvedInText
                 throw new ArgumentNullException("The method provided is null", nameof(method));
-            
+
             bool isStatic = method.IsStatic;
 
             _methodName = method.Name;
@@ -80,7 +80,7 @@
             _staticType = method.DeclaringType;
             _persistentArguments = arguments;
         }
-        
+
         /// <summary>
         /// Create a <see cref="PersistentListener"/> instance from a static method.
         /// </summary>
@@ -206,7 +206,7 @@
             if (_initializationSuccessful)
                 InvokeImpl(args);
         }
-        
+
         internal static BindingFlags GetFlags(bool isStatic) => BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -229,7 +229,7 @@
                 _initializationComplete = true;
                 return false;
             }
-            
+
             var argumentTypes = GetArgumentTypes();
 
             if (argumentTypes == null)
@@ -237,7 +237,7 @@
                 _initializationComplete = true;
                 return false;
             }
-            
+
             var target = _isStatic ? null : _target;
             _invokableCall = GetInvokableCall(declaringType, argumentTypes, target);
 
@@ -264,12 +264,12 @@
                 return _staticType.Type;
             }
 
-            if (_target is null) 
+            if (_target is null)
                 Logger.LogWarning("Tried to invoke a listener to an event but the target is missing");
 
             return _target?.GetType();
         }
-        
+
         private void LogMethodInfoWarning()
         {
 #if UNITY_EDITOR
@@ -293,7 +293,7 @@
             for (int i = 0; i < _arguments.Length; i++)
             {
                 var serializedArg = _persistentArguments[i];
-                
+
                 if (!serializedArg._isSerialized)
                     _arguments[i] = args[serializedArg._index];
             }
@@ -313,9 +313,7 @@
 
                 if (serializedArg._isSerialized)
                 {
-                    // TODO: might be necessary to pin the object, especially if built with Mono.
-                    var serializedValue = serializedArg._serializedValue;
-                    _arguments[i] = Unsafe.AsPointer(ref serializedValue);
+                    _arguments[i] = serializedArg.SerializedValuePointer;
                 }
                 else
                 {
@@ -345,7 +343,7 @@
                 {
                     if (PackageSettings.ShowInvocationWarning)
                         Logger.LogWarning($"Tried to invoke a listener to an event but some of the argument types are missing: {string.Join(", ", GetNullArgumentTypeNames().Select(TypeReference.GetTypeNameFromNameAndAssembly))}.");
-                    
+
                     return null;
                 }
             }

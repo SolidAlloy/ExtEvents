@@ -1,6 +1,7 @@
 ﻿namespace ExtEvents
 {
     using System;
+    using System.Runtime.CompilerServices;
     using UnityEngine;
     using UnityEngine.Scripting;
 
@@ -12,7 +13,10 @@
     public abstract class ArgumentHolder
     {
         [Preserve]
-        public abstract object Value { get; }
+        public abstract unsafe void* ValuePointer { get; }
+
+        [Preserve]
+        public abstract unsafe object Value { get; }
     }
 
     [Serializable]
@@ -21,10 +25,13 @@
         [SerializeField] private T _value;
 
         [Preserve]
+        public override unsafe void* ValuePointer => Unsafe.AsPointer(ref _value);
+
+        [Preserve]
         public override object Value => _value;
 
         public ArgumentHolder() { }
-        
+
         public ArgumentHolder(T value)
         {
             _value = value;

@@ -3,6 +3,7 @@
     using System;
     using JetBrains.Annotations;
     using TypeReferences;
+    using Unity.Collections.LowLevel.Unsafe;
     using UnityEngine;
 
     /// <summary>
@@ -12,25 +13,57 @@
     public class PersistentArgument
     {
         [SerializeField] internal int _index;
-        
+
         /// <summary> An index of the argument passed through ExtEvent.Invoke(). </summary>
         [PublicAPI]
         public int Index => _index;
-        
+
         [SerializeField] internal bool _isSerialized;
-        
+
         /// <summary> Whether the argument is serialized or dynamic. </summary>
         [PublicAPI] public bool IsSerialized => _isSerialized;
-        
+
         [SerializeField] internal TypeReference _type;
-        
+
         /// <summary> The type of the argument. </summary>
         [PublicAPI] public Type Type => _type;
-        
+
         [SerializeField] internal string _serializedArg;
         [SerializeField] internal bool _canBeDynamic;
 
-        internal object _serializedValue => GetValue(_serializedArg, _type);
+        private ArgumentHolder _argumentHolder;
+        private bool _initialized;
+
+        private ArgumentHolder GetArgumentHolder(string serializedArg, Type valueType)
+        {
+            if (!_initialized)
+            {
+                // It's important to assign argumentHolder to a field so that it is not cleaned by GC until we stop using PersistentArgument.
+                _initialized = true;
+                var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
+                _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
+            }
+
+            return _argumentHolder;
+        }
+
+        internal unsafe void* SerializedValuePointer
+        {
+            get
+            {
+                try
+                {
+                    return GetArgumentHolder(_serializedArg, _type) == null ? default : _argumentHolder.ValuePointer;
+                }
+#pragma warning disable CS0618
+                catch (ExecutionEngineException)
+#pragma warning restore CS0618
+                {
+                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_type} but there was no code generated for it ahead of time.");
+                    return default;
+                }
+            }
+        }
 
         /// <summary> The value of the argument if it is serialized. </summary>
         /// <exception cref="Exception">The argument is not serialized but a dynamic one.</exception>
@@ -45,7 +78,17 @@
                 if (_type.Type == null || string.IsNullOrEmpty(_serializedArg))
                     return null;
 
-                return GetValue(_serializedArg, _type);
+                try
+                {
+                    return GetArgumentHolder(_serializedArg, _type)?.Value;
+                }
+#pragma warning disable CS0618
+                catch (ExecutionEngineException)
+#pragma warning restore CS0618
+                {
+                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_type} but there was no code generated for it ahead of time.");
+                    return null;
+                }
             }
         }
 
@@ -95,26 +138,14 @@
                 _canBeDynamic = true
             };
         }
-
-        public static object GetValue(string serializedArg, Type valueType)
+        internal static object GetValue(string serializedArg, Type valueType)
         {
             var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
             var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
-
-            try
-            {
-                return argumentHolder?.Value;
-            }
-#pragma warning disable CS0618
-            catch (ExecutionEngineException)
-#pragma warning restore CS0618
-            {
-                Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {valueType} but there was no code generated for it ahead of time.");
-                return null;
-            }
+            return argumentHolder?.Value;
         }
 
-        public static string SerializeValue(object value, Type valueType)
+        internal static string SerializeValue(object value, Type valueType)
         {
             var argHolderType = typeof(ArgumentHolder<>).MakeGenericType(valueType);
             var argHolder = Activator.CreateInstance(argHolderType, value);
