@@ -1,3 +1,19 @@
+# [1.2.0](https://github.com/SolidAlloy/ExtEvents/compare/1.1.0...1.2.0) (2022-05-02)
+
+
+### Bug Fixes
+
+* Fixed a ReorderableList exception in Unity 2021.2.15 ([b78fcdc](https://github.com/SolidAlloy/ExtEvents/commit/b78fcdc015bcfaa2b6e61a077336e8c654e105a5))
+* Fixed missing property in Unity 2021.1 ([2944c58](https://github.com/SolidAlloy/ExtEvents/commit/2944c5804caed31701b4c52bba1161af089812fa))
+* Fixed ReorderableList methods not being found through reflection ([e00881f](https://github.com/SolidAlloy/ExtEvents/commit/e00881f78abfb170d9e091c391d9201e7d31706d))
+* Started suppressing the missing type warning when a method argument of such type no longer exists ([4c28909](https://github.com/SolidAlloy/ExtEvents/commit/4c2890926640551206a194a657dad3854d11aeb4))
+
+
+### Features
+
+* Replaced an enum button with a single-click button to switch between dynamic and serialized ([20701a4](https://github.com/SolidAlloy/ExtEvents/commit/20701a47dce745f5f38329623eabab900462664c))
+* Replaced object with void* to avoid boxing of structs ([8c4ffa0](https://github.com/SolidAlloy/ExtEvents/commit/8c4ffa06217eb4657914270f5b292b5ef434906d))
+
 # [1.1.0](https://github.com/SolidAlloy/ExtEvents/compare/1.0.3...1.1.0) (2022-02-13)
 
 
