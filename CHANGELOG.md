@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/SolidAlloy/ExtEvents/compare/1.2.0...1.2.1) (2022-05-02)
+
+
+### Bug Fixes
+
+* Fixed incorrect handling of serialized value-typed values ([1001a06](https://github.com/SolidAlloy/ExtEvents/commit/1001a06f121d5bf52eaa623fa430145c6d740cc5))
+
 # [1.2.0](https://github.com/SolidAlloy/ExtEvents/compare/1.1.0...1.2.0) (2022-05-02)
 
 
