@@ -14,7 +14,7 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 | Static methods             | :x: No                                                  | :white_check_mark: Yes                    | :white_check_mark: **Yes**                                   |
 | Non-void methods           | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ smart filtration system)**       |
 | Non-public methods         | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ flexible options to show/hide such methods)** |
-| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Fast**                                  |
+| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Very Fast**                             |
 | Method Dropdown            | :x: All methods in one GenericMenu list                 | :warning:GenericMenu with a few sub-menus | :white_check_mark: **Scrollable list with a search field and folders** |
 | Finding renamed types      | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
 
@@ -124,7 +124,7 @@ public class TestBehaviour : Monobehaviour
 
 <img src="/.images/one-dynamic-arg.png" alt="one-dynamic-arg" style="zoom:80%;" />
 
-The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized:
+The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized by pressing on the **d** button:
 
 <img src="/.images/dynamic-serialized-dropdown.png" alt="dynamic-serialized-dropdown" style="zoom:80%;" />
 
@@ -268,26 +268,28 @@ You may know that Rider has a cool feature of marking the methods used by UnityE
 
 ## Working with ExtEvents from code
 
+### Working with persistent listeners
+
 ```csharp
 // You can manage persistent listeners of ExtEvent easily. This is how you can add a new persistent listener:
-_testEvent.AddPersistentListener((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly);
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly));
 
 // When creating a persistent listener for a method with arguments, you need to specify whether you want to create dynamic or serialized arguments.
 // In this case, we create a dynamic argument and make it accept a value from the first argument of _testEvent (hence index 0).
-_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, UnityEventCallState.RuntimeOnly, PersistentArgument.CreateDynamic<string>(0));
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action<string>) EventWithOneArg, this, UnityEventCallState.RuntimeOnly, PersistentArgument.CreateDynamic<string>(0)));
 
 // Or we can pass a serialized argument with its predetermined value. Note that callState is not a required argument and defaults to RuntimeOnly.
-_testEvent.AddPersistentListener((Action<string>) EventWithOneArg, this, arguments: PersistentArgument.CreateSerialized("test"));
+_testEvent.AddPersistentListener(PersistentListener.FromInstance((Action<string>) EventWithOneArg, this, arguments: PersistentArgument.CreateSerialized("test")));
 
 // When creating a persistent argument for a static method, pass null into the target parameter.
-// The newly created listener returned and you can check its values right away.
-var newListener = _testEvent.AddPersistentListener((Action) EventWithNoArgs, null);
-
-// Or you can access other persistent listeners easily.
-var firstListener = _testEvent.PersistentListeners[0];
+var newListener = PersistentListener.FromStatic((Action) EventWithNoArgs);
+_testEvent.AddPersistentListener(newListener);
 
 // PersistentListener exposes a bunch of read-only properties. If you need to change the listener, remove it from the event and add a new one.
 Debug.Log($"target: {newListener.Target}, method: {newListener.MethodName}");
+
+// You can access other persistent listeners easily.
+var firstListener = _testEvent.PersistentListeners[0];
 
 // Remove listeners like that.
 _testEvent.RemovePersistentListener(newListener);
@@ -297,15 +299,42 @@ _testEvent.RemovePersistentListenerAt(0);
 Debug.Log(firstListener.PersistentArguments[0].SerializedValue);
 
 // If you need the changes to persistent listeners to be saved, don't forget to mark the object that contains the event as dirty.
+#if UNITY_EDITOR
 EditorUtility.SetDirty(this);
+#endif
 ```
+
+### Working with dynamic listeners
+
+Of course, you can work with ExtEvents with an interface identical to default C# events:
+```csharp
+[SerializeField] private ExtEvent _testEvent;
+
+private void Start()
+{
+	_testEvent += TestCallback;
+}
+
+private void OnDestroy()
+{
+    _testEvent -= TestCallback;
+}
+
+private void TestCallback()
+{
+    Debug.Log("test");
+}
+```
+
+You cannot shuffle around arguments though, like you can do with persistent listeners.
 
 ## Performance
 
-The performance of events depends on the number of arguments you pass through them. When invoking a method with 0 arguments, ExtEvent is even faster than UnityEvent! The performance of ExtEvent is less than 2 times lower when building a project with the [faster build time](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/EditorUserBuildSettings-il2CppCodeGeneration.html) setting. The performance of UnityEvent is better in some cases because of how limited its feature set is. You can see that ExtEvents are faster than UltEvents in all cases while providing even more features! Still, performance of ExtEvents should not be your concern until you are performing hundreds of thousands of calls per frame. Also consider that most of the time you will invoke methods with 0 or 1 arguments which will be faster or on par with UnityEvents.
+ExtEvent is twice faster than UnityEvent in most of the use cases, and is at least on-par in the worst case scenario, leaving UltEvent far behind.
+*Faster Runtime* and *Faster Build Time* is related to the option you can choose in the Build Settings window when building with IL2CPP in Unity 2021+. Those options use different approach to code generation which results in the difference in performance.
 
 <img src="/.images/performance-graph.png" alt="performance-graph" style="zoom: 67%;" />
 
-When an event is invoked for the first time, it needs to initialize itself and it takes slightly more time than in the subsequent calls. ExtEvent is initialized much more quickly than UltEvent and slightly slower than UnityEvent. Moreover, initialization of other ExtEvents with similar methods will take much less time. The initialization will not cause stutter unless there are hundreds of events being called for the first time in the same frame. However, unlike UnityEvent and UltEvent, ExtEvent exposes the `Initialize()` method, so should you notice any impact of initialization on the performance, you can call it in Awake() or Start() when a level is loading.
+When an event is invoked for the first time, it needs to initialize itself and it takes slightly more time than in the subsequent calls. ExtEvent is initialized much more quickly than UltEvent and slightly slower than UnityEvent. Moreover, initialization of other ExtEvents with similar method signatures will take much less time. The initialization will not cause stutter unless there are hundreds of events being called for the first time in the same frame. However, unlike UnityEvent and UltEvent, ExtEvent exposes the `Initialize()` method, so should you notice any impact of initialization on the performance, you can call it in Awake() or Start() when a level is loading.
 
 <img src="/.images/invocation-graph.png" alt="invocation-graph" style="zoom:80%;" />

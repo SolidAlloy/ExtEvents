@@ -76,7 +76,14 @@
             var reorderableList = new FoldoutList(listenersProperty, label, extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)))
             {
                 DrawElementCallback = (rect, index) => EditorGUI.PropertyField(rect, listenersProperty.GetArrayElementAtIndex(index)),
-                ElementHeightCallback = index => EditorGUI.GetPropertyHeight(listenersProperty.GetArrayElementAtIndex(index)),
+                ElementHeightCallback = index =>
+                {
+                    // A fix for a bug in ReorderableList where it calls ElementHeightCallback with index 0 even though there are no elements in the list.
+                    if (listenersProperty.arraySize == 0)
+                        return 21f;
+                    
+                    return EditorGUI.GetPropertyHeight(listenersProperty.GetArrayElementAtIndex(index));
+                },
                 DrawFooterCallback = (rect, list) =>
                 {
                     // ReorderableList.defaultBehaviours.DrawFooter(rect, list._list);

@@ -21,12 +21,15 @@
         [PublicAPI]
         public void Invoke()
         {
-            // ReSharper disable once ForCanBeConvertedToForeach
-            for (int index = 0; index < _persistentListeners.Length; index++)
+            unsafe
             {
-                _persistentListeners[index].Invoke(null);
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int index = 0; index < _persistentListeners.Length; index++)
+                {
+                    _persistentListeners[index].Invoke(null);
+                }                
             }
-            
+
             DynamicListeners?.Invoke();
         }
         

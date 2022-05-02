@@ -26,7 +26,10 @@
             {
                 if (_clearCache == null)
                 {
-                    var clearCacheMethod = typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var clearCacheMethod = 
+                        typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic) 
+                        ?? typeof(ReorderableList).GetMethod("InvalidateCache", BindingFlags.Instance | BindingFlags.NonPublic); // the name of the method in newer Unity versions.
+                    
                     Assert.IsNotNull(clearCacheMethod);
                     // ReSharper disable once AssignNullToNotNullAttribute
                     _clearCache = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), clearCacheMethod);
@@ -58,7 +61,8 @@
         {
             if (_clearCacheRecursive == null)
             {
-                var clearCacheRecursive = typeof(ReorderableList).GetMethod("ClearCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic);
+                var clearCacheRecursive = typeof(ReorderableList).GetMethod("ClearCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic) 
+                                          ?? typeof(ReorderableList).GetMethod("InvalidateCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic);
                 Assert.IsNotNull(clearCacheRecursive);
                 // ReSharper disable once AssignNullToNotNullAttribute
                 _clearCacheRecursive = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), clearCacheRecursive);
@@ -184,7 +188,7 @@
         private static readonly GUIStyle _footerBackground = "RL Footer";
         private static readonly GUIStyle _preButton = (GUIStyle) "RL FooterButton";
 
-        public static void DrawFooter(Rect buttonsRect, FoldoutList list, params ButtonData[] buttons) // TODO: pass buttons here
+        public static void DrawFooter(Rect buttonsRect, FoldoutList list, params ButtonData[] buttons)
         {
             float rightBorder = buttonsRect.xMax - 10f;
             float leftBorder = rightBorder - 8f - buttons.Sum(button => button.Size.x);

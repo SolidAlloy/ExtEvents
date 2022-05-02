@@ -121,8 +121,8 @@
             methods = new HashSet<CreateMethod>();
             argumentTypes = new HashSet<Type>();
 
-            var serializedObjects = SerializedObjectFinder.GetSerializedObjects();
-            var extEventProperties = ExtEventProjectSearcher.FindExtEventProperties(serializedObjects);
+            var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
+            var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
             var methodInfos = ExtEventProjectSearcher.GetMethods(extEventProperties);
 
             foreach (var methodInfo in methodInfos)

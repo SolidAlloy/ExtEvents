@@ -8,7 +8,7 @@
     public class BuildPreprocessor : IPreprocessBuildWithReport
     {
         public int callbackOrder => EditorPackageSettings.BuildCallbackOrder;
-        
+
         public void OnPreprocessBuild(BuildReport report)
         {
             if (PlayerSettings.GetScriptingBackend(EditorUserBuildSettings.selectedBuildTargetGroup) !=
@@ -18,7 +18,7 @@
                 return;
             }
 
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
             switch (EditorUserBuildSettings.il2CppCodeGeneration)
             {
                 case Il2CppCodeGeneration.OptimizeSpeed:

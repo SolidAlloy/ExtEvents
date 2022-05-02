@@ -10,7 +10,6 @@
     using TypeReferences.Editor.Util;
     using UnityDropdown.Editor;
     using UnityEditor;
-    using UnityEditor.Build.Content;
     using UnityEngine;
 
     public static class MethodInfoDrawer
@@ -264,7 +263,7 @@
         {
             // the method cannot be used if it contains at least one argument that is not serializable nor it is passed from the event.
             return declaringType.GetMethods(bindingFlags)
-                .Where(method => ExtEventHelper.MethodIsEligible(method, eventParamTypes, EditorPackageSettings.IncludeInternalMethods, EditorPackageSettings.IncludePrivateMethods));
+                .Where(method => BaseExtEvent.MethodIsEligible(method, eventParamTypes, EditorPackageSettings.IncludeInternalMethods, EditorPackageSettings.IncludePrivateMethods));
         }
 
         private static void OnMethodChosen(MethodInfo previousMethod, MethodInfo newMethod, SerializedProperty listenerProperty)
@@ -293,6 +292,9 @@
         {
             var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._type)));
             serializedTypeRef.SetType(type);
+            
+            // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user. 
+            serializedTypeRef.SuppressLogs = true;
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
             // not in the middle of drawing ext events but rather after drawing all the events.

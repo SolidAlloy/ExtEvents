@@ -59,23 +59,130 @@
         [NonSerialized] internal bool _initializationComplete;
         [NonSerialized] private bool _initializationSuccessful;
 
-        private object[] _arguments;
+        private unsafe void*[] _arguments;
 
         private BaseInvokableCall _invokableCall;
         
         private PersistentListener() { }
-
-        internal PersistentListener(string methodName, bool isStatic, Object target, UnityEventCallState callState, Type staticType, PersistentArgument[] persistentArguments)
+        
+        internal PersistentListener([NotNull] MethodInfo method, [CanBeNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
         {
-            _methodName = methodName;
+            if (method is null)
+                // ReSharper disable once NotResolvedInText
+                throw new ArgumentNullException("The method provided is null", nameof(method));
+            
+            bool isStatic = method.IsStatic;
+
+            _methodName = method.Name;
             _isStatic = isStatic;
             _target = target;
             CallState = callState;
-            _staticType = staticType;
-            _persistentArguments = persistentArguments;
+            _staticType = method.DeclaringType;
+            _persistentArguments = arguments;
+        }
+        
+        /// <summary>
+        /// Create a <see cref="PersistentListener"/> instance from a static method.
+        /// </summary>
+        /// <param name="methodDelegate">
+        /// A method delegate that refers to a static method.
+        /// The method must not contain a parameter that is not serialized and is not one of the generic argument types of the event.
+        /// </param>
+        /// <param name="callState">When to call the callback.</param>
+        /// <param name="arguments">
+        /// A list of the arguments that will be passed to the method. The number of arguments must match the number of
+        /// parameters taken in by the method. An argument can have a pre-determined serialized value or be dynamic which
+        /// means it will be passed when the event is invoked. When the argument is dynamic, an index is specified that
+        /// reflects the index of an argument in the ExtEvent.Invoke() method.
+        /// </param>
+        /// <exception cref="ArgumentException">The method provided is instance.</exception>
+        /// <exception cref="ArgumentNullException">The method provided is null.</exception>
+        /// <returns>A new instance of <see cref="PersistentListener"/>.</returns>
+        public static PersistentListener FromStatic<T>([NotNull] T methodDelegate, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
+            where T : Delegate
+        {
+            return FromStatic(methodDelegate.Method, callState, arguments);
         }
 
-        internal void Invoke([CanBeNull] object[] args)
+        /// <summary>
+        /// Create a <see cref="PersistentListener"/> instance from a static method.
+        /// </summary>
+        /// <param name="method">
+        /// A static method info that acts as a callback to an event.
+        /// The method must not contain a parameter that is not serialized and is not one of the generic argument types of the event.
+        /// </param>
+        /// <param name="callState">When to call the callback.</param>
+        /// <param name="arguments">
+        /// A list of the arguments that will be passed to the method. The number of arguments must match the number of
+        /// parameters taken in by the method. An argument can have a pre-determined serialized value or be dynamic which
+        /// means it will be passed when the event is invoked. When the argument is dynamic, an index is specified that
+        /// reflects the index of an argument in the ExtEvent.Invoke() method.
+        /// </param>
+        /// <exception cref="ArgumentException">The method provided is instance.</exception>
+        /// <exception cref="ArgumentNullException">The method provided is null.</exception>
+        /// <returns>A new instance of <see cref="PersistentListener"/>.</returns>
+        public static PersistentListener FromStatic([NotNull] MethodInfo method, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
+        {
+            if (!method.IsStatic)
+                throw new ArgumentException("Expected a static method but got an instance one.", nameof(method));
+
+            return new PersistentListener(method, null, callState, arguments);
+        }
+
+        /// <summary>
+        /// Create a <see cref="PersistentListener"/> instance from an instance method.
+        /// </summary>
+        /// <param name="methodDelegate">
+        /// A method delegate that refers to a instance method.
+        /// The method must not contain a parameter that is not serialized and is not one of the generic argument types of the event.
+        /// </param>
+        /// <param name="target">An object that contains the passed method and on which the method will be called.</param>
+        /// <param name="callState">When to call the callback.</param>
+        /// <param name="arguments">
+        /// A list of the arguments that will be passed to the method. The number of arguments must match the number of
+        /// parameters taken in by the method. An argument can have a pre-determined serialized value or be dynamic which
+        /// means it will be passed when the event is invoked. When the argument is dynamic, an index is specified that
+        /// reflects the index of an argument in the ExtEvent.Invoke() method.
+        /// </param>
+        /// <exception cref="ArgumentException">The method provided is static.</exception>
+        /// <exception cref="ArgumentNullException">The target or the method provided is null.</exception>
+        /// <returns>A new instance of <see cref="PersistentListener"/>.</returns>
+        public static PersistentListener FromInstance<T>([NotNull] T methodDelegate, [NotNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
+            where T : Delegate
+        {
+            return FromInstance(methodDelegate.Method, target, callState, arguments);
+        }
+
+        /// <summary>
+        /// Create a <see cref="PersistentListener"/> instance from an instance method.
+        /// </summary>
+        /// <param name="method">
+        /// An instance method info that acts as a callback to an event.
+        /// The method must not contain a parameter that is not serialized and is not one of the generic argument types of the event.
+        /// </param>
+        /// <param name="target">An object that contains the passed method and on which the method will be called.</param>
+        /// <param name="callState">When to call the callback.</param>
+        /// <param name="arguments">
+        /// A list of the arguments that will be passed to the method. The number of arguments must match the number of
+        /// parameters taken in by the method. An argument can have a pre-determined serialized value or be dynamic which
+        /// means it will be passed when the event is invoked. When the argument is dynamic, an index is specified that
+        /// reflects the index of an argument in the ExtEvent.Invoke() method.
+        /// </param>
+        /// <exception cref="ArgumentException">The method provided is static.</exception>
+        /// <exception cref="ArgumentNullException">The target or the method provided is null.</exception>
+        /// <returns>A new instance of <see cref="PersistentListener"/>.</returns>
+        public static PersistentListener FromInstance([NotNull] MethodInfo method, [NotNull] Object target, UnityEventCallState callState = UnityEventCallState.RuntimeOnly, [CanBeNull] params PersistentArgument[] arguments)
+        {
+            if (method.IsStatic)
+                throw new ArgumentException("Expected an instance method but got a static one.", nameof(method));
+
+            if (target is null)
+                throw new ArgumentNullException($"The provided method is instance but the passed {nameof(target)} is null");
+
+            return new PersistentListener(method, target, callState, arguments);
+        }
+
+        internal unsafe void Invoke([CanBeNull] void*[] args)
         {
             // If no function is chosen, exit without any warnings.
             if (CallState == UnityEventCallState.Off || string.IsNullOrEmpty(_methodName))
@@ -95,8 +202,7 @@
             }
 
             _initializationSuccessful = Initialize();
-            _initializationComplete = true;
-            
+
             if (_initializationSuccessful)
                 InvokeImpl(args);
         }
@@ -104,7 +210,7 @@
         internal static BindingFlags GetFlags(bool isStatic) => BindingFlags.Public | BindingFlags.NonPublic | (isStatic ? BindingFlags.Static : BindingFlags.Instance | BindingFlags.Static);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InvokeImpl(object[] args)
+        private unsafe void InvokeImpl(void*[] args)
         {
             FillWithDynamicArgs(args);
             _invokableCall.Invoke(_arguments);
@@ -119,12 +225,18 @@
             var declaringType = GetDeclaringType();
 
             if (declaringType == null)
+            {
+                _initializationComplete = true;
                 return false;
+            }
             
             var argumentTypes = GetArgumentTypes();
 
             if (argumentTypes == null)
+            {
+                _initializationComplete = true;
                 return false;
+            }
             
             var target = _isStatic ? null : _target;
             _invokableCall = GetInvokableCall(declaringType, argumentTypes, target);
@@ -132,10 +244,13 @@
             if (_invokableCall == null)
             {
                 LogMethodInfoWarning();
+                _initializationComplete = true;
                 return false;
             }
 
-            _arguments = GetArguments();
+            InitializeArguments();
+
+            _initializationComplete = true;
             return true;
         }
 
@@ -170,7 +285,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FillWithDynamicArgs(object[] args)
+        private unsafe void FillWithDynamicArgs(void*[] args)
         {
             if (args == null || _arguments == null)
                 return;
@@ -184,12 +299,13 @@
             }
         }
 
-        private object[] GetArguments()
+        // Setting _arguments inside the method instead of returning it because IL2CPP incorrectly translates a method that returns void*[] into a void method.
+        private unsafe void InitializeArguments()
         {
             if (_persistentArguments.Length == 0)
-                return null;
+                return;
 
-            var arguments = new object[_persistentArguments.Length];
+            _arguments = new void*[_persistentArguments.Length];
 
             for (int i = 0; i < _persistentArguments.Length; i++)
             {
@@ -197,15 +313,15 @@
 
                 if (serializedArg._isSerialized)
                 {
-                    arguments[i] = serializedArg._serializedValue;
+                    // TODO: might be necessary to pin the object, especially if built with Mono.
+                    var serializedValue = serializedArg._serializedValue;
+                    _arguments[i] = Unsafe.AsPointer(ref serializedValue);
                 }
                 else
                 {
-                    arguments[i] = null;
+                    _arguments[i] = null;
                 }
             }
-
-            return arguments;
         }
 
         private IEnumerable<string> GetNullArgumentTypeNames()
