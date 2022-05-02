@@ -268,6 +268,8 @@ You may know that Rider has a cool feature of marking the methods used by UnityE
 
 ## Working with ExtEvents from code
 
+### Working with persistent listeners
+
 ```csharp
 // You can manage persistent listeners of ExtEvent easily. This is how you can add a new persistent listener:
 _testEvent.AddPersistentListener(PersistentListener.FromInstance((Action) EventWithNoArgs, this, UnityEventCallState.RuntimeOnly));
@@ -301,6 +303,30 @@ Debug.Log(firstListener.PersistentArguments[0].SerializedValue);
 EditorUtility.SetDirty(this);
 #endif
 ```
+
+### Working with dynamic listeners
+
+Of course, you can work with ExtEvents with an interface identical to default C# events:
+```csharp
+[SerializeField] private ExtEvent _testEvent;
+
+private void Start()
+{
+	_testEvent += TestCallback;
+}
+
+private void OnDestroy()
+{
+    _testEvent -= TestCallback;
+}
+
+private void TestCallback()
+{
+    Debug.Log("test");
+}
+```
+
+You cannot shuffle around arguments though, like you can do with persistent listeners.
 
 ## Performance
 
