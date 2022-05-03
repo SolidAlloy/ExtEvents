@@ -76,11 +76,11 @@ public class TestBehaviour : Monobehaviour
 }
 ```
 
-<img src="/.images/no-elements.png" alt="no-elements" style="zoom:80%;" />
+<img src="/.images/no-elements.png" alt="no-elements"  />
 
 Press "+i" to add an instance listener:
 
-<img src="/.images/one-empty-instance-listener.png" alt="one-empty-instance-listener" style="zoom:80%;" />
+<img src="/.images/one-empty-instance-listener.png" alt="one-empty-instance-listener"  />
 
 Let's declare a couple of methods in TestBehaviour:
 
@@ -103,15 +103,15 @@ Drag and drop TestBehaviour into the target field. A dropdown with methods will 
 
 Try choosing `EventWithOneArg()`. A field for the argument will appear where you will be able to fill in the data:
 
-<img src="/.images/string-argument.png" alt="string-argument" style="zoom:80%;" />
+<img src="/.images/string-argument.png" alt="string-argument"  />
 
 Let's add a static listener by pressing "**+s**":
 
-<img src="/.images/static-listener.png" alt="static-listener" style="zoom:80%;" />
+<img src="/.images/static-listener.png" alt="static-listener"  />
 
 The process is basically the same, except that instead of dragging a target you choose a type from the dropdown:
 
-<img src="/.images/type-dropdown.png" alt="type-dropdown" style="zoom: 67%;" />
+<img src="/.images/type-dropdown.png" alt="type-dropdown"  />
 
 But let's say you have a string event and want to pass the value dynamically instead of having the same serialized value:
 
@@ -122,11 +122,11 @@ public class TestBehaviour : Monobehaviour
 }
 ```
 
-<img src="/.images/one-dynamic-arg.png" alt="one-dynamic-arg" style="zoom:80%;" />
+<img src="/.images/one-dynamic-arg.png" alt="one-dynamic-arg"  />
 
 The argument is shown as dynamic now, so every time you pass a value to `_stringEvent`, it will be sent to `EventWithOneArg()`. Should you need it preset in editor, you can switch the argument to serialized by pressing on the **d** button:
 
-<img src="/.images/dynamic-serialized-dropdown.png" alt="dynamic-serialized-dropdown" style="zoom:80%;" />
+<img src="/.images/dynamic-serialized-dropdown.png" alt="dynamic-serialized-dropdown"  />
 
 The "*Arg1*" dropdown is disabled now because there is no other argument that can be passed to `arg`, only the first argument of `_stringEvent`. But what if we have a choice? Let's imagine we have a player creation menu and want to add the player username to the database:
 
@@ -146,7 +146,7 @@ public class TestBehaviour : Monobehaviour
 
 The `_onPlayerCreated` has three arguments but we want only one passed to the `AddToDatabase` method:
 
-<img src="/.images/dynamic-argument-dropdown.png" alt="dynamic-argument-dropdown" style="zoom:80%;" />
+<img src="/.images/dynamic-argument-dropdown.png" alt="dynamic-argument-dropdown"  />
 
 Well, we can do that, and moreover we can choose which specific argument we want to pass. However, it is not clear which arguments we are choosing from. Is username the first argument passed to the event, or second? We can clear out the confusion by declaring the argument names:
 
@@ -160,11 +160,11 @@ public class TestBehaviour : Monobehaviour
 
 And voila, the argument name has been replaced:
 
-<img src="/.images/new-arg-name.png" alt="new-arg-name" style="zoom:80%;" />
+<img src="/.images/new-arg-name.png" alt="new-arg-name"  />
 
 And if we want to pass something else to the method, we can choose another argument:
 
-<img src="/.images/arg-name-dropdown.png" alt="arg-name-dropdown" style="zoom:80%;" />
+<img src="/.images/arg-name-dropdown.png" alt="arg-name-dropdown"  />
 
 Finally, I'll show you that we can serialize any serializable argument, even the custom ones. Let's create it:
 
@@ -186,7 +186,7 @@ public class CustomSerializableClass
 
 The  serializable class showed up correctly. And if you create a custom drawer for it, it will work too.
 
-<img src="/.images/custom-serializable-arg.png" alt="custom-serializable-arg" style="zoom:80%;" />
+<img src="/.images/custom-serializable-arg.png" alt="custom-serializable-arg"  />
 
 ## Project Settings and Preferences
 
@@ -333,8 +333,8 @@ You cannot shuffle around arguments though, like you can do with persistent list
 ExtEvent is twice faster than UnityEvent in most of the use cases, and is at least on-par in the worst case scenario, leaving UltEvent far behind.
 *Faster Runtime* and *Faster Build Time* is related to the option you can choose in the Build Settings window when building with IL2CPP in Unity 2021+. Those options use different approach to code generation which results in the difference in performance.
 
-<img src="/.images/performance-graph.png" alt="performance-graph" style="zoom: 67%;" />
+<img src="/.images/performance-graph.png" alt="performance-graph"  />
 
 When an event is invoked for the first time, it needs to initialize itself and it takes slightly more time than in the subsequent calls. ExtEvent is initialized much more quickly than UltEvent and slightly slower than UnityEvent. Moreover, initialization of other ExtEvents with similar method signatures will take much less time. The initialization will not cause stutter unless there are hundreds of events being called for the first time in the same frame. However, unlike UnityEvent and UltEvent, ExtEvent exposes the `Initialize()` method, so should you notice any impact of initialization on the performance, you can call it in Awake() or Start() when a level is loading.
 
-<img src="/.images/invocation-graph.png" alt="invocation-graph" style="zoom:80%;" />
+<img src="/.images/invocation-graph.png" alt="invocation-graph"  />
