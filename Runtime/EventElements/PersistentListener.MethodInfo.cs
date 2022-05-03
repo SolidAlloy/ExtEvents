@@ -17,7 +17,7 @@
         /// </summary>
         [PublicAPI]
         public string MethodName => _methodName;
-        
+
         /// <summary>
         /// The method info of this listener, or null if the method is not set or missing.
         /// </summary>
@@ -26,7 +26,7 @@
         {
             get
             {
-                if (!_initializationComplete) 
+                if (!_initializationComplete)
                     Initialize();
 
                 return _invokableCall?.Method;
@@ -41,7 +41,7 @@
                 return null;
 
             bool isVoid = method.ReturnType == typeof(void);
-            
+
             if (paramTypes.Length == 0 && isVoid)
                 return new InvokableActionCall(target, method);
 
@@ -63,7 +63,7 @@
 
             private static readonly Dictionary<Type[], Func<object, MethodInfo, BaseInvokableCall>> _createActionCache =
                 new Dictionary<Type[], Func<object, MethodInfo, BaseInvokableCall>>(new ArrayEqualityComparer<Type>());
-            
+
             private static readonly Dictionary<Type[], Func<object, MethodInfo, BaseInvokableCall>> _createFuncCache =
                 new Dictionary<Type[], Func<object, MethodInfo, BaseInvokableCall>>(new ArrayEqualityComparer<Type>());
 
@@ -75,7 +75,7 @@
                 {
                     _createActionMethods.Add(createActionMethod.GetGenericArguments().Length, createActionMethod);
                 }
-                
+
                 foreach (var createFuncMethod in staticMethods.Where(method => method.Name == nameof(BaseInvokableCall.CreateFunc)))
                 {
                     _createFuncMethods.Add(createFuncMethod.GetGenericArguments().Length, createFuncMethod);
@@ -111,13 +111,13 @@
                     return createDelegate(target, method);
 
                 var createMethodDefinition = _createActionMethods[paramTypes.Length];
-                
+
                 var createMethod = createMethodDefinition.MakeGenericMethod(paramTypes);
                 createDelegate = (Func<object, MethodInfo, BaseInvokableCall>) Delegate.CreateDelegate(typeof(Func<object, MethodInfo, BaseInvokableCall>), createMethod);
                 _createActionCache.Add(paramTypes, createDelegate);
                 return createDelegate(target, method);
             }
-            
+
             private static BaseInvokableCall CreateFuncInvokableCall(Type[] paramTypes, object target, MethodInfo method)
             {
                 if (_createFuncCache.TryGetValue(paramTypes, out var createDelegate))

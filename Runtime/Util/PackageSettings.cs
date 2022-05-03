@@ -8,7 +8,7 @@
     {
         public const string PackageName = "com.solidalloy.ext-events";
         public const string PluginsPath = "Assets/Plugins/ExtEvents";
-        
+
         private const string FolderPath = PluginsPath + "/Resources";
         private const string AssetName = "ExtEvents_PackageSettings";
 

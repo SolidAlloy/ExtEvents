@@ -6,7 +6,7 @@
     public static class EditorPackageSettings
     {
         public const float LinePadding = 2f;
-        
+
         private static Settings _instance;
 
         private static UserSetting<bool> _nicifyArgumentNames;
@@ -32,7 +32,7 @@
 
             set => _includeInternalMethods.value = value;
         }
-        
+
         private static UserSetting<bool> _includePrivateMethods;
         public static bool IncludePrivateMethods
         {

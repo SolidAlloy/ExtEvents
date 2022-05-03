@@ -33,7 +33,7 @@
             var reorderableList = GetList(property, label.text);
             float listHeight = reorderableList.GetHeight();
             reorderableList.DoList(new Rect(position) { height = listHeight });
-            
+
             DynamicListenersDrawer.DrawListeners(property, position, listHeight);
         }
 
@@ -58,7 +58,7 @@
                 new GUIContent(EditorIcons.AddButtonS.Default, "Add static listener"), true,
                 (rect, list) => AddListener(listenersProperty, true));
         }
-        
+
         private static FoldoutList.ButtonData GetInstanceButton(SerializedProperty listenersProperty)
         {
             return new FoldoutList.ButtonData(new Vector2(25f, 16f),
@@ -81,7 +81,7 @@
                     // A fix for a bug in ReorderableList where it calls ElementHeightCallback with index 0 even though there are no elements in the list.
                     if (listenersProperty.arraySize == 0)
                         return 21f;
-                    
+
                     return EditorGUI.GetPropertyHeight(listenersProperty.GetArrayElementAtIndex(index));
                 },
                 DrawFooterCallback = (rect, list) =>

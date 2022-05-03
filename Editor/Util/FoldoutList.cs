@@ -10,7 +10,7 @@
 
     internal class FoldoutList
     {
-        public readonly ReorderableList _list;
+        private readonly ReorderableList _list;
         private readonly SerializedProperty _elementsProperty;
         private readonly string _title;
 
@@ -18,7 +18,7 @@
         public Func<int, float> ElementHeightCallback;
         public Action OnAddDropdownCallback;
         public Action<Rect, FoldoutList> DrawFooterCallback;
-        
+
         private static Action<ReorderableList> _clearCache;
         private static Action<ReorderableList> ClearCache
         {
@@ -26,10 +26,10 @@
             {
                 if (_clearCache == null)
                 {
-                    var clearCacheMethod = 
-                        typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic) 
+                    var clearCacheMethod =
+                        typeof(ReorderableList).GetMethod("ClearCache", BindingFlags.Instance | BindingFlags.NonPublic)
                         ?? typeof(ReorderableList).GetMethod("InvalidateCache", BindingFlags.Instance | BindingFlags.NonPublic); // the name of the method in newer Unity versions.
-                    
+
                     Assert.IsNotNull(clearCacheMethod);
                     // ReSharper disable once AssignNullToNotNullAttribute
                     _clearCache = (Action<ReorderableList>) Delegate.CreateDelegate(typeof(Action<ReorderableList>), clearCacheMethod);
@@ -38,7 +38,7 @@
                 return _clearCache;
             }
         }
-        
+
         private static Action<ReorderableList> _cacheIfNeeded;
         private static Action<ReorderableList> CacheIfNeeded
         {
@@ -61,7 +61,7 @@
         {
             if (_clearCacheRecursive == null)
             {
-                var clearCacheRecursive = typeof(ReorderableList).GetMethod("ClearCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic) 
+                var clearCacheRecursive = typeof(ReorderableList).GetMethod("ClearCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic)
                                           ?? typeof(ReorderableList).GetMethod("InvalidateCacheRecursive", BindingFlags.Instance | BindingFlags.NonPublic);
                 Assert.IsNotNull(clearCacheRecursive);
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -85,7 +85,7 @@
 
                 if (_scheduleRemove == null)
                     return true;
-                
+
                 return (bool) _scheduleRemove.GetValue(_list);
             }
             set
@@ -95,7 +95,7 @@
                     _scheduleRemove = typeof(ReorderableList).GetField("scheduleRemove", BindingFlags.NonPublic | BindingFlags.Instance);
                     _triedGetScheduleRemoveField = true;
                 }
-                
+
                 _scheduleRemove?.SetValue(_list, value);
             }
         }
@@ -149,7 +149,7 @@
                 },
                 drawElementCallback = (rect, index, _, __) =>
                 {
-                    if ( ! expandedProperty.boolValue) 
+                    if ( ! expandedProperty.boolValue)
                         return;
 
                     DrawElementCallback(rect, index);
@@ -184,7 +184,7 @@
             ClearCache(_list);
             CacheIfNeeded(_list);
         }
-        
+
         private static readonly GUIStyle _footerBackground = "RL Footer";
         private static readonly GUIStyle _preButton = (GUIStyle) "RL FooterButton";
 
@@ -193,12 +193,12 @@
             float rightBorder = buttonsRect.xMax - 10f;
             float leftBorder = rightBorder - 8f - buttons.Sum(button => button.Size.x);
             buttonsRect = new Rect(leftBorder, buttonsRect.y, rightBorder - leftBorder, buttonsRect.height);
-            
+
             if (Event.current.type == EventType.Repaint)
                 _footerBackground.Draw(buttonsRect, false, false, false, false);
 
             leftBorder += 4f;
-            
+
             foreach (var button in buttons)
             {
                 if (button.IsAddButton)
@@ -268,7 +268,7 @@
                 return _defaultAddButton;
             }
         }
-        
+
         private static ButtonData _defaultRemoveButton;
         public static ButtonData DefaultRemoveButton
         {
@@ -289,7 +289,7 @@
                             {
                                 list._list.onRemoveCallback(list._list);
                             }
-                    
+
                             ReorderableList.ChangedCallbackDelegate onChangedCallback = list._list.onChangedCallback;
                             onChangedCallback?.Invoke(list._list);
                             list.ClearCacheRecursive();
@@ -299,7 +299,7 @@
 
                 return _defaultRemoveButton;
             }
-        } 
+        }
 
         public class ButtonData
         {

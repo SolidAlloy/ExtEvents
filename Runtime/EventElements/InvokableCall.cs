@@ -6,7 +6,7 @@
     using UnityEngine.Scripting;
 
     // We use [Preserve] a lot here because link.xml cannot be used in a package.
-    
+
     /// <summary>
     /// An invokable call constructs a delegate from a method info so that it is invoked efficiently.
     /// The generic types derived from BaseInvokableCall are constructed at runtime by <see cref="PersistentListener"/>.
@@ -20,31 +20,31 @@
         {
             Method = method;
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateAction<T>(object target, MethodInfo method)
         {
             return new InvokableActionCall<T>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateAction<T1, T2>(object target, MethodInfo method)
         {
             return new InvokableActionCall<T1, T2>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateAction<T1, T2, T3>(object target, MethodInfo method)
         {
             return new InvokableActionCall<T1, T2, T3>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateAction<T1, T2, T3, T4>(object target, MethodInfo method)
         {
             return new InvokableActionCall<T1, T2, T3, T4>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateFunc<TResult>(object target, MethodInfo method)
         {
@@ -55,19 +55,19 @@
         {
             return new InvokableFuncCall<T1, TResult>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateFunc<T1, T2, TResult>(object target, MethodInfo method)
         {
             return new InvokableFuncCall<T1, T2, TResult>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateFunc<T1, T2, T3, TResult>(object target, MethodInfo method)
         {
             return new InvokableFuncCall<T1, T2, T3, TResult>(target, method);
         }
-        
+
         [Preserve]
         public static BaseInvokableCall CreateFunc<T1, T2, T3, T4, TResult>(object target, MethodInfo method)
         {
@@ -101,7 +101,7 @@
             _delegate();
         }
     }
-    
+
     [Preserve]
     public class InvokableActionCall<T> : BaseInvokableCall
     {
@@ -118,7 +118,7 @@
             _delegate(Unsafe.Read<T>(args[0]));
         }
     }
-    
+
     [Preserve]
     public class InvokableActionCall<T1, T2> : BaseInvokableCall
     {
@@ -132,10 +132,10 @@
 
         public override unsafe void Invoke(void*[] args)
         {
-            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1])); 
+            _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]));
         }
     }
-    
+
     [Preserve]
     public class InvokableActionCall<T1, T2, T3> : BaseInvokableCall
     {
@@ -152,7 +152,7 @@
             _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]));
         }
     }
-    
+
     [Preserve]
     public class InvokableActionCall<T1, T2, T3, T4> : BaseInvokableCall
     {
@@ -174,7 +174,7 @@
     public class InvokableFuncCall<TReturn> : BaseInvokableCall
     {
         private readonly Func<TReturn> _delegate;
-        
+
         [Preserve]
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
@@ -186,12 +186,12 @@
             _delegate();
         }
     }
-    
+
     [Preserve]
     public class InvokableFuncCall<T, TReturn> : BaseInvokableCall
     {
         private readonly Func<T, TReturn> _delegate;
-        
+
         [Preserve]
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
@@ -203,12 +203,12 @@
             _delegate(Unsafe.Read<T>(args[0]));
         }
     }
-    
+
     [Preserve]
     public class InvokableFuncCall<T1, T2, TReturn> : BaseInvokableCall
     {
         private readonly Func<T1, T2, TReturn> _delegate;
-        
+
         [Preserve]
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
@@ -220,12 +220,12 @@
             _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]));
         }
     }
-    
+
     [Preserve]
     public class InvokableFuncCall<T1, T2, T3, TReturn> : BaseInvokableCall
     {
         private readonly Func<T1, T2, T3, TReturn> _delegate;
-        
+
         [Preserve]
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {
@@ -237,12 +237,12 @@
             _delegate(Unsafe.Read<T1>(args[0]), Unsafe.Read<T2>(args[1]), Unsafe.Read<T3>(args[2]));
         }
     }
-    
+
     [Preserve]
     public class InvokableFuncCall<T1, T2, T3, T4, TReturn> : BaseInvokableCall
     {
         private readonly Func<T1, T2, T3, T4, TReturn> _delegate;
-        
+
         [Preserve]
         public InvokableFuncCall(object target, MethodInfo method) : base(target, method)
         {

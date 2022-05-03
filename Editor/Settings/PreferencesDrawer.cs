@@ -9,7 +9,7 @@
         private const string NicifyArgumentNamesLabel = "Nicify arguments names";
 
         private const string NicifyArgumentNamesTooltip = "Replace the original argument names (e.g. \"currentPlayer\") with more readable labels - \"Current Player\"";
-        
+
         [SettingsProvider]
         public static SettingsProvider CreateSettingsProvider()
         {
@@ -19,7 +19,7 @@
                 keywords = GetKeywords()
             };
         }
-        
+
         private static void OnGUI(string searchContext)
         {
             using (EditorGUIUtilityHelper.LabelWidthBlock(180f))
@@ -27,7 +27,7 @@
                 EditorPackageSettings.NicifyArgumentNames = EditorGUILayout.Toggle(GUIContentHelper.Temp(NicifyArgumentNamesLabel, NicifyArgumentNamesTooltip), EditorPackageSettings.NicifyArgumentNames);
             }
         }
-        
+
         private static HashSet<string> GetKeywords()
         {
             var keywords = new HashSet<string>();

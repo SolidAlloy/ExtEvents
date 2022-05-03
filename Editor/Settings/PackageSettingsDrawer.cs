@@ -9,13 +9,13 @@
     {
         private const string IncludeInternalMethodsLabel = "Include internal methods";
         private const string IncludeInternalMethodsTooltip = "Include internal methods and properties in the methods dropdown when choosing a listener in ExtEvent?";
-        
+
         private const string IncludePrivateMethodsLabel = "Include private methods";
         private const string IncludePrivateMethodsTooltip = "Include private and protected methods and properties in the methods dropdown when choosing a listener in ExtEvent?";
 
         private const string BuildCallbackLabel = "Build preprocessor callback order";
         private const string BuildCallbackTooltip = "When a build is initiated with IL2CPP and 'Faster runtime' chosen, ExtEvents needs to generate some code for events to work properly. You can change the callback order of the code generation here if it conflicts with other preprocessors.";
-        
+
         private static SerializedObject _serializedObject;
 
         [SettingsProvider]
@@ -31,9 +31,9 @@
         private static void OnGUI(string searchContext)
         {
             using var _ = EditorGUIUtilityHelper.LabelWidthBlock(210f);
-            
+
             DrawSerializedObject();
-            
+
             EditorPackageSettings.IncludeInternalMethods = EditorGUILayout.Toggle(GUIContentHelper.Temp(IncludeInternalMethodsLabel, IncludeInternalMethodsTooltip), EditorPackageSettings.IncludeInternalMethods);
             EditorPackageSettings.IncludePrivateMethods = EditorGUILayout.Toggle(GUIContentHelper.Temp(IncludePrivateMethodsLabel, IncludePrivateMethodsTooltip), EditorPackageSettings.IncludePrivateMethods);
             EditorPackageSettings.BuildCallbackOrder = EditorGUILayout.IntField(GUIContentHelper.Temp(BuildCallbackLabel, BuildCallbackTooltip), EditorPackageSettings.BuildCallbackOrder, GUILayout.ExpandWidth(false));

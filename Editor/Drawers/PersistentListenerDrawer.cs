@@ -12,7 +12,7 @@
     using UnityEngine;
     using UnityEngine.Events;
     using Object = UnityEngine.Object;
-    
+
 #if GENERIC_UNITY_OBJECTS
     using GenericUnityObjects.Editor;
 #endif
@@ -21,7 +21,7 @@
     public class PersistentListenerDrawer : PropertyDrawer
     {
         private static readonly Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo> _previousListenerValues = new Dictionary<(SerializedObject serializedObject, string propertyPath), PersistentListenerInfo>();
-        
+
         private Rect _methodRect;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -54,7 +54,7 @@
             var currentRect = new Rect(position) { height = EditorGUIUtility.singleLineHeight };
             currentRect.y += EditorPackageSettings.LinePadding;
             _methodRect = new Rect(currentRect) { y = currentRect.y + EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding };
-            
+
             var callStateProp = property.FindPropertyRelative(nameof(PersistentListener.CallState));
             (var callStateRect, var targetRect) = currentRect.CutVertically(GetCallStateWidth((UnityEventCallState) callStateProp.enumValueIndex));
             callStateRect.width -= 10f;
@@ -77,7 +77,7 @@
                 Reinitialize(property);
             }
         }
-        
+
         private static void DrawCallState(Rect rect, SerializedProperty callStateProp)
         {
             if (!EditorGUI.DropdownButton(rect, GetCallStateContent((UnityEventCallState) callStateProp.enumValueIndex), FocusType.Passive, EditorStyles.miniPullDown))
@@ -118,9 +118,9 @@
 #endif
                     .ObjectField(rect, GUIContent.none, targetProp.objectReferenceValue, typeof(Object), true);
 
-            if (targetProp.objectReferenceValue == newTarget) 
+            if (targetProp.objectReferenceValue == newTarget)
                 return;
-            
+
             if (newTarget is GameObject gameObject)
             {
                 DrawComponentDropdown(property, targetProp, gameObject);
@@ -301,7 +301,7 @@
                     return _offIcon;
                 }
             }
-        
+
             private static Texture _editorRuntimeIcon;
 
             public static Texture EditorRuntime
@@ -316,7 +316,7 @@
                     return _editorRuntimeIcon;
                 }
             }
-        
+
             private static Texture _runtimeIcon;
 
             public static Texture Runtime

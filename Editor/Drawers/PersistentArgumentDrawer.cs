@@ -20,7 +20,7 @@
         private SerializedProperty _isSerialized;
         private SerializedProperty _serializedArgProp;
         private bool _showChoiceButton = true;
-        
+
         private GUIStyle _buttonStyle;
         private GUIStyle ButtonStyle => _buttonStyle ?? (_buttonStyle = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold, alignment = TextAnchor.LowerCenter});
 
@@ -46,7 +46,7 @@
         {
             FindProperties(property);
             _showChoiceButton = property.FindPropertyRelative(nameof(PersistentArgument._canBeDynamic)).boolValue;
-            
+
             (Rect labelRect, Rect buttonRect, Rect valueRect) = GetLabelButtonValueRects(fieldRect);
 
             DrawLabel(property, fieldRect, labelRect, label);
@@ -196,7 +196,7 @@
             Assert.IsNotNull(type);
             return type;
         }
-        
+
         private void DrawValueProperty(SerializedProperty mainProperty, Rect valueRect, Rect totalRect, int indentLevel)
         {
             if (ExposedProperty.propertyType == SerializedPropertyType.Generic)

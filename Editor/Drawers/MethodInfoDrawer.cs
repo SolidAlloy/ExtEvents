@@ -69,7 +69,7 @@
 
             if (currentMethodName.IsPropertySetter())
                 currentMethodName = currentMethodName.Substring(4);
-            
+
             string popupLabel = string.IsNullOrEmpty(currentMethodName) ? "No Function" : (methodInfo != null ? currentMethodName : currentMethodName + " {Missing}");
 
             using (new EditorGUI.DisabledGroupScope(declaringType == null))
@@ -82,7 +82,7 @@
 
             GUI.backgroundColor = previousGuiColor;
         }
-        
+
         private static bool GetIsStatic(SerializedProperty listenerProperty) => listenerProperty.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
 
         public static string GetCurrentMethodName(SerializedProperty listenerProperty)
@@ -103,7 +103,7 @@
 
             if ( ! string.IsNullOrEmpty(currentMethodName))
                 return;
-            
+
             bool isStatic = GetIsStatic(listenerProperty);
             Type declaringType = GetDeclaringType(listenerProperty, isStatic);
 
@@ -140,11 +140,11 @@
 
             if (isInstance)
                 menuItems.AddRange(FindInstanceMethods(declaringType, paramTypes));
-            
+
             menuItems.AddRange(FindStaticMethods(declaringType, paramTypes));
-            
+
             SortItems(menuItems);
-            
+
             var itemToSelect = menuItems.Find(menuItem => menuItem.Value == currentMethod);
 
             if (itemToSelect != null)
@@ -173,7 +173,7 @@
                 // - Static Properties
                 // - Static Methods
                 // The method names are sorted alphabetically.
-                
+
                 var xFolder = x.Path.GetSubstringBefore('/');
                 var yFolder = y.Path.GetSubstringBefore('/');
 
@@ -232,7 +232,7 @@
             var staticMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             return GetDropdownItems(staticMethods, "Static");
         }
-        
+
         private static IEnumerable<DropdownItem<MethodInfo>> FindInstanceMethods(Type declaringType, Type[] eventParamTypes)
         {
             var instanceMethods = GetEligibleMethods(declaringType, eventParamTypes, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -270,7 +270,7 @@
         {
             if (previousMethod == newMethod)
                 return;
-            
+
             var methodNameProp = listenerProperty.FindPropertyRelative(nameof(PersistentListener._methodName));
             var serializedArgsProp = listenerProperty.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
 
@@ -292,8 +292,8 @@
         {
             var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._type)));
             serializedTypeRef.SetType(type);
-            
-            // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user. 
+
+            // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user.
             serializedTypeRef.SuppressLogs = true;
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs

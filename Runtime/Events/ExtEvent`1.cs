@@ -30,17 +30,17 @@
             unsafe
             {
                 _arguments[0] = Unsafe.AsPointer(ref arg);
-                
+
                 // ReSharper disable once ForCanBeConvertedToForeach
                 for (int index = 0; index < _persistentListeners.Length; index++)
                 {
                     _persistentListeners[index].Invoke(_arguments);
                 }
             }
-            
+
             DynamicListeners?.Invoke(arg);
         }
-        
+
         public static ExtEvent<T> operator +(ExtEvent<T> extEvent, Action<T> listener)
         {
             if (extEvent == null)
@@ -49,7 +49,7 @@
             extEvent.DynamicListeners += listener;
             return extEvent;
         }
-        
+
         public static ExtEvent<T> operator -(ExtEvent<T> extEvent, Action<T> listener)
         {
             if (extEvent == null)

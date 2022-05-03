@@ -35,14 +35,14 @@
             {
                 if ((UnityEventCallState) response.FindPropertyRelative(nameof(PersistentListener.CallState)).enumValueIndex == UnityEventCallState.Off)
                     return null;
-                
+
                 string methodName = response.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
 
                 if (string.IsNullOrEmpty(methodName))
                     return null;
 
                 bool isStatic = response.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
-                
+
                 var declaringType = GetDeclaringType(response, isStatic);
                 if (declaringType == null)
                     return null;
@@ -53,7 +53,7 @@
 
                 return PersistentListener.GetMethod(declaringType, argumentTypes, methodName, PersistentListener.GetFlags(isStatic));
             }
-            
+
             private static Type GetDeclaringType(SerializedProperty response, bool isStatic)
             {
                 if (isStatic)

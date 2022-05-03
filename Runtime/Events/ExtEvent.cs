@@ -7,7 +7,7 @@
     public class ExtEvent : BaseExtEvent
     {
         protected override Type[] EventParamTypes => Type.EmptyTypes;
-        
+
         /// <summary>
         /// The dynamic listeners list that you can add your listener to.
         /// </summary>
@@ -27,12 +27,12 @@
                 for (int index = 0; index < _persistentListeners.Length; index++)
                 {
                     _persistentListeners[index].Invoke(null);
-                }                
+                }
             }
 
             DynamicListeners?.Invoke();
         }
-        
+
         public static ExtEvent operator +(ExtEvent extEvent, Action listener)
         {
             if (extEvent == null)
@@ -41,7 +41,7 @@
             extEvent.DynamicListeners += listener;
             return extEvent;
         }
-        
+
         public static ExtEvent operator -(ExtEvent extEvent, Action listener)
         {
             if (extEvent == null)

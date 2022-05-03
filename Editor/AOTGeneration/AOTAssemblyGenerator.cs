@@ -16,7 +16,7 @@
     {
         private const string FolderPath = PackageSettings.PluginsPath + "/" + "AOT Generation";
         private const string AssemblyName = "z_ExtEvents_AOTGeneration";
-        
+
         public static void GenerateCreateMethods()
         {
             string dllName = $"{AssemblyName}.dll";
@@ -54,7 +54,7 @@
             string asmDefPath = $"{folderPath}/ExtEvents.AOTGeneration.asmdef";
             File.WriteAllText(asmDefPath, AsmDefContent);
             AssetDatabase.ImportAsset(asmDefPath);
-            
+
             string scriptPath = $"{folderPath}/AOTGeneration.cs";
             File.WriteAllText(scriptPath, ScriptContent);
             AssetDatabase.ImportAsset(scriptPath);
@@ -71,14 +71,14 @@
                     VersionCompatibility = AssemblyVersionCompatibility.SameDomain
                 },
                 AssemblyBuilderAccess.RunAndSave, folderPath);
-            
+
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
-            
+
             var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
 
             GetCodeToGenerate(out var methods, out var argumentTypes);
             CreateType(typeBuilder, methods, argumentTypes);
-            
+
             typeBuilder.CreateType();
             assemblyBuilder.Save(dllName);
         }
@@ -90,7 +90,7 @@
                 MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 typeof(void),
                 Type.EmptyTypes);
-            
+
             ILGenerator ilGenerator = methodBuilder.GetILGenerator();
 
             foreach (var createMethod in createMethods)
@@ -112,7 +112,7 @@
                 ilGenerator.Emit(OpCodes.Newobj, constructor);
                 ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
             }
-            
+
             ilGenerator.Emit(OpCodes.Ret);
         }
 
@@ -139,7 +139,7 @@
                     continue;
 
                 bool hasValueType = false;
-                
+
                 foreach (Type argType in args)
                 {
                     if (!argType.IsValueType)
@@ -153,7 +153,7 @@
                     methods.Add(new CreateMethod(isVoid, args));
             }
         }
-        
+
         private static Type[] GetArgumentTypes(ParameterInfo[] parameters)
         {
             var types = new Type[parameters.Length];
@@ -165,7 +165,7 @@
 
             return types;
         }
-        
+
         private const string AsmDefContent = @"{
     ""name"": ""ExtEvents.AOTGeneration"",
     ""rootNamespace"": ""ExtEvents.AOTGeneration"",
@@ -202,13 +202,13 @@
         {
             public readonly bool IsVoid;
             public readonly Type[] Args;
-            
+
             public CreateMethod(bool isVoid, Type[] args)
             {
                 IsVoid = isVoid;
                 Args = args;
             }
-            
+
             public override bool Equals(object obj) => obj is CreateMethod other && this.Equals(other);
 
             public bool Equals(CreateMethod p) => IsVoid == p.IsVoid && Args.SequenceEqual(p.Args);
@@ -224,7 +224,7 @@
                         hash = hash * 31 + element.GetHashCode();
                     }
 
-                    hash = hash * 31 + IsVoid.GetHashCode(); 
+                    hash = hash * 31 + IsVoid.GetHashCode();
 
                     return hash;
                 }

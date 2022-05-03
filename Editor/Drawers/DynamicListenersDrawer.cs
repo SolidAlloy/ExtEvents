@@ -6,7 +6,7 @@
     using UnityEditor;
     using UnityEngine;
     using Object = UnityEngine.Object;
-    
+
 #if GENERIC_UNITY_OBJECTS
     using GenericUnityObjects.Editor;
 #endif
@@ -24,23 +24,23 @@
 
             if (eventObject._dynamicListeners == null)
                 return 0f;
-                
-            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * (extEventProperty.isExpanded ? eventObject._dynamicListeners.GetInvocationList().Length : 0); 
+
+            return (EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding) * (extEventProperty.isExpanded ? eventObject._dynamicListeners.GetInvocationList().Length : 0);
         }
 
         public static void DrawListeners(SerializedProperty extEventProperty, Rect totalRect, float listHeight)
         {
             using var _ = EditorGUIHelper.IndentLevelBlock(EditorGUI.indentLevel + 2);
-                
+
             bool isEventExpanded = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent.Expanded)).boolValue;
 
             if (!isEventExpanded)
                 return;
-                
+
             var eventObject = PropertyObjectCache.GetObject<BaseExtEvent>(extEventProperty);
             if (eventObject._dynamicListeners == null)
                 return;
-                
+
             Rect currentRect = new Rect(totalRect) { height = EditorGUIUtility.singleLineHeight, y = totalRect.y + listHeight - EditorGUIUtility.singleLineHeight - EditorPackageSettings.LinePadding };
 
             extEventProperty.isExpanded = EditorGUI.Foldout(currentRect, extEventProperty.isExpanded, "Dynamic Listeners", true);
@@ -58,7 +58,7 @@
                 string methodName = $"{@delegate.Method.Name}()";
                 if (methodName.StartsWith("<"))
                     methodName = "Lambda Expression";
-                    
+
                 DrawDynamicType(typeRect, @delegate);
                 EditorGUI.LabelField(methodRect, methodName);
             }
@@ -77,7 +77,7 @@
 #endif
                         .ObjectField(rect, GUIContent.none, objectTarget, objectTarget.GetType(), true);
                 }
-                
+
                 return;
             }
 

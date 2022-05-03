@@ -26,7 +26,7 @@
         public IReadOnlyList<PersistentListener> PersistentListeners => _persistentListeners;
 
         [SerializeField] internal bool Expanded = true;
-        
+
         protected abstract Type[] EventParamTypes { get; }
 
         internal abstract Delegate _dynamicListeners { get; }
@@ -54,7 +54,7 @@
         {
             if (!MethodIsEligible(persistentListener.MethodInfo, EventParamTypes, true, true))
                 throw new MethodNotEligibleException("The method of persistent listener is not eligible for adding to this event");
-            
+
             CheckArguments(persistentListener.MethodInfo, ref persistentListener._persistentArguments, EventParamTypes);
             ArrayHelper.Add(ref _persistentListeners, persistentListener);
         }
@@ -89,7 +89,7 @@
             if (arguments.Length < parameters.Length)
                 throw new ArgumentException($"The number of arguments passed is {arguments.Length} while the method needs {parameters.Length} arguments", nameof(arguments));
 
-            if (arguments.Length > parameters.Length) 
+            if (arguments.Length > parameters.Length)
                 Array.Resize(ref arguments, parameters.Length);
 
             for (int i = 0; i < parameters.Length; i++)
@@ -115,16 +115,16 @@
             {
                 if (argument._index < 0 || argument._index >= eventParamTypes.Length)
                     throw new ArgumentIndexException($"The argument index {argument._index} is out of bounds of the number of parameter types of the event: {eventParamTypes.Length}");
-                    
+
                 if (!matchingParamIndices.Contains(argument._index))
-                    throw new ArgumentIndexException($"The argument is dynamic and was assigned an index of {argument._index} but an event parameter at that index is of a different type: {eventParamTypes[argument._index]}");                    
+                    throw new ArgumentIndexException($"The argument is dynamic and was assigned an index of {argument._index} but an event parameter at that index is of a different type: {eventParamTypes[argument._index]}");
             }
         }
 
         private static List<int> GetMatchingParamIndices(Type[] eventParamTypes, Type argumentType)
         {
             var foundIndices = new List<int>(1);
-            
+
             for (int i = 0; i < eventParamTypes.Length; i++)
             {
                 if (eventParamTypes[i] == argumentType)
@@ -149,8 +149,8 @@
         public static bool MethodIsEligible(MethodInfo method, Type[] eventParamTypes, bool allowInternal, bool allowPrivate)
         {
             var methodParams = method.GetParameters();
-            
-            return IsEligibleByVisibility(method, allowInternal, allowPrivate) 
+
+            return IsEligibleByVisibility(method, allowInternal, allowPrivate)
                    && !method.Name.IsPropertyGetter()
                    && !IsMethodPure(method)
                    && IsEligibleByParameters(methodParams, eventParamTypes);
@@ -160,7 +160,7 @@
         {
             if (method.IsPublic)
                 return true;
-            
+
             if (method.IsAssembly && allowInternal)
                 return true;
 
@@ -188,7 +188,7 @@
         {
             return paramType.IsUnitySerializable() || ArgumentTypeIsInList(paramType, eventParamTypes);
         }
-        
+
         private static bool ArgumentTypeIsInList(Type argType, Type[] eventParamTypes)
         {
             return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType));
@@ -196,7 +196,7 @@
 
         #endregion
     }
-    
+
     public class MethodNotEligibleException : ArgumentException
     {
         public MethodNotEligibleException(string message) : base(message) { }
