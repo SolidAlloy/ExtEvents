@@ -1,4 +1,4 @@
-﻿namespace ExtEvents.Editor
+namespace ExtEvents.Editor
 {
     using System;
     using System.Collections.Generic;
@@ -259,10 +259,13 @@
             SerializedProperty iterator = valueProperty.Copy();
             var nextProp = valueProperty.Copy();
             nextProp.NextVisible(false);
+            bool enterChildren = true;
 
-            while (iterator.NextVisible(true) && ! SerializedProperty.EqualContents(iterator, nextProp))
+            while (iterator.NextVisible(enterChildren) && ! SerializedProperty.EqualContents(iterator, nextProp))
             {
-                shiftedRect.height = EditorGUI.GetPropertyHeight(iterator, false);
+                // enter children only once.
+                enterChildren = false;
+                shiftedRect.height = EditorGUI.GetPropertyHeight(iterator, true);
                 EditorGUI.PropertyField(shiftedRect, iterator, true);
                 shiftedRect = shiftedRect.ShiftOneLineDown(lineHeight: shiftedRect.height);
             }

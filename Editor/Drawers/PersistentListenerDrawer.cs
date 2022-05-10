@@ -1,4 +1,4 @@
-﻿namespace ExtEvents.Editor
+namespace ExtEvents.Editor
 {
     using System;
     using System.Collections.Generic;
@@ -153,10 +153,17 @@
 
             EditorGUI.BeginChangeCheck();
 
+            float previousPropertyHeight = EditorGUIUtility.singleLineHeight;
+
             for (int i = 0; i < argumentsArray.arraySize; i++)
             {
-                rect.y += EditorGUIUtility.singleLineHeight + EditorPackageSettings.LinePadding;
                 var argumentProp = argumentsArray.GetArrayElementAtIndex(i);
+
+                var propertyHeight = EditorGUI.GetPropertyHeight(argumentProp);
+                rect.y += previousPropertyHeight + EditorPackageSettings.LinePadding;
+                rect.height = propertyHeight;
+                previousPropertyHeight = propertyHeight;
+
                 string label = EditorPackageSettings.NicifyArgumentNames ? ObjectNames.NicifyVariableName(paramNames[i]) : paramNames[i];
                 EditorGUI.PropertyField(rect, argumentProp, GUIContentHelper.Temp(label));
             }
