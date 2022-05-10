@@ -96,6 +96,7 @@ namespace ExtEvents.Editor
         public static void SaveValueProperty(SerializedProperty argumentProperty, SerializedProperty valueProperty)
         {
             valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            LogHelper.RemoveLogEntriesByMode(LogModes.NoScriptAssetWarning);
             var value = valueProperty.GetObject();
             var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg));
             serializedArgProp.stringValue = PersistentArgument.SerializeValue(value, valueProperty.GetObjectType());
