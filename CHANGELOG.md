@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/SolidAlloy/ExtEvents/compare/1.2.1...1.2.2) (2022-05-10)
+
+
+### Bug Fixes
+
+* Fixed overflow issue with nested serialized arguments ([31c8a16](https://github.com/SolidAlloy/ExtEvents/commit/31c8a16bcaeb1174e9611fe49efb77fcdb9a480f))
+
 ## [1.2.1](https://github.com/SolidAlloy/ExtEvents/compare/1.2.0...1.2.1) (2022-05-02)
 
 
