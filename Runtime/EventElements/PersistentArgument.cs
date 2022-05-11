@@ -32,14 +32,28 @@
         [SerializeField] internal bool _canBeDynamic;
 
         private ArgumentHolder _argumentHolder;
+
         private bool _initialized;
+        internal bool Initialized
+        {
+            get => _initialized;
+            set
+            {
+                _initialized = value;
+
+                if (!_initialized)
+                    OnArgumentChanged?.Invoke();
+            }
+        }
+
+        internal event Action OnArgumentChanged;
 
         private ArgumentHolder GetArgumentHolder(string serializedArg, Type valueType)
         {
-            if (!_initialized)
+            if (!Initialized)
             {
                 // It's important to assign argumentHolder to a field so that it is not cleaned by GC until we stop using PersistentArgument.
-                _initialized = true;
+                Initialized = true;
                 var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
                 _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
             }

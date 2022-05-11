@@ -58,10 +58,9 @@
 
         [NonSerialized] internal bool _initializationComplete;
         [NonSerialized] private bool _initializationSuccessful;
-
         private unsafe void*[] _arguments;
-
         private BaseInvokableCall _invokableCall;
+        private bool _subscribedToArguments;
 
         private PersistentListener() { }
 
@@ -193,6 +192,8 @@
                 return;
 #endif
 
+            Debug.Log($"initialization complete {_initializationComplete}, successful {_initializationSuccessful}");
+
             if (_initializationComplete)
             {
                 if (_initializationSuccessful)
@@ -302,6 +303,8 @@
         // Setting _arguments inside the method instead of returning it because IL2CPP incorrectly translates a method that returns void*[] into a void method.
         private unsafe void InitializeArguments()
         {
+            Debug.Log("Initialize arguments");
+
             if (_persistentArguments.Length == 0)
                 return;
 
@@ -319,7 +322,12 @@
                 {
                     _arguments[i] = null;
                 }
+
+                if (!_subscribedToArguments)
+                    serializedArg.OnArgumentChanged += InitializeArguments;
             }
+
+            _subscribedToArguments = true;
         }
 
         private IEnumerable<string> GetNullArgumentTypeNames()
