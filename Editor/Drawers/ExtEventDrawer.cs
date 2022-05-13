@@ -6,7 +6,6 @@
     using SolidUtilities.Editor;
     using SolidUtilities.UnityEditorInternals;
     using UnityEditor;
-    using UnityEditorInternal;
     using UnityEngine;
     using UnityEngine.Events;
 
