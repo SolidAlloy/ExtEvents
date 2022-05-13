@@ -1,3 +1,18 @@
+# [1.3.0](https://github.com/SolidAlloy/ExtEvents/compare/1.2.2...1.3.0) (2022-05-13)
+
+
+### Bug Fixes
+
+* Applied the correct method of getting IL2CPP code generation in Unity 2022 ([d87beed](https://github.com/SolidAlloy/ExtEvents/commit/d87beed6e029332ae0913a1b76fff1ddf9a2bf74))
+* Fixed "No Script Asset for ..." warning appearing when changing serialized argument value in Play Mode ([366e585](https://github.com/SolidAlloy/ExtEvents/commit/366e5851dd644938e7dbc2f9a7c9233e4178c301))
+* Fixed add button icons missing after exiting play mode ([0ed9c9e](https://github.com/SolidAlloy/ExtEvents/commit/0ed9c9e1935f0940ca61d1f3562d120662ecbc8e))
+* Fixed old serialized values passed to event listeners after changing in the inspector ([ed7aa78](https://github.com/SolidAlloy/ExtEvents/commit/ed7aa78510b7ebe321a5ec79cf74c3ed9ed664be))
+
+
+### Features
+
+* Added GameObject to the list of components that can be added as instance listeners ([4c02b52](https://github.com/SolidAlloy/ExtEvents/commit/4c02b52b94cdf0bf8e6bfe22e4d31659f5297bcd))
+
 ## [1.2.2](https://github.com/SolidAlloy/ExtEvents/compare/1.2.1...1.2.2) (2022-05-10)
 
 
