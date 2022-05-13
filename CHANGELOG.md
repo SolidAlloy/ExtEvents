@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/SolidAlloy/ExtEvents/compare/1.3.0...1.3.1) (2022-05-13)
+
+
+### Bug Fixes
+
+* Fixed arguments of abstract types not being considered serializable ([633c655](https://github.com/SolidAlloy/ExtEvents/commit/633c655905be9cdd0831fc99c0dc3aa0ef5492ad))
+
 # [1.3.0](https://github.com/SolidAlloy/ExtEvents/compare/1.2.2...1.3.0) (2022-05-13)
 
 
