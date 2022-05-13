@@ -212,10 +212,14 @@ namespace ExtEvents.Editor
 
         private void DrawComponentDropdown(SerializedProperty listenerProperty, SerializedProperty targetProperty, GameObject gameObject)
         {
-            var components = gameObject.GetComponents<Component>().Where(component => component != null && !component.hideFlags.ContainsFlag(HideFlags.HideInInspector));
-            var dropdownItems = new List<DropdownItem<Component>>();
+            var components = gameObject
+                .GetComponents<Component>()
+                .Where(component => component != null && !component.hideFlags.ContainsFlag(HideFlags.HideInInspector))
+                .Prepend<Object>(gameObject);
 
-            foreach (Component component in components)
+            var dropdownItems = new List<DropdownItem<Object>>();
+
+            foreach (var component in components)
             {
                 var componentType = component.GetType();
                 var componentMenu = componentType.GetCustomAttribute<AddComponentMenu>();
@@ -231,10 +235,10 @@ namespace ExtEvents.Editor
                     componentName = ObjectNames.NicifyVariableName(componentType.Name);
                 }
 
-                dropdownItems.Add(new DropdownItem<Component>(component, componentName, EditorGUIUtility.ObjectContent(component, componentType).image));
+                dropdownItems.Add(new DropdownItem<Object>(component, componentName, EditorGUIUtility.ObjectContent(component, componentType).image));
             }
 
-            var tree = new DropdownMenu<Component>(dropdownItems, component =>
+            var tree = new DropdownMenu<Object>(dropdownItems, component =>
             {
                 targetProperty.objectReferenceValue = component;
                 targetProperty.serializedObject.ApplyModifiedProperties();
