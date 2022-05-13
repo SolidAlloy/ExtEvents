@@ -58,9 +58,7 @@
 
         [NonSerialized] internal bool _initializationComplete;
         [NonSerialized] private bool _initializationSuccessful;
-
         private unsafe void*[] _arguments;
-
         private BaseInvokableCall _invokableCall;
 
         private PersistentListener() { }

@@ -58,7 +58,7 @@ namespace ExtEvents.Editor
             EditorGUI.indentLevel = 0;
 
             if (_showChoiceButton)
-                DrawChoiceButton(buttonRect);
+                DrawChoiceButton(buttonRect, property);
 
             DrawValue(property, valueRect, fieldRect, previousIndent);
 
@@ -96,9 +96,13 @@ namespace ExtEvents.Editor
         public static void SaveValueProperty(SerializedProperty argumentProperty, SerializedProperty valueProperty)
         {
             valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            LogHelper.RemoveLogEntriesByMode(LogModes.NoScriptAssetWarning);
             var value = valueProperty.GetObject();
             var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg));
             serializedArgProp.stringValue = PersistentArgument.SerializeValue(value, valueProperty.GetObjectType());
+
+            var argument = argumentProperty.GetObject<PersistentArgument>();
+            argument._initialized = false;
         }
 
         private void DrawValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
@@ -271,11 +275,13 @@ namespace ExtEvents.Editor
             }
         }
 
-        private void DrawChoiceButton(Rect buttonRect)
+        private void DrawChoiceButton(Rect buttonRect, SerializedProperty argumentProperty)
         {
             if (GUI.Button(buttonRect, _isSerialized.boolValue ? "s" : "d", ButtonStyle))
             {
                 _isSerialized.boolValue = !_isSerialized.boolValue;
+                var argument = argumentProperty.GetObject<PersistentArgument>();
+                argument._initialized = false;
             }
         }
     }

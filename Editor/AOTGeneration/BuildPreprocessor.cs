@@ -19,7 +19,14 @@
             }
 
 #if UNITY_2021_2_OR_NEWER
-            switch (EditorUserBuildSettings.il2CppCodeGeneration)
+            var codeGeneration =
+    #if UNITY_2022
+                PlayerSettings.GetIl2CppCodeGeneration(NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
+    #else
+                EditorUserBuildSettings.il2CppCodeGeneration;
+    #endif
+
+            switch (codeGeneration)
             {
                 case Il2CppCodeGeneration.OptimizeSpeed:
                     AOTAssemblyGenerator.GenerateCreateMethods();
@@ -28,7 +35,7 @@
                     AOTAssemblyGenerator.DeleteGeneratedFolder();
                     break;
                 default:
-                    Debug.LogWarning($"Unknown value of IL2CPP Code Generation: {EditorUserBuildSettings.il2CppCodeGeneration}");
+                    Debug.LogWarning($"Unknown value of IL2CPP Code Generation: {codeGeneration}");
                     break;
             }
 #else
