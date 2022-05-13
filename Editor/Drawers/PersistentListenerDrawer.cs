@@ -141,7 +141,6 @@ namespace ExtEvents.Editor
         {
             listenerProperty.serializedObject.ApplyModifiedProperties();
             var listener = PropertyObjectCache.GetObject<PersistentListener>(listenerProperty);
-            Debug.Log("reinitialize");
             listener._initializationComplete = false;
         }
 

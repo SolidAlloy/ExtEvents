@@ -33,33 +33,8 @@
 
         private ArgumentHolder _argumentHolder;
 
-        private bool _initialized;
-        internal bool Initialized
-        {
-            get => _initialized;
-            set
-            {
-                _initialized = value;
-
-                if (!_initialized)
-                    OnArgumentChanged?.Invoke();
-            }
-        }
-
-        internal event Action OnArgumentChanged;
-
-        private ArgumentHolder GetArgumentHolder(string serializedArg, Type valueType)
-        {
-            if (!Initialized)
-            {
-                // It's important to assign argumentHolder to a field so that it is not cleaned by GC until we stop using PersistentArgument.
-                Initialized = true;
-                var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
-                _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
-            }
-
-            return _argumentHolder;
-        }
+        // NonSerialized is required here, otherwise Unity will try to serialize the field even though we didn't put SerializeField attribute.
+        [NonSerialized] internal bool _initialized;
 
         internal unsafe void* SerializedValuePointer
         {
@@ -164,6 +139,19 @@
             var argHolderType = typeof(ArgumentHolder<>).MakeGenericType(valueType);
             var argHolder = Activator.CreateInstance(argHolderType, value);
             return JsonUtility.ToJson(argHolder);
+        }
+
+        private ArgumentHolder GetArgumentHolder(string serializedArg, Type valueType)
+        {
+            if (!_initialized)
+            {
+                // It's important to assign argumentHolder to a field so that it is not cleaned by GC until we stop using PersistentArgument.
+                _initialized = true;
+                var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
+                _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
+            }
+
+            return _argumentHolder;
         }
     }
 }

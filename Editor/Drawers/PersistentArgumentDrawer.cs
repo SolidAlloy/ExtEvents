@@ -102,7 +102,7 @@ namespace ExtEvents.Editor
             serializedArgProp.stringValue = PersistentArgument.SerializeValue(value, valueProperty.GetObjectType());
 
             var argument = argumentProperty.GetObject<PersistentArgument>();
-            argument.Initialized = false;
+            argument._initialized = false;
         }
 
         private void DrawValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
@@ -179,7 +179,6 @@ namespace ExtEvents.Editor
             DrawValueProperty(property, valueRect, totalRect, indentLevel);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log("end change check");
                 SaveValueProperty(property, _valueProperty);
             }
         }
@@ -282,7 +281,7 @@ namespace ExtEvents.Editor
             {
                 _isSerialized.boolValue = !_isSerialized.boolValue;
                 var argument = argumentProperty.GetObject<PersistentArgument>();
-                argument.Initialized = false;
+                argument._initialized = false;
             }
         }
     }
