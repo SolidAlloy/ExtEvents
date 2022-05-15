@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
+    using OdinSerializer.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
@@ -28,7 +29,7 @@
             if (!folderExists)
             {
                 Directory.CreateDirectory(FolderPath);
-                CreateAssemblyDefinition(FolderPath);
+                CreateLinkXml(FolderPath);
             }
 
             CreateAssembly(dllName, FolderPath);
@@ -49,15 +50,11 @@
                 AssetDatabase.DeleteAsset(FolderPath);
         }
 
-        private static void CreateAssemblyDefinition(string folderPath)
+        private static void CreateLinkXml(string folderPath)
         {
-            string asmDefPath = $"{folderPath}/ExtEvents.AOTGeneration.asmdef";
-            File.WriteAllText(asmDefPath, AsmDefContent);
-            AssetDatabase.ImportAsset(asmDefPath);
-
-            string scriptPath = $"{folderPath}/AOTGeneration.cs";
-            File.WriteAllText(scriptPath, ScriptContent);
-            AssetDatabase.ImportAsset(scriptPath);
+            string linkXmlPath = $"{folderPath}/link.xml";
+            File.WriteAllText(linkXmlPath, $"<linker>\n    <assembly fullname=\"{AssemblyName}\" preserve=\"all\"/>\n</linker>");
+            AssetDatabase.ImportAsset(linkXmlPath);
         }
 
         private static void CreateAssembly(string dllName, string folderPath)
@@ -83,7 +80,7 @@
             assemblyBuilder.Save(dllName);
         }
 
-        private static void CreateType(TypeBuilder typeBuilder, IEnumerable<CreateMethod> createMethods, IEnumerable<Type> argumentTypes)
+        private static void CreateType(TypeBuilder typeBuilder, HashSet<CreateMethod> createMethods, HashSet<Type> argumentTypes)
         {
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
                 "AOTGeneration",
@@ -104,7 +101,7 @@
             var genericArgs = new Type[1];
             var throwAwayVariable = ilGenerator.DeclareLocal(typeof(ArgumentHolder));
 
-            foreach (Type argumentType in argumentTypes)
+            foreach (Type argumentType in argumentTypes.Where(argumentType => argumentType.IsValueType))
             {
                 genericArgs[0] = argumentType;
                 var holderType = typeof(ArgumentHolder<>).MakeGenericType(genericArgs);
@@ -112,6 +109,8 @@
                 ilGenerator.Emit(OpCodes.Newobj, constructor);
                 ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
             }
+
+            AOTSupportUtilities.GenerateCode(argumentTypes, ilGenerator);
 
             ilGenerator.Emit(OpCodes.Ret);
         }
@@ -142,10 +141,9 @@
 
                 foreach (Type argType in args)
                 {
-                    if (!argType.IsValueType)
-                        continue;
+                    if (argType.IsValueType)
+                        hasValueType = true;
 
-                    hasValueType = true;
                     argumentTypes.Add(argType);
                 }
 
@@ -165,38 +163,6 @@
 
             return types;
         }
-
-        private const string AsmDefContent = @"{
-    ""name"": ""ExtEvents.AOTGeneration"",
-    ""rootNamespace"": ""ExtEvents.AOTGeneration"",
-    ""references"": [],
-    ""includePlatforms"": [],
-    ""excludePlatforms"": [],
-    ""allowUnsafeCode"": false,
-    ""overrideReferences"": true,
-    ""precompiledReferences"": [
-        ""z_ExtEvents_AOTGeneration.dll""
-    ],
-    ""autoReferenced"": false,
-    ""defineConstraints"": [],
-    ""versionDefines"": [],
-    ""noEngineReferences"": false
-}";
-
-        private const string ScriptContent = @"namespace ExtEvents.AOTGeneration
-{
-    using UnityEngine.Scripting;
-
-    public static class AOTGeneration
-    {
-        [Preserve]
-        public static void Generation()
-        {
-            GeneratedCreateMethods.AOTGeneration();
-        }
-    }
-}
-";
 
         private readonly struct CreateMethod : IEquatable<CreateMethod>
         {
