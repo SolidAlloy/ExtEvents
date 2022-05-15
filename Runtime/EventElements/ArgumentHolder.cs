@@ -16,7 +16,7 @@
         public abstract unsafe void* ValuePointer { get; }
 
         [Preserve]
-        public abstract unsafe object Value { get; }
+        public abstract object Value { get; set; }
     }
 
     [Serializable]
@@ -28,7 +28,11 @@
         public override unsafe void* ValuePointer => Unsafe.AsPointer(ref _value);
 
         [Preserve]
-        public override object Value => _value;
+        public override object Value
+        {
+            get => _value;
+            set => _value = value == null ? default : (T) value;
+        }
 
         public ArgumentHolder() { }
 
