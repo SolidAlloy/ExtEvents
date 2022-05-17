@@ -16,10 +16,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-
 namespace ExtEvents.OdinSerializer
 {
+    using System;
+
     /// <summary>
     /// Defines the configuration during serialization and deserialization. This class is thread-safe.
     /// </summary>
@@ -34,7 +34,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public SerializationConfig()
         {
-            this.ResetToDefault();
+            ResetToDefault();
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace ExtEvents.OdinSerializer
         /// with invalid data if they are decorated with the <see cref="SerializationConfig.AllowDeserializeInvalidData"/> attribute.
         /// </para>
         /// </summary>
-        public bool AllowDeserializeInvalidData = false;
+        public bool AllowDeserializeInvalidData;
 
         /// <summary>
         /// Gets or sets the serialization policy. This value is never null; if set to null, it will default to <see cref="SerializationPolicies.Unity"/>.
@@ -61,25 +61,25 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.serializationPolicy == null)
+                if (serializationPolicy == null)
                 {
-                    lock (this.LOCK)
+                    lock (LOCK)
                     {
-                        if (this.serializationPolicy == null)
+                        if (serializationPolicy == null)
                         {
-                            this.serializationPolicy = SerializationPolicies.Unity;
+                            serializationPolicy = SerializationPolicies.Unity;
                         }
                     }
                 }
 
-                return this.serializationPolicy;
+                return serializationPolicy;
             }
 
             set
             {
-                lock (this.LOCK)
+                lock (LOCK)
                 {
-                    this.serializationPolicy = value;
+                    serializationPolicy = value;
                 }
             }
         }
@@ -94,25 +94,25 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.debugContext == null)
+                if (debugContext == null)
                 {
-                    lock (this.LOCK)
+                    lock (LOCK)
                     {
-                        if (this.debugContext == null)
+                        if (debugContext == null)
                         {
-                            this.debugContext = new DebugContext();
+                            debugContext = new DebugContext();
                         }
                     }
                 }
 
-                return this.debugContext;
+                return debugContext;
             }
 
             set
             {
-                lock (this.LOCK)
+                lock (LOCK)
                 {
-                    this.debugContext = value;
+                    debugContext = value;
                 }
             }
         }
@@ -122,13 +122,13 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void ResetToDefault()
         {
-            lock (this.LOCK)
+            lock (LOCK)
             {
-                this.AllowDeserializeInvalidData = false;
-                this.serializationPolicy = null;
-                if (!object.ReferenceEquals(this.debugContext, null))
+                AllowDeserializeInvalidData = false;
+                serializationPolicy = null;
+                if (!ReferenceEquals(debugContext, null))
                 {
-                    this.debugContext.ResetToDefault();
+                    debugContext.ResetToDefault();
                 }
             }
         }
@@ -152,24 +152,24 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.logger == null)
+                if (logger == null)
                 {
-                    lock (this.LOCK)
+                    lock (LOCK)
                     {
-                        if (this.logger == null)
+                        if (logger == null)
                         {
-                            this.logger = DefaultLoggers.UnityLogger;
+                            logger = DefaultLoggers.UnityLogger;
                         }
                     }
                 }
 
-                return this.logger;
+                return logger;
             }
             set
             {
-                lock (this.LOCK)
+                lock (LOCK)
                 {
-                    this.logger = value;
+                    logger = value;
                 }
             }
         }
@@ -179,8 +179,8 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public LoggingPolicy LoggingPolicy
         {
-            get { return this.loggingPolicy; }
-            set { this.loggingPolicy = value; }
+            get { return loggingPolicy; }
+            set { loggingPolicy = value; }
         }
 
         /// <summary>
@@ -188,8 +188,8 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public ErrorHandlingPolicy ErrorHandlingPolicy
         {
-            get { return this.errorHandlingPolicy; }
-            set { this.errorHandlingPolicy = value; }
+            get { return errorHandlingPolicy; }
+            set { errorHandlingPolicy = value; }
         }
 
         /// <summary>
@@ -197,14 +197,14 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void LogWarning(string message)
         {
-            if (this.errorHandlingPolicy == ErrorHandlingPolicy.ThrowOnWarningsAndErrors)
+            if (errorHandlingPolicy == ErrorHandlingPolicy.ThrowOnWarningsAndErrors)
             {
                 throw new SerializationAbortException("The following warning was logged during serialization or deserialization: " + (message ?? "EMPTY EXCEPTION MESSAGE"));
             }
 
-            if (this.loggingPolicy == LoggingPolicy.LogWarningsAndErrors)
+            if (loggingPolicy == LoggingPolicy.LogWarningsAndErrors)
             {
-                this.Logger.LogWarning(message);
+                Logger.LogWarning(message);
             }
         }
 
@@ -213,14 +213,14 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void LogError(string message)
         {
-            if (this.errorHandlingPolicy != ErrorHandlingPolicy.Resilient)
+            if (errorHandlingPolicy != ErrorHandlingPolicy.Resilient)
             {
                 throw new SerializationAbortException("The following error was logged during serialization or deserialization: " + (message ?? "EMPTY EXCEPTION MESSAGE"));
             }
 
-            if (this.loggingPolicy != LoggingPolicy.Silent)
+            if (loggingPolicy != LoggingPolicy.Silent)
             {
-                this.Logger.LogError(message);
+                Logger.LogError(message);
             }
         }
 
@@ -240,16 +240,16 @@ namespace ExtEvents.OdinSerializer
                 throw exception;
             }
 
-            var policy = this.errorHandlingPolicy;
+            var policy = errorHandlingPolicy;
 
             if (policy != ErrorHandlingPolicy.Resilient)
             {
                 throw new SerializationAbortException("An exception of type " + exception.GetType().Name + " occurred during serialization or deserialization.", exception);
             }
 
-            if (this.loggingPolicy != LoggingPolicy.Silent)
+            if (loggingPolicy != LoggingPolicy.Silent)
             {
-                this.Logger.LogException(exception);
+                Logger.LogException(exception);
             }
         }
 
@@ -257,9 +257,9 @@ namespace ExtEvents.OdinSerializer
         {
             lock (LOCK)
             {
-                this.logger = null;
-                this.loggingPolicy = default(LoggingPolicy);
-                this.errorHandlingPolicy = default(ErrorHandlingPolicy);
+                logger = null;
+                loggingPolicy = default(LoggingPolicy);
+                errorHandlingPolicy = default(ErrorHandlingPolicy);
             }
         }
     }

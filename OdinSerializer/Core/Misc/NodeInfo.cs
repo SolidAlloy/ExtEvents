@@ -64,20 +64,20 @@ namespace ExtEvents.OdinSerializer
         /// <param name="isArray">If set to <c>true</c> the node is an array node.</param>
         public NodeInfo(string name, int id, Type type, bool isArray)
         {
-            this.Name = name;
-            this.Id = id;
-            this.Type = type;
-            this.IsArray = isArray;
-            this.IsEmpty = false;
+            Name = name;
+            Id = id;
+            Type = type;
+            IsArray = isArray;
+            IsEmpty = false;
         }
 
         private NodeInfo(bool parameter)
         {
-            this.Name = null;
-            this.Id = -1;
-            this.Type = null;
-            this.IsArray = false;
-            this.IsEmpty = true;
+            Name = null;
+            Id = -1;
+            Type = null;
+            IsArray = false;
+            IsEmpty = true;
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (object.ReferenceEquals(obj, null))
+            if (ReferenceEquals(obj, null))
             {
                 return false;
             }
@@ -140,7 +140,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override int GetHashCode()
         {
-            if (this.IsEmpty)
+            if (IsEmpty)
             {
                 return 0;
             }
@@ -150,11 +150,11 @@ namespace ExtEvents.OdinSerializer
             unchecked
             {
                 return (int)2166136261
-                    ^ ((this.Name == null ? 12321 : this.Name.GetHashCode()) * P)
-                    ^ (this.Id * P)
-                    ^ ((this.Type == null ? 1423 : this.Type.GetHashCode()) * P)
-                    ^ ((this.IsArray ? 124124 : 43234) * P)
-                    ^ ((this.IsEmpty ? 872934 : 27323) * P);
+                    ^ ((Name == null ? 12321 : Name.GetHashCode()) * P)
+                    ^ (Id * P)
+                    ^ ((Type == null ? 1423 : Type.GetHashCode()) * P)
+                    ^ ((IsArray ? 124124 : 43234) * P)
+                    ^ ((IsEmpty ? 872934 : 27323) * P);
             }
         }
     }

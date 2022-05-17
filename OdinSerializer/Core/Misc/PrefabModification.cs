@@ -23,6 +23,7 @@ namespace ExtEvents.OdinSerializer
     using System.Linq;
     using System.Reflection;
     using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// An Odin-serialized prefab modification, containing all the information necessary to apply the modification.
@@ -67,48 +68,48 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Applies the modification to the given Object.
         /// </summary>
-        public void Apply(UnityEngine.Object unityObject)
+        public void Apply(Object unityObject)
         {
-            if (this.ModificationType == PrefabModificationType.Value)
+            if (ModificationType == PrefabModificationType.Value)
             {
-                this.ApplyValue(unityObject);
+                ApplyValue(unityObject);
             }
-            else if (this.ModificationType == PrefabModificationType.ListLength)
+            else if (ModificationType == PrefabModificationType.ListLength)
             {
-                this.ApplyListLength(unityObject);
+                ApplyListLength(unityObject);
             }
-            else if (this.ModificationType == PrefabModificationType.Dictionary)
+            else if (ModificationType == PrefabModificationType.Dictionary)
             {
-                this.ApplyDictionaryModifications(unityObject);
+                ApplyDictionaryModifications(unityObject);
             }
             else
             {
-                throw new NotImplementedException(this.ModificationType.ToString());
+                throw new NotImplementedException(ModificationType.ToString());
             }
         }
 
-        private void ApplyValue(UnityEngine.Object unityObject)
+        private void ApplyValue(Object unityObject)
         {
             Type valueType = null;
 
-            if (!object.ReferenceEquals(this.ModifiedValue, null))
+            if (!ReferenceEquals(ModifiedValue, null))
             {
-                valueType = this.ModifiedValue.GetType();
+                valueType = ModifiedValue.GetType();
             }
 
-            if (valueType != null && this.ReferencePaths != null && this.ReferencePaths.Count > 0)
+            if (valueType != null && ReferencePaths != null && ReferencePaths.Count > 0)
             {
-                for (int i = 0; i < this.ReferencePaths.Count; i++)
+                for (int i = 0; i < ReferencePaths.Count; i++)
                 {
-                    var path = this.ReferencePaths[i];
+                    var path = ReferencePaths[i];
 
                     try
                     {
                         var refValue = GetInstanceFromPath(path, unityObject);
 
-                        if (!object.ReferenceEquals(refValue, null) && refValue.GetType() == valueType)
+                        if (!ReferenceEquals(refValue, null) && refValue.GetType() == valueType)
                         {
-                            this.ModifiedValue = refValue;
+                            ModifiedValue = refValue;
                             break;
                         }
                     }
@@ -116,12 +117,12 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            SetInstanceToPath(this.Path, unityObject, this.ModifiedValue);
+            SetInstanceToPath(Path, unityObject, ModifiedValue);
         }
 
-        private void ApplyListLength(UnityEngine.Object unityObject)
+        private void ApplyListLength(Object unityObject)
         {
-            object listObj = GetInstanceFromPath(this.Path, unityObject);
+            object listObj = GetInstanceFromPath(Path, unityObject);
 
             if (listObj == null)
             {
@@ -136,7 +137,7 @@ namespace ExtEvents.OdinSerializer
             {
                 Array array = (Array)listObj;
 
-                if (this.NewLength == array.Length)
+                if (NewLength == array.Length)
                 {
                     // If this happens, for some weird reason, then we can actually just not do anything
                     return;
@@ -146,9 +147,9 @@ namespace ExtEvents.OdinSerializer
                 // Ridiculous, we know - but there's no choice...
 
                 // Let's create a new, modified array
-                Array newArray = Array.CreateInstance(listType.GetElementType(), this.NewLength);
+                Array newArray = Array.CreateInstance(listType.GetElementType(), NewLength);
 
-                if (this.NewLength > array.Length)
+                if (NewLength > array.Length)
                 {
                     Array.Copy(array, 0, newArray, 0, array.Length);
                     ReplaceAllReferencesInGraph(unityObject, array, newArray);
@@ -167,7 +168,7 @@ namespace ExtEvents.OdinSerializer
 
                 int count = 0;
 
-                while (list.Count < this.NewLength)
+                while (list.Count < NewLength)
                 {
                     if (elementIsValueType)
                     {
@@ -181,7 +182,7 @@ namespace ExtEvents.OdinSerializer
                     count++;
                 }
 
-                while (list.Count > this.NewLength)
+                while (list.Count > NewLength)
                 {
                     list.RemoveAt(list.Count - 1);
                 }
@@ -196,9 +197,9 @@ namespace ExtEvents.OdinSerializer
 
                 int count = (int)countProp.GetValue(listObj, null);
 
-                if (count < this.NewLength)
+                if (count < NewLength)
                 {
-                    int add = this.NewLength - count;
+                    int add = NewLength - count;
 
                     MethodInfo addMethod = collectionType.GetMethod("Add");
 
@@ -206,7 +207,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         if (elementIsValueType)
                         {
-                            addMethod.Invoke(listObj, new object[] { Activator.CreateInstance(elementType) });
+                            addMethod.Invoke(listObj, new[] { Activator.CreateInstance(elementType) });
                         }
                         else
                         {
@@ -215,9 +216,9 @@ namespace ExtEvents.OdinSerializer
                         count++;
                     }
                 }
-                else if (count > this.NewLength)
+                else if (count > NewLength)
                 {
-                    int remove = count - this.NewLength;
+                    int remove = count - NewLength;
 
                     Type listInterfaceType = typeof(IList<>).MakeGenericType(elementType);
                     MethodInfo removeAtMethod = listInterfaceType.GetMethod("RemoveAt");
@@ -230,9 +231,9 @@ namespace ExtEvents.OdinSerializer
             }
         }
 
-        private void ApplyDictionaryModifications(UnityEngine.Object unityObject)
+        private void ApplyDictionaryModifications(Object unityObject)
         {
-            object dictionaryObj = GetInstanceFromPath(this.Path, unityObject);
+            object dictionaryObj = GetInstanceFromPath(Path, unityObject);
 
             if (dictionaryObj == null)
             {
@@ -258,17 +259,17 @@ namespace ExtEvents.OdinSerializer
             // First, remove keys
             //
 
-            if (this.DictionaryKeysRemoved != null && this.DictionaryKeysRemoved.Length > 0)
+            if (DictionaryKeysRemoved != null && DictionaryKeysRemoved.Length > 0)
             {
-                MethodInfo method = iType.GetMethod("Remove", new Type[] { typeArgs[0] });
+                MethodInfo method = iType.GetMethod("Remove", new[] { typeArgs[0] });
                 object[] parameters = new object[1];
 
-                for (int i = 0; i < this.DictionaryKeysRemoved.Length; i++)
+                for (int i = 0; i < DictionaryKeysRemoved.Length; i++)
                 {
-                    parameters[0] = this.DictionaryKeysRemoved[i];
+                    parameters[0] = DictionaryKeysRemoved[i];
 
                     // Ensure the key value is safe to add
-                    if (object.ReferenceEquals(parameters[0], null) || !typeArgs[0].IsAssignableFrom(parameters[0].GetType()))
+                    if (ReferenceEquals(parameters[0], null) || !typeArgs[0].IsAssignableFrom(parameters[0].GetType()))
                         continue;
 
                     method.Invoke(dictionaryObj, parameters);
@@ -279,7 +280,7 @@ namespace ExtEvents.OdinSerializer
             // Then, add keys
             //
 
-            if (this.DictionaryKeysAdded != null && this.DictionaryKeysAdded.Length > 0)
+            if (DictionaryKeysAdded != null && DictionaryKeysAdded.Length > 0)
             {
                 MethodInfo method = iType.GetMethod("set_Item", typeArgs);
                 object[] parameters = new object[2];
@@ -287,12 +288,12 @@ namespace ExtEvents.OdinSerializer
                 // Get default value to set key to
                 parameters[1] = typeArgs[1].IsValueType ? Activator.CreateInstance(typeArgs[1]) : null;
 
-                for (int i = 0; i < this.DictionaryKeysAdded.Length; i++)
+                for (int i = 0; i < DictionaryKeysAdded.Length; i++)
                 {
-                    parameters[0] = this.DictionaryKeysAdded[i];
+                    parameters[0] = DictionaryKeysAdded[i];
 
                     // Ensure the key value is safe to add
-                    if (object.ReferenceEquals(parameters[0], null) || !typeArgs[0].IsAssignableFrom(parameters[0].GetType()))
+                    if (ReferenceEquals(parameters[0], null) || !typeArgs[0].IsAssignableFrom(parameters[0].GetType()))
                         continue;
 
                     method.Invoke(dictionaryObj, parameters);
@@ -317,12 +318,12 @@ namespace ExtEvents.OdinSerializer
                 {
                     var value = array.GetValue(i);
 
-                    if (object.ReferenceEquals(value, null))
+                    if (ReferenceEquals(value, null))
                     {
                         continue;
                     }
 
-                    if (object.ReferenceEquals(value, oldReference))
+                    if (ReferenceEquals(value, oldReference))
                     {
                         array.SetValue(newReference, i);
                         value = newReference;
@@ -347,7 +348,7 @@ namespace ExtEvents.OdinSerializer
 
                     object value = field.GetValue(graph);
 
-                    if (object.ReferenceEquals(value, null))
+                    if (ReferenceEquals(value, null))
                     {
                         continue;
                     }
@@ -357,7 +358,7 @@ namespace ExtEvents.OdinSerializer
                     if (valueType.IsPrimitive || valueType == typeof(SerializationData) || valueType == typeof(string))
                         continue;
 
-                    if (object.ReferenceEquals(value, oldReference))
+                    if (ReferenceEquals(value, oldReference))
                     {
                         field.SetValue(graph, newReference);
                         value = newReference;
@@ -381,7 +382,7 @@ namespace ExtEvents.OdinSerializer
             {
                 currentInstance = GetInstanceOfStep(steps[i], currentInstance);
 
-                if (object.ReferenceEquals(currentInstance, null))
+                if (ReferenceEquals(currentInstance, null))
                 {
                     //Debug.LogWarning("Failed to resolve modification path '" + path + "' at step '" + steps[i] + "'.");
                     return null;
@@ -418,7 +419,8 @@ namespace ExtEvents.OdinSerializer
 
                     return array.GetValue(index);
                 }
-                else if (typeof(IList).IsAssignableFrom(type))
+
+                if (typeof(IList).IsAssignableFrom(type))
                 {
                     IList list = (IList)instance;
 
@@ -429,7 +431,8 @@ namespace ExtEvents.OdinSerializer
 
                     return list[index];
                 }
-                else if (type.ImplementsOpenGenericInterface(typeof(IList<>)))
+
+                if (type.ImplementsOpenGenericInterface(typeof(IList<>)))
                 {
                     Type elementType = type.GetArgumentsOfInheritedOpenGenericInterface(typeof(IList<>))[0];
                     Type listType = typeof(IList<>).MakeGenericType(elementType);
@@ -458,7 +461,7 @@ namespace ExtEvents.OdinSerializer
 
                     try
                     {
-                        return getItemMethod.Invoke(instance, new object[] { key });
+                        return getItemMethod.Invoke(instance, new[] { key });
                     }
                     catch (Exception)
                     {
@@ -511,7 +514,7 @@ namespace ExtEvents.OdinSerializer
             {
                 object currentInstance = GetInstanceOfStep(steps[index], instance);
 
-                if (object.ReferenceEquals(currentInstance, null))
+                if (ReferenceEquals(currentInstance, null))
                 {
                     //Debug.LogWarning("Failed to resolve prefab modification path '" + path + "' at step '" + steps[index] + "'.");
                     return;
@@ -565,7 +568,8 @@ namespace ExtEvents.OdinSerializer
                         array.SetValue(value, index);
                         return true;
                     }
-                    else if (typeof(IList).IsAssignableFrom(type))
+
+                    if (typeof(IList).IsAssignableFrom(type))
                     {
                         IList list = (IList)instance;
 
@@ -577,13 +581,14 @@ namespace ExtEvents.OdinSerializer
                         list[index] = value;
                         return true;
                     }
-                    else if (type.ImplementsOpenGenericInterface(typeof(IList<>)))
+
+                    if (type.ImplementsOpenGenericInterface(typeof(IList<>)))
                     {
                         Type elementType = type.GetArgumentsOfInheritedOpenGenericInterface(typeof(IList<>))[0];
                         Type listType = typeof(IList<>).MakeGenericType(elementType);
                         MethodInfo setItemMethod = listType.GetMethod("set_Item", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                        setItemMethod.Invoke(instance, new object[] { index, value });
+                        setItemMethod.Invoke(instance, new[] { index, value });
                         return true;
                     }
                 }
@@ -600,7 +605,7 @@ namespace ExtEvents.OdinSerializer
                         MethodInfo containsKeyMethod = dictType.GetMethod("ContainsKey", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                         MethodInfo setItemMethod = dictType.GetMethod("set_Item", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                        bool containsKey = (bool)containsKeyMethod.Invoke(instance, new object[] { key });
+                        bool containsKey = (bool)containsKeyMethod.Invoke(instance, new[] { key });
 
                         if (!containsKey)
                         {
@@ -608,7 +613,7 @@ namespace ExtEvents.OdinSerializer
                             return false;
                         }
 
-                        setItemMethod.Invoke(instance, new object[] { key, value });
+                        setItemMethod.Invoke(instance, new[] { key, value });
                     }
                 }
                 else

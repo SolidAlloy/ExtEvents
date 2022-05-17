@@ -19,6 +19,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.ComponentModel;
 
     /// <summary>
     /// Attribute indicating that a generic type definition class which implements the <see cref="IFormatter{T}" /> interface somewhere in its hierarchy is a custom formatter for *any variation* of the generic type definition T.
@@ -30,7 +31,7 @@ namespace ExtEvents.OdinSerializer
     /// <seealso cref="CustomFormatterAttribute" />
     [AttributeUsage(AttributeTargets.Class)]
     [Obsolete("Use a RegisterFormatterAttribute applied to the containing assembly instead.", true)]
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class CustomGenericFormatterAttribute : CustomFormatterAttribute
     {
         /// <summary>
@@ -58,7 +59,7 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentException("The type " + serializedGenericTypeDefinition.Name + " is not a generic type definition.");
             }
 
-            this.SerializedGenericTypeDefinition = serializedGenericTypeDefinition;
+            SerializedGenericTypeDefinition = serializedGenericTypeDefinition;
         }
     }
 }

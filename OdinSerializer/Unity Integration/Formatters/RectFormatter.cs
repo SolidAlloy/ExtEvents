@@ -39,10 +39,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref Rect value, IDataReader reader)
         {
-            value.x = RectFormatter.FloatSerializer.ReadValue(reader);
-            value.y = RectFormatter.FloatSerializer.ReadValue(reader);
-            value.width = RectFormatter.FloatSerializer.ReadValue(reader);
-            value.height = RectFormatter.FloatSerializer.ReadValue(reader);
+            value.x = FloatSerializer.ReadValue(reader);
+            value.y = FloatSerializer.ReadValue(reader);
+            value.width = FloatSerializer.ReadValue(reader);
+            value.height = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -52,10 +52,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Rect value, IDataWriter writer)
         {
-            RectFormatter.FloatSerializer.WriteValue(value.x, writer);
-            RectFormatter.FloatSerializer.WriteValue(value.y, writer);
-            RectFormatter.FloatSerializer.WriteValue(value.width, writer);
-            RectFormatter.FloatSerializer.WriteValue(value.height, writer);
+            FloatSerializer.WriteValue(value.x, writer);
+            FloatSerializer.WriteValue(value.y, writer);
+            FloatSerializer.WriteValue(value.width, writer);
+            FloatSerializer.WriteValue(value.height, writer);
         }
     }
 }

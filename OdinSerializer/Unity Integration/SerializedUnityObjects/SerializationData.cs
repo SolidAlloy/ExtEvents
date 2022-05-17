@@ -19,8 +19,10 @@ namespace ExtEvents.OdinSerializer
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using UnityEngine;
     using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Unity serialized data struct that contains all data needed by Odin serialization.
@@ -60,28 +62,28 @@ namespace ExtEvents.OdinSerializer
         /// All serialized Unity references.
         /// </summary>
         [SerializeField]
-        public List<UnityEngine.Object> ReferencedUnityObjects;
+        public List<Object> ReferencedUnityObjects;
 
         /// <summary>
         /// Whether the object contains any serialized data.
         /// </summary>
         [Obsolete("Use ContainsData instead")]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool HasEditorData
         {
             get
             {
-                switch (this.SerializedFormat)
+                switch (SerializedFormat)
                 {
                     case DataFormat.Binary:
                     case DataFormat.JSON:
-                        return !(this.SerializedBytesString.IsNullOrWhitespace() && (this.SerializedBytes == null || this.SerializedBytes.Length == 0));
+                        return !(SerializedBytesString.IsNullOrWhitespace() && (SerializedBytes == null || SerializedBytes.Length == 0));
 
                     case DataFormat.Nodes:
-                        return !(this.SerializationNodes == null || this.SerializationNodes.Count == 0);
+                        return !(SerializationNodes == null || SerializationNodes.Count == 0);
 
                     default:
-                        throw new NotImplementedException(this.SerializedFormat.ToString());
+                        throw new NotImplementedException(SerializedFormat.ToString());
                 }
             }
         }
@@ -96,10 +98,10 @@ namespace ExtEvents.OdinSerializer
             {
                 return
                     // this.SerializedBytesString != null && // Unity serialized strings remains null when an object is created until it's deserialized.
-                    this.SerializedBytes != null &&
-                    this.SerializationNodes != null &&
-                    this.PrefabModifications != null &&
-                    this.ReferencedUnityObjects != null;
+                    SerializedBytes != null &&
+                    SerializationNodes != null &&
+                    PrefabModifications != null &&
+                    ReferencedUnityObjects != null;
             }
         }
 
@@ -113,13 +115,13 @@ namespace ExtEvents.OdinSerializer
         /// The reference to the prefab this is only populated in prefab scene instances.
         /// </summary>
         [SerializeField]
-        public UnityEngine.Object Prefab;
+        public Object Prefab;
 
         /// <summary>
         /// All serialized Unity references.
         /// </summary>
         [SerializeField]
-        public List<UnityEngine.Object> PrefabModificationsReferencedUnityObjects;
+        public List<Object> PrefabModificationsReferencedUnityObjects;
 
         /// <summary>
         /// All Odin serialized prefab modifications.
@@ -138,38 +140,38 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void Reset()
         {
-            this.SerializedFormat = DataFormat.Binary;
+            SerializedFormat = DataFormat.Binary;
 
-            if (this.SerializedBytes != null && this.SerializedBytes.Length > 0)
+            if (SerializedBytes != null && SerializedBytes.Length > 0)
             {
-                this.SerializedBytes = new byte[0];
+                SerializedBytes = new byte[0];
             }
 
-            if (this.ReferencedUnityObjects != null && this.ReferencedUnityObjects.Count > 0)
+            if (ReferencedUnityObjects != null && ReferencedUnityObjects.Count > 0)
             {
-                this.ReferencedUnityObjects.Clear();
+                ReferencedUnityObjects.Clear();
             }
 
-            this.Prefab = null;
+            Prefab = null;
 
-            if (this.SerializationNodes != null && this.SerializationNodes.Count > 0)
+            if (SerializationNodes != null && SerializationNodes.Count > 0)
             {
-                this.SerializationNodes.Clear();
+                SerializationNodes.Clear();
             }
 
-            if (this.SerializedBytesString != null && this.SerializedBytesString.Length > 0)
+            if (SerializedBytesString != null && SerializedBytesString.Length > 0)
             {
-                this.SerializedBytesString = string.Empty;
+                SerializedBytesString = string.Empty;
             }
 
-            if (this.PrefabModificationsReferencedUnityObjects != null && this.PrefabModificationsReferencedUnityObjects.Count > 0)
+            if (PrefabModificationsReferencedUnityObjects != null && PrefabModificationsReferencedUnityObjects.Count > 0)
             {
-                this.PrefabModificationsReferencedUnityObjects.Clear();
+                PrefabModificationsReferencedUnityObjects.Clear();
             }
 
-            if (this.PrefabModifications != null && this.PrefabModifications.Count > 0)
+            if (PrefabModifications != null && PrefabModifications.Count > 0)
             {
-                this.PrefabModifications.Clear();
+                PrefabModifications.Clear();
             }
         }
     }

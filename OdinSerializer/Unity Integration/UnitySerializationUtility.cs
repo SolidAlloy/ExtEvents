@@ -20,20 +20,23 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System.Globalization;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Text;
-    using Utilities;
-    using UnityEngine;
-    using UnityEngine.Events;
     using System.Runtime.CompilerServices;
-    using UnityEngine.Assertions;
     using System.Runtime.Serialization;
-
+    using System.Text;
+    using UnityEditor;
+    using UnityEngine;
+    using UnityEngine.Assertions;
+    using UnityEngine.Events;
+    using Utilities;
+    using Debug = UnityEngine.Debug;
+    using Object = UnityEngine.Object;
 #if PREFAB_DEBUG && !SIRENIX_INTERNAL
 #warning "Prefab serialization debugging is enabled outside of Sirenix internal. Are you sure this is right?"
 #endif
@@ -58,7 +61,7 @@ namespace ExtEvents.OdinSerializer
 #if UNITY_EDITOR        
         private static bool isDoingDomainReload;
 
-        [UnityEditor.InitializeOnLoadMethod]
+        [InitializeOnLoadMethod]
         private static void SubscribeToDomainReloadEvents()
         {
             var AssemblyReloadEvents_Type = TwoWaySerializationBinder.Default.BindToType("UnityEditor.AssemblyReloadEvents");
@@ -101,38 +104,38 @@ namespace ExtEvents.OdinSerializer
         private static readonly Type SBP_ContentPipelineType = TwoWaySerializationBinder.Default.BindToType("UnityEditor.Build.Pipeline.ContentPipeline");
 
         [NonSerialized]
-        private static readonly MethodInfo PrefabUtility_IsComponentAddedToPrefabInstance_MethodInfo = typeof(UnityEditor.PrefabUtility).GetMethod("IsComponentAddedToPrefabInstance");
+        private static readonly MethodInfo PrefabUtility_IsComponentAddedToPrefabInstance_MethodInfo = typeof(PrefabUtility).GetMethod("IsComponentAddedToPrefabInstance");
 
         [NonSerialized]
-        private static readonly HashSet<UnityEngine.Object> UnityObjectsWaitingForDelayedModificationApply = new HashSet<UnityEngine.Object>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
+        private static readonly HashSet<Object> UnityObjectsWaitingForDelayedModificationApply = new HashSet<Object>(ReferenceEqualityComparer<Object>.Default);
 
         [NonSerialized]
-        private static readonly Dictionary<UnityEngine.Object, List<PrefabModification>> RegisteredPrefabModifications = new Dictionary<UnityEngine.Object, List<PrefabModification>>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
+        private static readonly Dictionary<Object, List<PrefabModification>> RegisteredPrefabModifications = new Dictionary<Object, List<PrefabModification>>(ReferenceEqualityComparer<Object>.Default);
 
         private static class PrefabDeserializeUtility
         {
-            private static int updateCount = 0;
+            private static int updateCount;
 
             [NonSerialized]
-            public static readonly HashSet<UnityEngine.Object> PrefabsWithValuesApplied = new HashSet<UnityEngine.Object>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
+            public static readonly HashSet<Object> PrefabsWithValuesApplied = new HashSet<Object>(ReferenceEqualityComparer<Object>.Default);
 
             [NonSerialized]
-            private static readonly Dictionary<UnityEngine.Object, HashSet<object>> SceneObjectsToKeepOnApply = new Dictionary<UnityEngine.Object, HashSet<object>>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
+            private static readonly Dictionary<Object, HashSet<object>> SceneObjectsToKeepOnApply = new Dictionary<Object, HashSet<object>>(ReferenceEqualityComparer<Object>.Default);
 
             [NonSerialized]
             public static readonly object DeserializePrefabs_LOCK = new object();
 
-            private static readonly List<UnityEngine.Object> toRemove = new List<UnityEngine.Object>();
+            private static readonly List<Object> toRemove = new List<Object>();
 
             static PrefabDeserializeUtility()
             {
-                UnityEditor.EditorApplication.update += OnEditorUpdate;
+                EditorApplication.update += OnEditorUpdate;
             }
 
             /// <summary>
             /// Note: it is assumed that code calling this is holding the DeserializePrefabCaches_LOCK lock, and will continue to hold it while the returned hashset is being modified
             /// </summary>
-            public static HashSet<object> GetSceneObjectsToKeepSet(UnityEngine.Object unityObject, bool createIfDoesntExist)
+            public static HashSet<object> GetSceneObjectsToKeepSet(Object unityObject, bool createIfDoesntExist)
             {
                 HashSet<object> keep;
 
@@ -189,12 +192,12 @@ namespace ExtEvents.OdinSerializer
         private static readonly Dictionary<MemberInfo, bool> UnityWillSerializeMembersCache = new Dictionary<MemberInfo, bool>();
         private static readonly Dictionary<Type, bool> UnityWillSerializeTypesCache = new Dictionary<Type, bool>();
 
-        private static readonly HashSet<Type> UnityNeverSerializesTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> UnityNeverSerializesTypes = new HashSet<Type>
         {
             typeof(Coroutine)
         };
 
-        private static readonly HashSet<string> UnityNeverSerializesTypeNames = new HashSet<string>()
+        private static readonly HashSet<string> UnityNeverSerializesTypeNames = new HashSet<string>
         {
             "UnityEngine.AnimationState"
         };
@@ -209,14 +212,14 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static List<PrefabModification> GetRegisteredPrefabModifications(UnityEngine.Object obj)
+        public static List<PrefabModification> GetRegisteredPrefabModifications(Object obj)
         {
             List<PrefabModification> result;
             RegisteredPrefabModifications.TryGetValue(obj, out result);
             return result;
         }
 
-        public static bool HasModificationsWaitingForDelayedApply(UnityEngine.Object obj)
+        public static bool HasModificationsWaitingForDelayedApply(Object obj)
         {
             return UnityObjectsWaitingForDelayedModificationApply.Contains(obj);
         }
@@ -234,15 +237,15 @@ namespace ExtEvents.OdinSerializer
         {
             Dictionary<MemberInfo, CachedSerializationBackendResult> cacheForPolicy;
             
-            if (policy == null || object.ReferenceEquals(policy, UnityPolicy))
+            if (policy == null || ReferenceEquals(policy, UnityPolicy))
             {
                 cacheForPolicy = OdinWillSerializeCache_UnityPolicy;
             }
-            else if (object.ReferenceEquals(policy, EverythingPolicy))
+            else if (ReferenceEquals(policy, EverythingPolicy))
             {
                 cacheForPolicy = OdinWillSerializeCache_EverythingPolicy;
             }
-            else if (object.ReferenceEquals(policy, StrictPolicy))
+            else if (ReferenceEquals(policy, StrictPolicy))
             {
                 cacheForPolicy = OdinWillSerializeCache_StrictPolicy;
             }
@@ -303,7 +306,7 @@ namespace ExtEvents.OdinSerializer
 
         private static bool CalculateOdinWillSerialize(MemberInfo member, bool serializeUnityFields, ISerializationPolicy policy)
         {
-            if (member.DeclaringType == typeof(UnityEngine.Object)) return false;
+            if (member.DeclaringType == typeof(Object)) return false;
             if (!policy.ShouldSerializeMember(member)) return false;
 
             // Allow serialization of fields with [OdinSerialize], regardless of whether Unity
@@ -394,7 +397,7 @@ namespace ExtEvents.OdinSerializer
                 return true;
             }
 
-            if (!typeof(UnityEngine.Object).IsAssignableFrom(fieldInfo.FieldType) && fieldInfo.FieldType == fieldInfo.DeclaringType)
+            if (!typeof(Object).IsAssignableFrom(fieldInfo.FieldType) && fieldInfo.FieldType == fieldInfo.DeclaringType)
             {
                 // Unity will not serialize references that are obviously cyclical
                 return false;
@@ -447,7 +450,7 @@ namespace ExtEvents.OdinSerializer
                 return false;
             }
 
-            if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+            if (typeof(Object).IsAssignableFrom(type))
             {
                 if (type.IsGenericType)
                 {
@@ -472,10 +475,8 @@ namespace ExtEvents.OdinSerializer
                 {
                     return underlyingType != typeof(long) && underlyingType != typeof(ulong);
                 }
-                else
-                {
-                    return underlyingType == typeof(int) || underlyingType == typeof(byte);
-                }
+
+                return underlyingType == typeof(int) || underlyingType == typeof(byte);
             }
 
             if (type.IsPrimitive || type == typeof(string))
@@ -547,10 +548,8 @@ namespace ExtEvents.OdinSerializer
                 {
                     return true;
                 }
-                else
-                {
-                    return type.IsClass;
-                }
+
+                return type.IsClass;
             }
 
             // Check for synclists if legacy networking is present
@@ -576,7 +575,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void SerializeUnityObject(UnityEngine.Object unityObject, ref SerializationData data, bool serializeUnityFields = false, SerializationContext context = null)
+        public static void SerializeUnityObject(Object unityObject, ref SerializationData data, bool serializeUnityFields = false, SerializationContext context = null)
         {
             if (unityObject == null)
             {
@@ -604,7 +603,7 @@ namespace ExtEvents.OdinSerializer
             }
 
             {
-                bool pretendIsPlayer = Application.isPlaying && !UnityEditor.AssetDatabase.Contains(unityObject);
+                bool pretendIsPlayer = Application.isPlaying && !AssetDatabase.Contains(unityObject);
 
                 //
                 // Look through a stack trace to determine some things about the current serialization context.
@@ -613,9 +612,9 @@ namespace ExtEvents.OdinSerializer
                 //
 
                 {
-                    var stackFrames = new System.Diagnostics.StackTrace().GetFrames();
-                    Type buildPipelineType = typeof(UnityEditor.BuildPipeline);
-                    Type prefabUtilityType = typeof(UnityEditor.PrefabUtility);
+                    var stackFrames = new StackTrace().GetFrames();
+                    Type buildPipelineType = typeof(BuildPipeline);
+                    Type prefabUtilityType = typeof(PrefabUtility);
                     
 
                     for (int i = 0; i < stackFrames.Length; i++)
@@ -652,7 +651,7 @@ namespace ExtEvents.OdinSerializer
 
                 if (!pretendIsPlayer && !isDoingDomainReload) // Recently some Unity versions started breaking if the prefab API was accessed during a domain reload, so no prefab stuff for domain reloads!
                 {
-                    UnityEngine.Object prefab = null;
+                    Object prefab = null;
                     SerializationData prefabData = default(SerializationData);
 
                     bool prefabDataIsFromSelf = false;
@@ -661,7 +660,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         prefab = OdinPrefabSerializationEditorUtility.GetCorrespondingObjectFromSource(unityObject);
 
-                        if (prefab.SafeIsUnityNull() && !object.ReferenceEquals(data.Prefab, null))
+                        if (prefab.SafeIsUnityNull() && !ReferenceEquals(data.Prefab, null))
                         {
                             // Sometimes, GetPrefabParent does not return the prefab,
                             // because Unity is just completely unreliable.
@@ -674,7 +673,7 @@ namespace ExtEvents.OdinSerializer
                             prefab = data.Prefab;
                         }
 
-                        if (!object.ReferenceEquals(prefab, null))
+                        if (!ReferenceEquals(prefab, null))
                         {
                             if (prefab is ISupportsPrefabSerialization)
                             {
@@ -691,7 +690,7 @@ namespace ExtEvents.OdinSerializer
                                     prefabDataIsFromSelf = true;
                                 }
                             }
-                            else if (prefab.GetType() != typeof(UnityEngine.Object))
+                            else if (prefab.GetType() != typeof(Object))
                             {
                                 //Debug.LogWarning(unityObject.name + " is a prefab instance, but the prefab reference type " + prefab.GetType().GetNiceName() + " does not implement the interface " + typeof(ISupportsPrefabSerialization).GetNiceName() + "; non-Unity-serialized data will most likely not be updated properly from the prefab any more.");
                                 //prefab = null;
@@ -703,7 +702,7 @@ namespace ExtEvents.OdinSerializer
                         }
                     }
 
-                    if (!object.ReferenceEquals(prefab, null))
+                    if (!ReferenceEquals(prefab, null))
                     {
                         // We will bail out. But first...
 
@@ -738,7 +737,7 @@ namespace ExtEvents.OdinSerializer
                             {
                                 if (prefab)
                                 {
-                                    UnityEditor.EditorUtility.SetDirty(prefab);
+                                    EditorUtility.SetDirty(prefab);
                                     //UnityEditor.AssetDatabase.SaveAssets(); // Has a tendency to cause infinite serialization loops
                                 }
                             };
@@ -751,7 +750,7 @@ namespace ExtEvents.OdinSerializer
                         bool newModifications = false;
                         List<string> modificationsToKeep;
                         List<PrefabModification> modificationsList;
-                        List<UnityEngine.Object> modificationsReferencedUnityObjects = data.PrefabModificationsReferencedUnityObjects;
+                        List<Object> modificationsReferencedUnityObjects = data.PrefabModificationsReferencedUnityObjects;
 
                         if (RegisteredPrefabModifications.TryGetValue(unityObject, out modificationsList))
                         {
@@ -819,20 +818,20 @@ namespace ExtEvents.OdinSerializer
                                 if (data.PrefabModificationsReferencedUnityObjects != null && data.PrefabModificationsReferencedUnityObjects.Count > 0)
                                 {
                                     //var prefabRoot = UnityEditor.PrefabUtility.FindPrefabRoot(((Component)data.Prefab).gameObject);
-                                    var instanceRoot = UnityEditor.PrefabUtility.FindPrefabRoot(((Component)unityObject).gameObject);
+                                    var instanceRoot = PrefabUtility.FindPrefabRoot(((Component)unityObject).gameObject);
 
                                     foreach (var reference in data.PrefabModificationsReferencedUnityObjects)
                                     {
                                         if (reference == null) continue;
                                         if (!(reference is GameObject || reference is Component)) continue;
-                                        if (UnityEditor.AssetDatabase.Contains(reference)) continue;
+                                        if (AssetDatabase.Contains(reference)) continue;
 
-                                        var referencePrefabType = UnityEditor.PrefabUtility.GetPrefabType(reference);
+                                        var referencePrefabType = PrefabUtility.GetPrefabType(reference);
 
-                                        bool mightBeInPrefab = referencePrefabType == UnityEditor.PrefabType.Prefab
-                                                            || referencePrefabType == UnityEditor.PrefabType.PrefabInstance
-                                                            || referencePrefabType == UnityEditor.PrefabType.ModelPrefab
-                                                            || referencePrefabType == UnityEditor.PrefabType.ModelPrefabInstance;
+                                        bool mightBeInPrefab = referencePrefabType == PrefabType.Prefab
+                                                            || referencePrefabType == PrefabType.PrefabInstance
+                                                            || referencePrefabType == PrefabType.ModelPrefab
+                                                            || referencePrefabType == PrefabType.ModelPrefabInstance;
 
                                         if (!mightBeInPrefab)
                                         {
@@ -852,7 +851,7 @@ namespace ExtEvents.OdinSerializer
                                         }
 
                                         var gameObject = (GameObject)(reference is GameObject ? reference : (reference as Component).gameObject);
-                                        var referenceRoot = UnityEditor.PrefabUtility.FindPrefabRoot(gameObject);
+                                        var referenceRoot = PrefabUtility.FindPrefabRoot(gameObject);
 
                                         if (referenceRoot != instanceRoot)
                                         {
@@ -932,11 +931,11 @@ namespace ExtEvents.OdinSerializer
                     // We pretend as though we're serializing outside of the editor
                     if (format == DataFormat.Nodes)
                     {
-                        Debug.LogWarning("The serialization format '" + format.ToString() + "' is disabled in play mode, and when building a player. Defaulting to the format '" + DataFormat.Binary.ToString() + "' instead.");
+                        Debug.LogWarning("The serialization format '" + format + "' is disabled in play mode, and when building a player. Defaulting to the format '" + DataFormat.Binary + "' instead.");
                         format = DataFormat.Binary;
                     }
 
-                    UnitySerializationUtility.SerializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, format, serializeUnityFields, context);
+                    SerializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, format, serializeUnityFields, context);
                     data.SerializedFormat = format;
                 }
                 else
@@ -964,7 +963,7 @@ namespace ExtEvents.OdinSerializer
                                 
                                 writer.Context = newContext;
 
-                                UnitySerializationUtility.SerializeUnityObject(unityObject, writer, serializeUnityFields);
+                                SerializeUnityObject(unityObject, writer, serializeUnityFields);
                                 data.SerializationNodes = writer.Nodes;
                                 data.ReferencedUnityObjects = resolver.Value.GetReferencedUnityObjects();
                             }
@@ -984,7 +983,7 @@ namespace ExtEvents.OdinSerializer
                                 resolver.Value.SetReferencedUnityObjects(data.ReferencedUnityObjects);
                                 context.IndexReferenceResolver = resolver.Value;
 
-                                UnitySerializationUtility.SerializeUnityObject(unityObject, writer, serializeUnityFields);
+                                SerializeUnityObject(unityObject, writer, serializeUnityFields);
                                 data.SerializationNodes = writer.Nodes;
                                 data.ReferencedUnityObjects = resolver.Value.GetReferencedUnityObjects();
                             }
@@ -992,7 +991,7 @@ namespace ExtEvents.OdinSerializer
                     }
                     else
                     {
-                        UnitySerializationUtility.SerializeUnityObject(unityObject, ref data.SerializedBytesString, ref data.ReferencedUnityObjects, format, serializeUnityFields, context);
+                        SerializeUnityObject(unityObject, ref data.SerializedBytesString, ref data.ReferencedUnityObjects, format, serializeUnityFields, context);
                     }
 
                     data.SerializedFormat = format;
@@ -1030,7 +1029,7 @@ namespace ExtEvents.OdinSerializer
 
 #if UNITY_EDITOR
 
-        private static void SetUnityObjectModifications(UnityEngine.Object unityObject, ref SerializationData data, UnityEngine.Object prefab)
+        private static void SetUnityObjectModifications(Object unityObject, ref SerializationData data, Object prefab)
         {
             //
             // We need to set the modifications to the prefab instance manually,
@@ -1039,7 +1038,7 @@ namespace ExtEvents.OdinSerializer
 
             Type unityObjectType = unityObject.GetType();
             var serializedDataField = unityObjectType.GetAllMembers<FieldInfo>(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                                                     .Where(field => field.FieldType == typeof(SerializationData) && UnitySerializationUtility.GuessIfUnityWillSerialize(field))
+                                                     .Where(field => field.FieldType == typeof(SerializationData) && GuessIfUnityWillSerialize(field))
                                                      .LastOrDefault();
 
             if (serializedDataField == null)
@@ -1053,7 +1052,7 @@ namespace ExtEvents.OdinSerializer
                 string modificationsPath = serializedDataPath + SerializationData.PrefabModificationsFieldName + ".Array.";
                 string prefabPath = serializedDataPath + SerializationData.PrefabFieldName;
 
-                var mods = UnityEditor.PrefabUtility.GetPropertyModifications(unityObject).ToList();
+                var mods = PrefabUtility.GetPropertyModifications(unityObject).ToList();
 
                 //
                 // Clear all old modifications to serialized data out
@@ -1063,7 +1062,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     var mod = mods[i];
 
-                    if (mod.propertyPath.StartsWith(serializedDataPath, StringComparison.InvariantCulture) && object.ReferenceEquals(mod.target, prefab))
+                    if (mod.propertyPath.StartsWith(serializedDataPath, StringComparison.InvariantCulture) && ReferenceEquals(mod.target, prefab))
                     {
                         mods.RemoveAt(i);
                         i--;
@@ -1075,14 +1074,14 @@ namespace ExtEvents.OdinSerializer
                 //
 
                 // Array length changes seem to always come first? Let's do that to be sure...
-                mods.Insert(0, new UnityEditor.PropertyModification()
+                mods.Insert(0, new PropertyModification
                 {
                     target = prefab,
                     propertyPath = referencedUnityObjectsPath + "size",
                     value = data.PrefabModificationsReferencedUnityObjects.Count.ToString("D", CultureInfo.InvariantCulture)
                 });
 
-                mods.Insert(0, new UnityEditor.PropertyModification()
+                mods.Insert(0, new PropertyModification
                 {
                     target = prefab,
                     propertyPath = modificationsPath + "size",
@@ -1090,7 +1089,7 @@ namespace ExtEvents.OdinSerializer
                 });
 
                 // Then the prefab object reference
-                mods.Add(new UnityEditor.PropertyModification()
+                mods.Add(new PropertyModification
                 {
                     target = prefab,
                     propertyPath = prefabPath,
@@ -1100,7 +1099,7 @@ namespace ExtEvents.OdinSerializer
                 // Then the actual array values
                 for (int i = 0; i < data.PrefabModificationsReferencedUnityObjects.Count; i++)
                 {
-                    mods.Add(new UnityEditor.PropertyModification()
+                    mods.Add(new PropertyModification
                     {
                         target = prefab,
                         propertyPath = referencedUnityObjectsPath + "data[" + i.ToString("D", CultureInfo.InvariantCulture) + "]",
@@ -1110,7 +1109,7 @@ namespace ExtEvents.OdinSerializer
 
                 for (int i = 0; i < data.PrefabModifications.Count; i++)
                 {
-                    mods.Add(new UnityEditor.PropertyModification()
+                    mods.Add(new PropertyModification
                     {
                         target = prefab,
                         propertyPath = modificationsPath + "data[" + i.ToString("D", CultureInfo.InvariantCulture) + "]",
@@ -1157,7 +1156,7 @@ namespace ExtEvents.OdinSerializer
 #endif
 
                     UnityObjectsWaitingForDelayedModificationApply.Remove(unityObject);
-                    UnityEditor.PrefabUtility.SetPropertyModifications(unityObject, mods.ToArray());
+                    PrefabUtility.SetPropertyModifications(unityObject, mods.ToArray());
                 };
 
                 UnityObjectsWaitingForDelayedModificationApply.Add(unityObject);
@@ -1169,7 +1168,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void SerializeUnityObject(UnityEngine.Object unityObject, ref string base64Bytes, ref List<UnityEngine.Object> referencedUnityObjects, DataFormat format, bool serializeUnityFields = false, SerializationContext context = null)
+        public static void SerializeUnityObject(Object unityObject, ref string base64Bytes, ref List<Object> referencedUnityObjects, DataFormat format, bool serializeUnityFields = false, SerializationContext context = null)
         {
             byte[] bytes = null;
             SerializeUnityObject(unityObject, ref bytes, ref referencedUnityObjects, format, serializeUnityFields, context);
@@ -1179,7 +1178,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void SerializeUnityObject(UnityEngine.Object unityObject, ref byte[] bytes, ref List<UnityEngine.Object> referencedUnityObjects, DataFormat format, bool serializeUnityFields = false, SerializationContext context = null)
+        public static void SerializeUnityObject(Object unityObject, ref byte[] bytes, ref List<Object> referencedUnityObjects, DataFormat format, bool serializeUnityFields = false, SerializationContext context = null)
         {
             if (unityObject == null)
             {
@@ -1188,13 +1187,13 @@ namespace ExtEvents.OdinSerializer
 
             if (format == DataFormat.Nodes)
             {
-                Debug.LogError("The serialization data format '" + format.ToString() + "' is not supported by this method. You must create your own writer.");
+                Debug.LogError("The serialization data format '" + format + "' is not supported by this method. You must create your own writer.");
                 return;
             }
 
             if (referencedUnityObjects == null)
             {
-                referencedUnityObjects = new List<UnityEngine.Object>();
+                referencedUnityObjects = new List<Object>();
             }
             else
             {
@@ -1259,7 +1258,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void SerializeUnityObject(UnityEngine.Object unityObject, IDataWriter writer, bool serializeUnityFields = false)
+        public static void SerializeUnityObject(Object unityObject, IDataWriter writer, bool serializeUnityFields = false)
         {
             if (unityObject == null)
             {
@@ -1310,7 +1309,7 @@ namespace ExtEvents.OdinSerializer
 
                     var value = getter(ref unityObjectInstance);
 
-                    bool isNull = object.ReferenceEquals(value, null);
+                    bool isNull = ReferenceEquals(value, null);
 
                     // Never serialize serialization data. That way lies madness.
                     if (!isNull && value.GetType() == typeof(SerializationData))
@@ -1345,7 +1344,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void DeserializeUnityObject(UnityEngine.Object unityObject, ref SerializationData data, DeserializationContext context = null)
+        public static void DeserializeUnityObject(Object unityObject, ref SerializationData data, DeserializationContext context = null)
         {
             //#if UNITY_EDITOR
             DeserializeUnityObject(unityObject, ref data, context, isPrefabData: false, prefabInstanceUnityObjects: null);
@@ -1355,7 +1354,7 @@ namespace ExtEvents.OdinSerializer
             //#endif
         }
 
-        private static void DeserializeUnityObject(UnityEngine.Object unityObject, ref SerializationData data, DeserializationContext context, bool isPrefabData, List<UnityEngine.Object> prefabInstanceUnityObjects)
+        private static void DeserializeUnityObject(Object unityObject, ref SerializationData data, DeserializationContext context, bool isPrefabData, List<Object> prefabInstanceUnityObjects)
         {
             if (unityObject == null)
             {
@@ -1364,7 +1363,7 @@ namespace ExtEvents.OdinSerializer
 
             if (isPrefabData && prefabInstanceUnityObjects == null)
             {
-                prefabInstanceUnityObjects = new List<UnityEngine.Object>(); // There's likely no data at all
+                prefabInstanceUnityObjects = new List<Object>(); // There's likely no data at all
             }
 
 #if UNITY_EDITOR
@@ -1447,11 +1446,11 @@ namespace ExtEvents.OdinSerializer
                     }
                     catch { }
 
-                    UnitySerializationUtility.DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, formatGuess, context);
+                    DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, formatGuess, context);
                 }
                 else
                 {
-                    UnitySerializationUtility.DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, data.SerializedFormat, context);
+                    DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref data.ReferencedUnityObjects, data.SerializedFormat, context);
                 }
 
                 // If there are any prefab modifications, we should *always* apply those
@@ -1514,7 +1513,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         if (data.Prefab is ISupportsPrefabSerialization)
                         {
-                            if (object.ReferenceEquals(data.Prefab, unityObject) && data.PrefabModifications != null && data.PrefabModifications.Count > 0)
+                            if (ReferenceEquals(data.Prefab, unityObject) && data.PrefabModifications != null && data.PrefabModifications.Count > 0)
                             {
                                 // We are deserializing a prefab, which has *just* had changes applied
                                 // from an instance of itself.
@@ -1563,7 +1562,7 @@ namespace ExtEvents.OdinSerializer
                                             if (data.PrefabModificationsReferencedUnityObjects.Count > 0 && keep != null && keep.Count > 0)
                                             {
                                                 newModifications = DeserializePrefabModifications(data.PrefabModifications, data.PrefabModificationsReferencedUnityObjects);
-                                                newModifications.RemoveAll(n => object.ReferenceEquals(n.ModifiedValue, null) || !keep.Contains(n.ModifiedValue));
+                                                newModifications.RemoveAll(n => ReferenceEquals(n.ModifiedValue, null) || !keep.Contains(n.ModifiedValue));
                                             }
                                             else
                                             {
@@ -1615,7 +1614,7 @@ namespace ExtEvents.OdinSerializer
                         }
                         // A straight UnityEngine.Object instance means that the type has been lost to Unity due to a deleted or renamed script
                         // We shouldn't complain in this case, as Unity itself will make it clear to the user that there is something wrong.
-                        else if (data.Prefab.GetType() != typeof(UnityEngine.Object))
+                        else if (data.Prefab.GetType() != typeof(Object))
                         {
                             Debug.LogWarning("The type " + data.Prefab.GetType().GetNiceName() + " no longer supports special prefab serialization (the interface " + typeof(ISupportsPrefabSerialization).GetNiceName() + ") upon deserialization of an instance of a prefab; prefab data may be lost. Has a type been lost?");
                         }
@@ -1634,16 +1633,16 @@ namespace ExtEvents.OdinSerializer
 
                             reader.Nodes = data.SerializationNodes;
 
-                            UnitySerializationUtility.DeserializeUnityObject(unityObject, reader);
+                            DeserializeUnityObject(unityObject, reader);
                         }
                     }
                     else if (data.SerializedBytes != null && data.SerializedBytes.Length > 0)
                     {
-                        UnitySerializationUtility.DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref unityObjects, data.SerializedFormat, context);
+                        DeserializeUnityObject(unityObject, ref data.SerializedBytes, ref unityObjects, data.SerializedFormat, context);
                     }
                     else
                     {
-                        UnitySerializationUtility.DeserializeUnityObject(unityObject, ref data.SerializedBytesString, ref unityObjects, data.SerializedFormat, context);
+                        DeserializeUnityObject(unityObject, ref data.SerializedBytesString, ref unityObjects, data.SerializedFormat, context);
                     }
 
                     // We may have a prefab that has had changes applied to it; either way, apply the stored modifications.
@@ -1662,7 +1661,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void DeserializeUnityObject(UnityEngine.Object unityObject, ref string base64Bytes, ref List<UnityEngine.Object> referencedUnityObjects, DataFormat format, DeserializationContext context = null)
+        public static void DeserializeUnityObject(Object unityObject, ref string base64Bytes, ref List<Object> referencedUnityObjects, DataFormat format, DeserializationContext context = null)
         {
             if (string.IsNullOrEmpty(base64Bytes))
             {
@@ -1689,7 +1688,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void DeserializeUnityObject(UnityEngine.Object unityObject, ref byte[] bytes, ref List<UnityEngine.Object> referencedUnityObjects, DataFormat format, DeserializationContext context = null)
+        public static void DeserializeUnityObject(Object unityObject, ref byte[] bytes, ref List<Object> referencedUnityObjects, DataFormat format, DeserializationContext context = null)
         {
             if (unityObject == null)
             {
@@ -1705,7 +1704,7 @@ namespace ExtEvents.OdinSerializer
             {
                 try
                 {
-                    Debug.LogError("The serialization data format '" + format.ToString() + "' is not supported by this method. You must create your own reader.");
+                    Debug.LogError("The serialization data format '" + format + "' is not supported by this method. You must create your own reader.");
                 }
                 catch { }
                 return;
@@ -1713,7 +1712,7 @@ namespace ExtEvents.OdinSerializer
 
             if (referencedUnityObjects == null)
             {
-                referencedUnityObjects = new List<UnityEngine.Object>();
+                referencedUnityObjects = new List<Object>();
             }
 
             using (var stream = Cache<CachedMemoryStream>.Claim())
@@ -1776,7 +1775,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void DeserializeUnityObject(UnityEngine.Object unityObject, IDataReader reader)
+        public static void DeserializeUnityObject(Object unityObject, IDataReader reader)
         {
             if (unityObject == null)
             {
@@ -1838,7 +1837,7 @@ namespace ExtEvents.OdinSerializer
                             {
                                 var log = "DELAYED SERIALIZATION LOG: Name = " + unityObject.name + ", Type = " + unityObject.GetType().GetNiceFullName();
 
-                                UnityEngine.Object toPing = unityObject;
+                                Object toPing = unityObject;
 
                                 var component = unityObject as Component;
 
@@ -1847,17 +1846,17 @@ namespace ExtEvents.OdinSerializer
                                     log += ", ScenePath = " + component.gameObject.scene.path;
                                 }
 
-                                if (UnityEditor.AssetDatabase.Contains(unityObject))
+                                if (AssetDatabase.Contains(unityObject))
                                 {
-                                    var path = UnityEditor.AssetDatabase.GetAssetPath(unityObject);
+                                    var path = AssetDatabase.GetAssetPath(unityObject);
                                     log += ", AssetPath = " + path;
 
-                                    toPing = UnityEditor.AssetDatabase.LoadMainAssetAtPath(path);
+                                    toPing = AssetDatabase.LoadMainAssetAtPath(path);
 
                                     if (toPing == null) toPing = unityObject;
 
-                                    UnityEditor.EditorUtility.SetDirty(unityObject);
-                                    UnityEditor.AssetDatabase.SaveAssets();
+                                    EditorUtility.SetDirty(unityObject);
+                                    AssetDatabase.SaveAssets();
                                 }
 
                                 Debug.LogWarning(log, toPing);
@@ -1947,11 +1946,11 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static List<string> SerializePrefabModifications(List<PrefabModification> modifications, ref List<UnityEngine.Object> referencedUnityObjects)
+        public static List<string> SerializePrefabModifications(List<PrefabModification> modifications, ref List<Object> referencedUnityObjects)
         {
             if (referencedUnityObjects == null)
             {
-                referencedUnityObjects = new List<UnityEngine.Object>();
+                referencedUnityObjects = new List<Object>();
             }
             else if (referencedUnityObjects.Count > 0)
             {
@@ -1975,7 +1974,8 @@ namespace ExtEvents.OdinSerializer
                     {
                         return 1;
                     }
-                    else if (a.ModificationType == PrefabModificationType.Value && (b.ModificationType == PrefabModificationType.ListLength || b.ModificationType == PrefabModificationType.Dictionary))
+
+                    if (a.ModificationType == PrefabModificationType.Value && (b.ModificationType == PrefabModificationType.ListLength || b.ModificationType == PrefabModificationType.Dictionary))
                     {
                         return -1;
                     }
@@ -2071,7 +2071,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static List<PrefabModification> DeserializePrefabModifications(List<string> modifications, List<UnityEngine.Object> referencedUnityObjects)
+        public static List<PrefabModification> DeserializePrefabModifications(List<string> modifications, List<Object> referencedUnityObjects)
         {
             if (modifications == null || modifications.Count == 0)
             {
@@ -2211,7 +2211,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public static void RegisterPrefabModificationsChange(UnityEngine.Object unityObject, List<PrefabModification> modifications)
+        public static void RegisterPrefabModificationsChange(Object unityObject, List<PrefabModification> modifications)
         {
             if (unityObject == null)
             {
@@ -2281,7 +2281,7 @@ namespace ExtEvents.OdinSerializer
                 return null;
             }
 
-            if (!UnitySerializationUtility.GuessIfUnityWillSerialize(type))
+            if (!GuessIfUnityWillSerialize(type))
             {
                 return type.IsValueType ? Activator.CreateInstance(type) : null;
             }
@@ -2290,21 +2290,25 @@ namespace ExtEvents.OdinSerializer
             {
                 return "";
             }
-            else if (type.IsEnum)
+
+            if (type.IsEnum)
             {
                 var values = Enum.GetValues(type);
                 return values.Length > 0 ? values.GetValue(0) : Enum.ToObject(type, 0);
             }
-            else if (type.IsPrimitive)
+
+            if (type.IsPrimitive)
             {
                 return Activator.CreateInstance(type);
             }
-            else if (type.IsArray)
+
+            if (type.IsArray)
             {
                 Assert.IsTrue(type.GetArrayRank() == 1);
                 return Array.CreateInstance(type.GetElementType(), 0);
             }
-            else if (type.ImplementsOpenGenericClass(typeof(List<>)) || typeof(UnityEventBase).IsAssignableFrom(type))
+
+            if (type.ImplementsOpenGenericClass(typeof(List<>)) || typeof(UnityEventBase).IsAssignableFrom(type))
             {
                 try
                 {
@@ -2315,11 +2319,13 @@ namespace ExtEvents.OdinSerializer
                     return null;
                 }
             }
-            else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+
+            if (typeof(Object).IsAssignableFrom(type))
             {
                 return null;
             }
-            else if ((type.Assembly.GetName().Name.StartsWith("UnityEngine") || type.Assembly.GetName().Name.StartsWith("UnityEditor")) && type.GetConstructor(Type.EmptyTypes) != null)
+
+            if ((type.Assembly.GetName().Name.StartsWith("UnityEngine") || type.Assembly.GetName().Name.StartsWith("UnityEditor")) && type.GetConstructor(Type.EmptyTypes) != null)
             {
                 try
                 {
@@ -2355,7 +2361,7 @@ namespace ExtEvents.OdinSerializer
             return value;
         }
 
-        private static void ApplyPrefabModifications(UnityEngine.Object unityObject, List<string> modificationData, List<UnityEngine.Object> referencedUnityObjects)
+        private static void ApplyPrefabModifications(Object unityObject, List<string> modificationData, List<Object> referencedUnityObjects)
         {
             if (unityObject == null)
             {
@@ -2564,20 +2570,20 @@ namespace ExtEvents.OdinSerializer
 
 #if UNITY_EDITOR
 
-        [UnityEditor.InitializeOnLoad]
+        [InitializeOnLoad]
         private static class PrefabSelectionTracker
         {
             private static readonly object LOCK = new object();
-            private static readonly HashSet<UnityEngine.Object> selectedPrefabObjects;
+            private static readonly HashSet<Object> selectedPrefabObjects;
 
             static PrefabSelectionTracker()
             {
-                selectedPrefabObjects = new HashSet<UnityEngine.Object>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
-                UnityEditor.Selection.selectionChanged += OnSelectionChanged;
+                selectedPrefabObjects = new HashSet<Object>(ReferenceEqualityComparer<Object>.Default);
+                Selection.selectionChanged += OnSelectionChanged;
                 OnSelectionChanged();
             }
 
-            public static bool IsCurrentlySelectedPrefabRoot(UnityEngine.Object obj)
+            public static bool IsCurrentlySelectedPrefabRoot(Object obj)
             {
                 lock (LOCK)
                 {
@@ -2615,18 +2621,18 @@ namespace ExtEvents.OdinSerializer
                 {
                     selectedPrefabObjects.Clear();
 
-                    var rootPrefabs = UnityEditor.Selection.objects
+                    var rootPrefabs = Selection.objects
                         .Where(n =>
                         {
                             if (!(n is GameObject)) return false;
 
-                            var prefabType = UnityEditor.PrefabUtility.GetPrefabType(n);
-                            return prefabType == UnityEditor.PrefabType.Prefab
-                                || prefabType == UnityEditor.PrefabType.ModelPrefab
-                                || prefabType == UnityEditor.PrefabType.PrefabInstance
-                                || prefabType == UnityEditor.PrefabType.ModelPrefabInstance;
+                            var prefabType = PrefabUtility.GetPrefabType(n);
+                            return prefabType == PrefabType.Prefab
+                                || prefabType == PrefabType.ModelPrefab
+                                || prefabType == PrefabType.PrefabInstance
+                                || prefabType == PrefabType.ModelPrefabInstance;
                         })
-                        .Select(n => UnityEditor.PrefabUtility.FindPrefabRoot((GameObject)n))
+                        .Select(n => PrefabUtility.FindPrefabRoot((GameObject)n))
                         .Distinct();
 
                     foreach (var root in rootPrefabs)
@@ -2678,9 +2684,9 @@ namespace ExtEvents.OdinSerializer
 
             private static readonly object Caches_LOCK = new object();
 
-            private static int counter = 0;
+            private static int counter;
 
-            public static List<PrefabModification> DeserializePrefabModificationsCached(UnityEngine.Object obj, List<string> modifications, List<UnityEngine.Object> referencedUnityObjects)
+            public static List<PrefabModification> DeserializePrefabModificationsCached(Object obj, List<string> modifications, List<Object> referencedUnityObjects)
             {
                 lock (Caches_LOCK)
                 {
@@ -2699,7 +2705,7 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            public static void CachePrefabModifications(UnityEngine.Object obj, List<PrefabModification> modifications)
+            public static void CachePrefabModifications(Object obj, List<PrefabModification> modifications)
             {
                 lock (Caches_LOCK)
                 {
@@ -2740,7 +2746,7 @@ namespace ExtEvents.OdinSerializer
                     CachedDeserializedModifications.Remove(lowestObj);
                     if (!CachedDeserializedModificationTimes.Remove(lowestObj))
                     {
-                        Debug.LogError("A Unity object instance of type '" + lowestObj.GetType().GetNiceName() + "' has likely become corrupt or destroyed somehow, yet deserialization has been invoked for it. If you're in the editor, you can click this log message to attempt to highlight the object. (It probably won't work, but there's a chance. If the highlighting doesn't work, the object instance is so broken that Odin cannot give you any more info about it than this message contains. Good luck!)", lowestObj as UnityEngine.Object);
+                        Debug.LogError("A Unity object instance of type '" + lowestObj.GetType().GetNiceName() + "' has likely become corrupt or destroyed somehow, yet deserialization has been invoked for it. If you're in the editor, you can click this log message to attempt to highlight the object. (It probably won't work, but there's a chance. If the highlighting doesn't work, the object instance is so broken that Odin cannot give you any more info about it than this message contains. Good luck!)", lowestObj as Object);
 
                         // There are bad keys in the dictionaries; we have to clear them and just rebuild the cache.
                         // This theory isn't confirmed, but it's probably because UnityEngine.Object.GetHashCode() 
@@ -2756,7 +2762,7 @@ namespace ExtEvents.OdinSerializer
             }
         }
 
-        private static readonly MemberInfo EditorApplication_delayCall_Member = typeof(UnityEditor.EditorApplication).GetMember("delayCall", Flags.StaticAnyVisibility).FirstOrDefault();
+        private static readonly MemberInfo EditorApplication_delayCall_Member = typeof(EditorApplication).GetMember("delayCall", Flags.StaticAnyVisibility).FirstOrDefault();
 
         /// <summary>
         /// In 2020.1, Unity changed EditorApplication.delayCall from a field to an event, meaning 
@@ -2770,8 +2776,8 @@ namespace ExtEvents.OdinSerializer
 
                 if (EditorApplication_delayCall_Member is FieldInfo)
                 {
-                    UnityEditor.EditorApplication.CallbackFunction val = (UnityEditor.EditorApplication.CallbackFunction)(EditorApplication_delayCall_Member as FieldInfo).GetValue(null);
-                    val += value.ConvertDelegate<UnityEditor.EditorApplication.CallbackFunction>();
+                    EditorApplication.CallbackFunction val = (EditorApplication.CallbackFunction)(EditorApplication_delayCall_Member as FieldInfo).GetValue(null);
+                    val += value.ConvertDelegate<EditorApplication.CallbackFunction>();
                     (EditorApplication_delayCall_Member as FieldInfo).SetValue(null, val);
                 }
                 else if (EditorApplication_delayCall_Member is EventInfo)
@@ -2789,8 +2795,8 @@ namespace ExtEvents.OdinSerializer
 
                 if (EditorApplication_delayCall_Member is FieldInfo)
                 {
-                    UnityEditor.EditorApplication.CallbackFunction val = (UnityEditor.EditorApplication.CallbackFunction)(EditorApplication_delayCall_Member as FieldInfo).GetValue(null);
-                    val -= value.ConvertDelegate<UnityEditor.EditorApplication.CallbackFunction>();
+                    EditorApplication.CallbackFunction val = (EditorApplication.CallbackFunction)(EditorApplication_delayCall_Member as FieldInfo).GetValue(null);
+                    val -= value.ConvertDelegate<EditorApplication.CallbackFunction>();
                     (EditorApplication_delayCall_Member as FieldInfo).SetValue(null, val);
                 }
                 else if (EditorApplication_delayCall_Member is EventInfo)
@@ -2813,10 +2819,8 @@ namespace ExtEvents.OdinSerializer
             {
                 return (T)(object)Delegate.CreateDelegate(typeof(T), src.Target, src.Method);
             }
-            else
-            {
-                return (T)(object)src.GetInvocationList().Aggregate<Delegate, Delegate>(null, (current, d) => Delegate.Combine(current, (Delegate)(object)ConvertDelegate<T>(d)));
-            }
+
+            return (T)(object)src.GetInvocationList().Aggregate<Delegate, Delegate>(null, (current, d) => Delegate.Combine(current, (Delegate)(object)ConvertDelegate<T>(d)));
         }
 
 #endif

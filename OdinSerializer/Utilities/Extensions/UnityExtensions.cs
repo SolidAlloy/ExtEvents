@@ -20,21 +20,22 @@ namespace ExtEvents.OdinSerializer.Utilities
 {
     using System;
     using System.Reflection;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Extends various Unity classes.
     /// </summary>
     public static class UnityExtensions
     {
-        private static readonly ValueGetter<UnityEngine.Object, IntPtr> UnityObjectCachedPtrFieldGetter;
+        private static readonly ValueGetter<Object, IntPtr> UnityObjectCachedPtrFieldGetter;
 
         static UnityExtensions()
         {
-            var field = typeof(UnityEngine.Object).GetField("m_CachedPtr", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = typeof(Object).GetField("m_CachedPtr", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (field != null)
             {
-                UnityObjectCachedPtrFieldGetter = EmitUtilities.CreateInstanceFieldGetter<UnityEngine.Object, IntPtr>(field);
+                UnityObjectCachedPtrFieldGetter = EmitUtilities.CreateInstanceFieldGetter<Object, IntPtr>(field);
             }
         }
 
@@ -48,9 +49,9 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         /// <param name="obj">The Unity object to check.</param>
         /// <returns>True if the object is null, missing or destroyed; otherwise false.</returns>
-        public static bool SafeIsUnityNull(this UnityEngine.Object obj)
+        public static bool SafeIsUnityNull(this Object obj)
         {
-            if (object.ReferenceEquals(obj, null))
+            if (ReferenceEquals(obj, null))
             {
                 return true;
             }

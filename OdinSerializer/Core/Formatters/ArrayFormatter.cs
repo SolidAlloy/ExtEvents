@@ -56,7 +56,7 @@ namespace ExtEvents.OdinSerializer
                 value = new T[length];
 
                 // We must remember to register the array reference ourselves, since we return null in GetUninitializedObject
-                this.RegisterReferenceID(value, reader);
+                RegisterReferenceID(value, reader);
 
                 // There aren't any OnDeserializing callbacks on arrays.
                 // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);

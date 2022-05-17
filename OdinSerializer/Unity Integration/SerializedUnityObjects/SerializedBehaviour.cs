@@ -17,13 +17,14 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer
 {
+    using Sirenix.OdinInspector;
     using UnityEngine;
 
     /// <summary>
     /// A Unity Behaviour which is serialized by the Sirenix serialization system.
     /// </summary>
 #if ODIN_INSPECTOR
-    [Sirenix.OdinInspector.ShowOdinSerializedPropertiesInInspector]
+    [ShowOdinSerializedPropertiesInInspector]
 #endif
 
     public abstract class SerializedBehaviour : Behaviour, ISerializationCallbackReceiver, ISupportsPrefabSerialization
@@ -31,18 +32,18 @@ namespace ExtEvents.OdinSerializer
         [SerializeField, HideInInspector]
         private SerializationData serializationData;
 
-        SerializationData ISupportsPrefabSerialization.SerializationData { get { return this.serializationData; } set { this.serializationData = value; } }
+        SerializationData ISupportsPrefabSerialization.SerializationData { get { return serializationData; } set { serializationData = value; } }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            UnitySerializationUtility.DeserializeUnityObject(this, ref this.serializationData);
-            this.OnAfterDeserialize();
+            UnitySerializationUtility.DeserializeUnityObject(this, ref serializationData);
+            OnAfterDeserialize();
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            this.OnBeforeSerialize();
-            UnitySerializationUtility.SerializeUnityObject(this, ref this.serializationData);
+            OnBeforeSerialize();
+            UnitySerializationUtility.SerializeUnityObject(this, ref serializationData);
         }
 
         /// <summary>

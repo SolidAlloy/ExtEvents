@@ -25,7 +25,7 @@ namespace ExtEvents.OdinSerializer
     using System.Collections.Generic;
 
     /// <summary>
-    /// Custom generic formatter for the generic type definition <see cref="KeyValuePair{TKey, TValue}"/>.
+    /// Custom generic formatter for the generic type definition <see cref="KeyValuePair{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>

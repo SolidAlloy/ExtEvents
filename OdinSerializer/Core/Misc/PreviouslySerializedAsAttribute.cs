@@ -39,7 +39,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The former name.</param>
         public PreviouslySerializedAsAttribute(string name)
         {
-            this.Name = name;
+            Name = name;
         }
     }
 }

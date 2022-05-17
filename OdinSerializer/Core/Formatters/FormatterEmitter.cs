@@ -22,13 +22,15 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
+    using System.Configuration.Assemblies;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using UnityEngine;
-
+    using Utilities;
 #if CAN_EMIT
 
     using System.Reflection.Emit;
@@ -106,18 +108,18 @@ namespace ExtEvents.OdinSerializer
 
             public RuntimeEmittedFormatter(ReadDataEntryMethodDelegate<T> read, WriteDataEntriesMethodDelegate<T> write)
             {
-                this.Read = read;
-                this.Write = write;
+                Read = read;
+                Write = write;
             }
 
             protected override void ReadDataEntry(ref T value, string entryName, EntryType entryType, IDataReader reader)
             {
-                this.Read(ref value, entryName, entryType, reader);
+                Read(ref value, entryName, entryType, reader);
             }
 
             protected override void WriteDataEntries(ref T value, IDataWriter writer)
             {
-                this.Write(ref value, writer);
+                Write(ref value, writer);
             }
         }
 
@@ -187,10 +189,10 @@ namespace ExtEvents.OdinSerializer
             {
                 var assemblyName = new AssemblyName(RUNTIME_EMITTED_ASSEMBLY_NAME);
 
-                assemblyName.CultureInfo = System.Globalization.CultureInfo.InvariantCulture;
+                assemblyName.CultureInfo = CultureInfo.InvariantCulture;
                 assemblyName.Flags = AssemblyNameFlags.None;
                 assemblyName.ProcessorArchitecture = ProcessorArchitecture.MSIL;
-                assemblyName.VersionCompatibility = System.Configuration.Assemblies.AssemblyVersionCompatibility.SameDomain;
+                assemblyName.VersionCompatibility = AssemblyVersionCompatibility.SameDomain;
 
                 runtimeEmittedAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             }
@@ -290,7 +292,7 @@ namespace ExtEvents.OdinSerializer
             var result = formatterType.CreateType();
 
             // Register the formatter on the assembly
-            ((AssemblyBuilder)moduleBuilder.Assembly).SetCustomAttribute(new CustomAttributeBuilder(typeof(RegisterFormatterAttribute).GetConstructor(new Type[] { typeof(Type), typeof(int) }), new object[] { formatterType, -1 }));
+            ((AssemblyBuilder)moduleBuilder.Assembly).SetCustomAttribute(new CustomAttributeBuilder(typeof(RegisterFormatterAttribute).GetConstructor(new[] { typeof(Type), typeof(int) }), new object[] { formatterType, -1 }));
 
             return result;
         }
@@ -308,7 +310,7 @@ namespace ExtEvents.OdinSerializer
             string helperTypeName = moduleBuilder.Name + "." + 
                 formattedType.GetCompilableNiceFullName() + "___" + 
                 formattedType.Assembly.GetName().Name + "___FormatterHelper___" + 
-                System.Threading.Interlocked.Increment(ref helperFormatterNameId);
+                Interlocked.Increment(ref helperFormatterNameId);
 
             Dictionary<Type, MethodInfo> serializerReadMethods;
             Dictionary<Type, MethodInfo> serializerWriteMethods;
@@ -416,7 +418,7 @@ namespace ExtEvents.OdinSerializer
                 var addMethod = typeof(Dictionary<string, int>).GetMethod("Add", Flags.InstancePublic);
                 var dictionaryConstructor = typeof(Dictionary<string, int>).GetConstructor(Type.EmptyTypes);
                 var serializerGetMethod = typeof(Serializer).GetMethod("Get", Flags.StaticPublic, null, new[] { typeof(Type) }, null);
-                var typeOfMethod = typeof(Type).GetMethod("GetTypeFromHandle", Flags.StaticPublic, null, new Type[] { typeof(RuntimeTypeHandle) }, null);
+                var typeOfMethod = typeof(Type).GetMethod("GetTypeFromHandle", Flags.StaticPublic, null, new[] { typeof(RuntimeTypeHandle) }, null);
 
                 ConstructorBuilder staticConstructor = helperTypeBuilder.DefineTypeInitializer();
                 ILGenerator gen = staticConstructor.GetILGenerator();

@@ -17,6 +17,7 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer.Utilities
 {
+    using UnityEditor;
     using UnityEngine;
 
     /// <summary>
@@ -24,7 +25,7 @@ namespace ExtEvents.OdinSerializer.Utilities
     /// </summary>
 #if UNITY_EDITOR
 
-    [UnityEditor.InitializeOnLoad]
+    [InitializeOnLoad]
 #endif
     public static class UnityVersion
     {
@@ -65,7 +66,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <returns><c>true</c> if the current Unity version is greater. Otherwise <c>false</c>.</returns>
         public static bool IsVersionOrGreater(int major, int minor)
         {
-            return UnityVersion.Major > major || (UnityVersion.Major == major && UnityVersion.Minor >= minor);
+            return Major > major || (Major == major && Minor >= minor);
         }
 
         /// <summary>

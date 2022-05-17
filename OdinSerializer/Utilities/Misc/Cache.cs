@@ -44,7 +44,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         private bool isFree;
 
-        private static volatile int THREAD_LOCK_TOKEN = 0;
+        private static volatile int THREAD_LOCK_TOKEN;
 
         private static int maxCacheSize = 5;
 
@@ -58,19 +58,19 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return Cache<T>.maxCacheSize;
+                return maxCacheSize;
             }
 
             set
             {
-                Cache<T>.maxCacheSize = Math.Max(1, value);
+                maxCacheSize = Math.Max(1, value);
             }
         }
 
         private Cache()
         {
-            this.Value = new T();
-            this.isFree = false;
+            Value = new T();
+            isFree = false;
         }
 
         /// <summary>
@@ -84,9 +84,9 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         ///   <c>true</c> if this cached value is free; otherwise, <c>false</c>.
         /// </value>
-        public bool IsFree { get { return this.isFree; } }
+        public bool IsFree { get { return isFree; } }
 
-        object ICache.Value { get { return this.Value; } }
+        object ICache.Value { get { return Value; } }
 
         /// <summary>
         /// Claims a cached value of type <see cref="T"/>.
@@ -117,7 +117,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             for (int i = 0; i < length; i++)
             {
                 result = (Cache<T>)freeValues[i];
-                if (!object.ReferenceEquals(result, null))
+                if (!ReferenceEquals(result, null))
                 {
                     freeValues[i] = null;
                     result.isFree = false;
@@ -191,7 +191,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
             for (int i = 0; i < length; i++)
             {
-                if (object.ReferenceEquals(freeValues[i], null))
+                if (ReferenceEquals(freeValues[i], null))
                 {
                     freeValues[i] = cache;
                     added = true;
@@ -248,7 +248,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         void IDisposable.Dispose()
         {
-            Cache<T>.Release(this);
+            Release(this);
         }
     }
 }

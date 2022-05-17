@@ -32,7 +32,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         public bool Equals(Type x, Type y)
         {
-            if (object.ReferenceEquals(x, y)) return true; // Oft-used fast path over regular Type.Equals makes this much faster
+            if (ReferenceEquals(x, y)) return true; // Oft-used fast path over regular Type.Equals makes this much faster
             return x == y;
         }
 

@@ -27,7 +27,7 @@ namespace ExtEvents.OdinSerializer
 
         public RegisterDictionaryKeyPathProviderAttribute(Type providerType)
         {
-            this.ProviderType = providerType;
+            ProviderType = providerType;
         }
     }
 }

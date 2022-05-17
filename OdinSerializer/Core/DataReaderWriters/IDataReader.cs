@@ -19,6 +19,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.ComponentModel;
     using System.IO;
 
     /// <summary>
@@ -46,7 +47,7 @@ namespace ExtEvents.OdinSerializer
         /// The base stream of the reader.
         /// </value>
         [Obsolete("Data readers and writers don't necessarily have streams any longer, so this API has been made obsolete. Using this property may result in NotSupportedExceptions being thrown.", false)]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         Stream Stream { get; set; }
 
         /// <summary>

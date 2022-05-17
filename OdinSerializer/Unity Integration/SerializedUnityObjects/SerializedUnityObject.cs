@@ -17,30 +17,31 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer
 {
+    using Sirenix.OdinInspector;
     using UnityEngine;
 
     /// <summary>
     /// A Unity ScriptableObject which is serialized by the Sirenix serialization system.
     /// </summary>
 #if ODIN_INSPECTOR
-    [Sirenix.OdinInspector.ShowOdinSerializedPropertiesInInspector]
+    [ShowOdinSerializedPropertiesInInspector]
 #endif
 
-    public abstract class SerializedUnityObject : UnityEngine.Object, ISerializationCallbackReceiver
+    public abstract class SerializedUnityObject : Object, ISerializationCallbackReceiver
     {
         [SerializeField, HideInInspector]
         private SerializationData serializationData;
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            UnitySerializationUtility.DeserializeUnityObject(this, ref this.serializationData);
-            this.OnAfterDeserialize();
+            UnitySerializationUtility.DeserializeUnityObject(this, ref serializationData);
+            OnAfterDeserialize();
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            this.OnBeforeSerialize();
-            UnitySerializationUtility.SerializeUnityObject(this, ref this.serializationData);
+            OnBeforeSerialize();
+            UnitySerializationUtility.SerializeUnityObject(this, ref serializationData);
         }
 
         /// <summary>

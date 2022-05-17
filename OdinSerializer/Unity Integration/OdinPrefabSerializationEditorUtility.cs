@@ -24,14 +24,15 @@ namespace ExtEvents.OdinSerializer
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
+    using Object = UnityEngine.Object;
 
     public static class OdinPrefabSerializationEditorUtility
     {
         private static bool? hasNewPrefabWorkflow;
-        private static MethodInfo PrefabUtility_GetPrefabAssetType_Method = typeof(PrefabUtility).GetMethod("GetPrefabAssetType", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(UnityEngine.Object) }, null);
-        private static MethodInfo PrefabUtility_GetPrefabParent_Method = typeof(PrefabUtility).GetMethod("GetPrefabParent", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(UnityEngine.Object) }, null);
-        private static MethodInfo PrefabUtility_GetCorrespondingObjectFromSource_Method = typeof(PrefabUtility).GetMethod("GetCorrespondingObjectFromSource", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(UnityEngine.Object) }, null);
-        private static MethodInfo PrefabUtility_GetPrefabType_Method = typeof(PrefabUtility).GetMethod("GetPrefabType", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(UnityEngine.Object) }, null);
+        private static MethodInfo PrefabUtility_GetPrefabAssetType_Method = typeof(PrefabUtility).GetMethod("GetPrefabAssetType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Object) }, null);
+        private static MethodInfo PrefabUtility_GetPrefabParent_Method = typeof(PrefabUtility).GetMethod("GetPrefabParent", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Object) }, null);
+        private static MethodInfo PrefabUtility_GetCorrespondingObjectFromSource_Method = typeof(PrefabUtility).GetMethod("GetCorrespondingObjectFromSource", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Object) }, null);
+        private static MethodInfo PrefabUtility_GetPrefabType_Method = typeof(PrefabUtility).GetMethod("GetPrefabType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Object) }, null);
         private static MethodInfo PrefabUtility_ApplyPropertyOverride_Method;
 
         static OdinPrefabSerializationEditorUtility()
@@ -40,7 +41,7 @@ namespace ExtEvents.OdinSerializer
 
             if (interactionModeEnum != null)
             {
-                PrefabUtility_ApplyPropertyOverride_Method = typeof(PrefabUtility).GetMethod("ApplyPropertyOverride", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(SerializedProperty), typeof(string), interactionModeEnum }, null);
+                PrefabUtility_ApplyPropertyOverride_Method = typeof(PrefabUtility).GetMethod("ApplyPropertyOverride", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(SerializedProperty), typeof(string), interactionModeEnum }, null);
             }
         }
 
@@ -69,7 +70,7 @@ namespace ExtEvents.OdinSerializer
         {
             try
             {
-                var method = typeof(PrefabUtility).GetMethod("GetPrefabType", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(UnityEngine.Object) }, null);
+                var method = typeof(PrefabUtility).GetMethod("GetPrefabType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Object) }, null);
 
                 if (method == null) return true;
 
@@ -93,7 +94,7 @@ namespace ExtEvents.OdinSerializer
             PrefabUtility_ApplyPropertyOverride_Method.Invoke(null, new object[] { instanceProperty, assetPath, 0 });
         }
 
-        public static bool ObjectIsPrefabInstance(UnityEngine.Object unityObject)
+        public static bool ObjectIsPrefabInstance(Object unityObject)
         {
             if (PrefabUtility_GetPrefabType_Method != null)
             {
@@ -122,7 +123,7 @@ namespace ExtEvents.OdinSerializer
             return GetCorrespondingObjectFromSource(unityObject) != null;
         }
 
-        public static bool ObjectHasNestedOdinPrefabData(UnityEngine.Object unityObject)
+        public static bool ObjectHasNestedOdinPrefabData(Object unityObject)
         {
             if (!HasNewPrefabWorkflow) return false;
             if (!(unityObject is ISupportsPrefabSerialization)) return false;
@@ -130,22 +131,22 @@ namespace ExtEvents.OdinSerializer
             return IsOdinSerializedPrefabInstance(prefab);
         }
 
-        private static bool IsOdinSerializedPrefabInstance(UnityEngine.Object unityObject)
+        private static bool IsOdinSerializedPrefabInstance(Object unityObject)
         {
             if (!(unityObject is ISupportsPrefabSerialization)) return false;
             return GetCorrespondingObjectFromSource(unityObject) != null;
         }
 
-        public static UnityEngine.Object GetCorrespondingObjectFromSource(UnityEngine.Object unityObject)
+        public static Object GetCorrespondingObjectFromSource(Object unityObject)
         {
             if (PrefabUtility_GetCorrespondingObjectFromSource_Method != null)
             {
-                return (UnityEngine.Object)PrefabUtility_GetCorrespondingObjectFromSource_Method.Invoke(null, new object[] { unityObject });
+                return (Object)PrefabUtility_GetCorrespondingObjectFromSource_Method.Invoke(null, new object[] { unityObject });
             }
 
             if (PrefabUtility_GetPrefabParent_Method != null)
             {
-                return (UnityEngine.Object)PrefabUtility_GetPrefabParent_Method.Invoke(null, new object[] { unityObject });
+                return (Object)PrefabUtility_GetPrefabParent_Method.Invoke(null, new object[] { unityObject });
             }
 
             Debug.LogError("Neither PrefabUtility.GetCorrespondingObjectFromSource or PrefabUtility.GetPrefabParent methods could be located. Prefab functionality will be broken in this build of Odin.");

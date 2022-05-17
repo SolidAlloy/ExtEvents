@@ -18,9 +18,9 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System;
+	using System;
 
-    /// <summary>
+	/// <summary>
     /// Binds types to strings during serialization, and strings to types during deserialization.
     /// </summary>
     public abstract class TwoWaySerializationBinder

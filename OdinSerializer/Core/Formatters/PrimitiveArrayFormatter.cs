@@ -48,7 +48,7 @@ namespace ExtEvents.OdinSerializer
             if (reader.PeekEntry(out name) == EntryType.PrimitiveArray)
             {
                 reader.ReadPrimitiveArray(out value);
-                this.RegisterReferenceID(value, reader);
+                RegisterReferenceID(value, reader);
             }
         }
 

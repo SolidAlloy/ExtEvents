@@ -17,9 +17,7 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer.Utilities
 {
-    using System;
     using System.IO;
-    using System.Text;
 
     /// <summary>
     /// DirectoryInfo method extensions.
@@ -41,10 +39,8 @@ namespace ExtEvents.OdinSerializer.Utilities
                 {
                     return true;
                 }
-                else
-                {
-                    subDir = subDir.Parent;
-                }
+
+                subDir = subDir.Parent;
             }
 
             return false;

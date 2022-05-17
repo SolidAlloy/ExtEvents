@@ -22,11 +22,14 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Reflection;
     using System.Runtime.Serialization;
+    using UnityEngine;
+    using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Provides common functionality for serializing and deserializing values of type <see cref="T"/>, and provides automatic support for the following common serialization conventions:
@@ -64,15 +67,15 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         protected static readonly bool IsValueType = typeof(T).IsValueType;
 
-        protected static readonly bool ImplementsISerializationCallbackReceiver = typeof(T).ImplementsOrInherits(typeof(UnityEngine.ISerializationCallbackReceiver));
+        protected static readonly bool ImplementsISerializationCallbackReceiver = typeof(T).ImplementsOrInherits(typeof(ISerializationCallbackReceiver));
         protected static readonly bool ImplementsIDeserializationCallback = typeof(T).ImplementsOrInherits(typeof(IDeserializationCallback));
         protected static readonly bool ImplementsIObjectReference = typeof(T).ImplementsOrInherits(typeof(IObjectReference));
 
         static BaseFormatter()
         {
-            if (typeof(T).ImplementsOrInherits(typeof(UnityEngine.Object)))
+            if (typeof(T).ImplementsOrInherits(typeof(Object)))
             {
-                DefaultLoggers.DefaultLogger.LogWarning("A formatter has been created for the UnityEngine.Object type " + typeof(T).Name + " - this is *strongly* discouraged. Unity should be allowed to handle serialization and deserialization of its own weird objects. Remember to serialize with a UnityReferenceResolver as the external index reference resolver in the serialization context.\n\n Stacktrace: " + new System.Diagnostics.StackTrace().ToString());
+                DefaultLoggers.DefaultLogger.LogWarning("A formatter has been created for the UnityEngine.Object type " + typeof(T).Name + " - this is *strongly* discouraged. Unity should be allowed to handle serialization and deserialization of its own weird objects. Remember to serialize with a UnityReferenceResolver as the external index reference resolver in the serialization context.\n\n Stacktrace: " + new StackTrace());
             }
 
             MethodInfo[] methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -124,7 +127,8 @@ namespace ExtEvents.OdinSerializer
                 };
 #endif
             }
-            else if (parameters.Length == 1 && parameters[0].ParameterType == typeof(StreamingContext) && parameters[0].ParameterType.IsByRef == false)
+
+            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(StreamingContext) && parameters[0].ParameterType.IsByRef == false)
             {
 #if CAN_EMIT
                 var action = EmitUtilities.CreateInstanceRefMethodCaller<T, StreamingContext>(info);
@@ -138,11 +142,9 @@ namespace ExtEvents.OdinSerializer
                 };
 #endif
             }
-            else
-            {
-                DefaultLoggers.DefaultLogger.LogWarning("The method " + info.GetNiceName() + " has an invalid signature and will be ignored by the serialization system.");
-                return null;
-            }
+
+            DefaultLoggers.DefaultLogger.LogWarning("The method " + info.GetNiceName() + " has an invalid signature and will be ignored by the serialization system.");
+            return null;
         }
 
         /// <summary>
@@ -160,7 +162,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         void IFormatter.Serialize(object value, IDataWriter writer)
         {
-            this.Serialize((T)value, writer);
+            Serialize((T)value, writer);
         }
 
         /// <summary>
@@ -172,7 +174,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         object IFormatter.Deserialize(IDataReader reader)
         {
-            return this.Deserialize(reader);
+            return Deserialize(reader);
         }
 
         /// <summary>
@@ -185,29 +187,29 @@ namespace ExtEvents.OdinSerializer
         public T Deserialize(IDataReader reader)
         {
             var context = reader.Context;
-            T value = this.GetUninitializedObject();
+            T value = GetUninitializedObject();
 
             // We allow the above method to return null (for reference types) because of special cases like arrays,
             //  where the size of the array cannot be known yet, and thus we cannot create an object instance at this time.
             //
             // Therefore, those who override GetUninitializedObject and return null must call RegisterReferenceID and InvokeOnDeserializingCallbacks manually.
-            if (BaseFormatter<T>.IsValueType)
+            if (IsValueType)
             {
-                this.InvokeOnDeserializingCallbacks(ref value, context);
+                InvokeOnDeserializingCallbacks(ref value, context);
             }
             else
             {
-                if (object.ReferenceEquals(value, null) == false)
+                if (ReferenceEquals(value, null) == false)
                 {
-                    this.RegisterReferenceID(value, reader);
-                    this.InvokeOnDeserializingCallbacks(ref value, context);
+                    RegisterReferenceID(value, reader);
+                    InvokeOnDeserializingCallbacks(ref value, context);
 
                     if (ImplementsIObjectReference)
                     {
                         try
                         {
                             value = (T)(value as IObjectReference).GetRealObject(context.StreamingContext);
-                            this.RegisterReferenceID(value, reader);
+                            RegisterReferenceID(value, reader);
                         }
                         catch (Exception ex)
                         {
@@ -219,7 +221,7 @@ namespace ExtEvents.OdinSerializer
 
             try
             {
-                this.DeserializeImplementation(ref value, reader);
+                DeserializeImplementation(ref value, reader);
             }
             catch (Exception ex)
             {
@@ -227,7 +229,7 @@ namespace ExtEvents.OdinSerializer
             }
 
             // The deserialized value might be null, so check for that
-            if (BaseFormatter<T>.IsValueType || object.ReferenceEquals(value, null) == false)
+            if (IsValueType || ReferenceEquals(value, null) == false)
             {
                 for (int i = 0; i < OnDeserializedCallbacks.Length; i++)
                 {
@@ -252,7 +254,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     try
                     {
-                        UnityEngine.ISerializationCallbackReceiver v = value as UnityEngine.ISerializationCallbackReceiver;
+                        ISerializationCallbackReceiver v = value as ISerializationCallbackReceiver;
                         v.OnAfterDeserialize();
                         value = (T)v;
                     }
@@ -292,7 +294,7 @@ namespace ExtEvents.OdinSerializer
                 try
                 {
 
-                    UnityEngine.ISerializationCallbackReceiver v = value as UnityEngine.ISerializationCallbackReceiver;
+                    ISerializationCallbackReceiver v = value as ISerializationCallbackReceiver;
                     v.OnBeforeSerialize();
                     value = (T)v;
                 }
@@ -304,7 +306,7 @@ namespace ExtEvents.OdinSerializer
 
             try
             {
-                this.SerializeImplementation(ref value, writer);
+                SerializeImplementation(ref value, writer);
             }
             catch (Exception ex)
             {
@@ -331,14 +333,12 @@ namespace ExtEvents.OdinSerializer
         /// <returns>An uninitialized object of type <see cref="T"/>.</returns>
         protected virtual T GetUninitializedObject()
         {
-            if (BaseFormatter<T>.IsValueType)
+            if (IsValueType)
             {
                 return default(T);
             }
-            else
-            {
-                return (T)FormatterServices.GetUninitializedObject(typeof(T));
-            }
+
+            return (T)FormatterServices.GetUninitializedObject(typeof(T));
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader which is currently being used.</param>
         protected void RegisterReferenceID(T value, IDataReader reader)
         {
-            if (!BaseFormatter<T>.IsValueType)
+            if (!IsValueType)
             {
                 int id = reader.CurrentNodeId;
 
@@ -375,7 +375,7 @@ namespace ExtEvents.OdinSerializer
         [Obsolete("Use the InvokeOnDeserializingCallbacks variant that takes a ref T value instead. This is for struct compatibility reasons.", false)]
         protected void InvokeOnDeserializingCallbacks(T value, DeserializationContext context)
         {
-            this.InvokeOnDeserializingCallbacks(ref value, context);
+            InvokeOnDeserializingCallbacks(ref value, context);
         }
 
         /// <summary>

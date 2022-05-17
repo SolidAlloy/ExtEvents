@@ -44,10 +44,6 @@ namespace ExtEvents.OdinSerializer
             new QueueFormatter<Queue<int>, int>();
         }
 
-        public QueueFormatter()
-        {
-        }
-
         /// <summary>
         /// Returns null.
         /// </summary>
@@ -86,7 +82,7 @@ namespace ExtEvents.OdinSerializer
                     }
 
                     // We must remember to register the queue reference ourselves, since we return null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any OnDeserializing callbacks on queues.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);

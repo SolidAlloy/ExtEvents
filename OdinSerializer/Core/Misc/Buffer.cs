@@ -37,9 +37,9 @@ namespace ExtEvents.OdinSerializer
 
         private Buffer(int count)
         {
-            this.array = new T[count];
+            array = new T[count];
             this.count = count;
-            this.isFree = false; // Always start as non-free
+            isFree = false; // Always start as non-free
         }
 
         /// <summary>
@@ -53,12 +53,12 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.isFree)
+                if (isFree)
                 {
                     throw new InvalidOperationException("Cannot access a buffer while it is freed.");
                 }
 
-                return this.count;
+                return count;
             }
         }
 
@@ -73,12 +73,12 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.isFree)
+                if (isFree)
                 {
                     throw new InvalidOperationException("Cannot access a buffer while it is freed.");
                 }
 
-                return this.array;
+                return array;
             }
         }
 
@@ -88,7 +88,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         ///   <c>true</c> if this buffer is free; otherwise, <c>false</c>.
         /// </value>
-        public bool IsFree { get { return this.isFree; } }
+        public bool IsFree { get { return isFree; } }
 
         /// <summary>
         /// Claims a buffer with the specified minimum capacity. Note: buffers always have a capacity equal to or larger than 256.
@@ -113,15 +113,15 @@ namespace ExtEvents.OdinSerializer
             lock (LOCK)
             {
                 // Search for a free buffer of sufficient size
-                for (int i = 0; i < Buffer<T>.FreeBuffers.Count; i++)
+                for (int i = 0; i < FreeBuffers.Count; i++)
                 {
-                    var buffer = Buffer<T>.FreeBuffers[i];
+                    var buffer = FreeBuffers[i];
 
                     if (buffer != null && buffer.count >= minimumCapacity)
                     {
                         result = buffer;
                         result.isFree = false;
-                        Buffer<T>.FreeBuffers[i] = null;
+                        FreeBuffers[i] = null;
                         break;
                     }
                 }
@@ -130,7 +130,7 @@ namespace ExtEvents.OdinSerializer
             if (result == null)
             {
                 // Allocate new buffer
-                result = new Buffer<T>(Buffer<T>.NextPowerOfTwo(minimumCapacity));
+                result = new Buffer<T>(NextPowerOfTwo(minimumCapacity));
             }
 
             return result;
@@ -158,11 +158,11 @@ namespace ExtEvents.OdinSerializer
 
                         bool added = false;
 
-                        for (int i = 0; i < Buffer<T>.FreeBuffers.Count; i++)
+                        for (int i = 0; i < FreeBuffers.Count; i++)
                         {
-                            if (Buffer<T>.FreeBuffers[i] == null)
+                            if (FreeBuffers[i] == null)
                             {
-                                Buffer<T>.FreeBuffers[i] = buffer;
+                                FreeBuffers[i] = buffer;
                                 added = true;
                                 break;
                             }
@@ -170,7 +170,7 @@ namespace ExtEvents.OdinSerializer
 
                         if (!added)
                         {
-                            Buffer<T>.FreeBuffers.Add(buffer);
+                            FreeBuffers.Add(buffer);
                         }
                     }
                 }
@@ -182,7 +182,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void Free()
         {
-            Buffer<T>.Free(this);
+            Free(this);
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void Dispose()
         {
-            Buffer<T>.Free(this);
+            Free(this);
         }
 
         private static int NextPowerOfTwo(int v)

@@ -41,16 +41,14 @@ namespace ExtEvents.OdinSerializer
                 float value;
                 if (reader.ReadSingle(out value) == false)
                 {
-                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry.ToString());
+                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry);
                 }
                 return value;
             }
-            else
-            {
-                reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.FloatingPoint.ToString() + " or " + EntryType.Integer.ToString() + ", but got entry '" + name + "' of type " + entry.ToString());
-                reader.SkipEntry();
-                return default(float);
-            }
+
+            reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.FloatingPoint + " or " + EntryType.Integer + ", but got entry '" + name + "' of type " + entry);
+            reader.SkipEntry();
+            return default(float);
         }
 
         /// <summary>

@@ -71,16 +71,16 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public ListIterator(List<T> list)
             {
-                this.isNull = list == null;
-                if (this.isNull)
+                isNull = list == null;
+                if (isNull)
                 {
                     this.list = null;
-                    this.enumerator = new List<T>.Enumerator();
+                    enumerator = new List<T>.Enumerator();
                 }
                 else
                 {
                     this.list = list;
-                    this.enumerator = this.list.GetEnumerator();
+                    enumerator = this.list.GetEnumerator();
                 }
             }
 
@@ -99,7 +99,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 get
                 {
-                    return this.enumerator.Current;
+                    return enumerator.Current;
                 }
             }
 
@@ -108,11 +108,11 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public bool MoveNext()
             {
-                if (this.isNull)
+                if (isNull)
                 {
                     return false;
                 }
-                return this.enumerator.MoveNext();
+                return enumerator.MoveNext();
             }
 
             /// <summary>
@@ -120,7 +120,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public void Dispose()
             {
-                this.enumerator.Dispose();
+                enumerator.Dispose();
             }
         }
 
@@ -138,16 +138,16 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public HashsetIterator(HashSet<T> hashset)
             {
-                this.isNull = hashset == null;
-                if (this.isNull)
+                isNull = hashset == null;
+                if (isNull)
                 {
                     this.hashset = null;
-                    this.enumerator = new HashSet<T>.Enumerator();
+                    enumerator = new HashSet<T>.Enumerator();
                 }
                 else
                 {
                     this.hashset = hashset;
-                    this.enumerator = this.hashset.GetEnumerator();
+                    enumerator = this.hashset.GetEnumerator();
                 }
             }
 
@@ -166,7 +166,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 get
                 {
-                    return this.enumerator.Current;
+                    return enumerator.Current;
                 }
             }
 
@@ -175,11 +175,11 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public bool MoveNext()
             {
-                if (this.isNull)
+                if (isNull)
                 {
                     return false;
                 }
-                return this.enumerator.MoveNext();
+                return enumerator.MoveNext();
             }
 
 			/// <summary>
@@ -187,7 +187,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public void Dispose()
             {
-                this.enumerator.Dispose();
+                enumerator.Dispose();
             }
         }
 
@@ -205,17 +205,17 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public DictionaryIterator(Dictionary<T1, T2> dictionary)
             {
-                this.isNull = dictionary == null;
+                isNull = dictionary == null;
 
-                if (this.isNull)
+                if (isNull)
                 {
                     this.dictionary = null;
-                    this.enumerator = new Dictionary<T1, T2>.Enumerator();
+                    enumerator = new Dictionary<T1, T2>.Enumerator();
                 }
                 else
                 {
                     this.dictionary = dictionary;
-                    this.enumerator = this.dictionary.GetEnumerator();
+                    enumerator = this.dictionary.GetEnumerator();
                 }
             }
 
@@ -234,7 +234,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 get
                 {
-                    return this.enumerator.Current;
+                    return enumerator.Current;
                 }
             }
 
@@ -243,11 +243,11 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public bool MoveNext()
             {
-                if (this.isNull)
+                if (isNull)
                 {
                     return false;
                 }
-                return this.enumerator.MoveNext();
+                return enumerator.MoveNext();
             }
 
             /// <summary>
@@ -255,7 +255,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public void Dispose()
             {
-                this.enumerator.Dispose();
+                enumerator.Dispose();
             }
         }
 
@@ -273,17 +273,17 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public DictionaryValueIterator(Dictionary<T1, T2> dictionary)
             {
-                this.isNull = dictionary == null;
+                isNull = dictionary == null;
 
-                if (this.isNull)
+                if (isNull)
                 {
                     this.dictionary = null;
-                    this.enumerator = new Dictionary<T1, T2>.Enumerator();
+                    enumerator = new Dictionary<T1, T2>.Enumerator();
                 }
                 else
                 {
                     this.dictionary = dictionary;
-                    this.enumerator = this.dictionary.GetEnumerator();
+                    enumerator = this.dictionary.GetEnumerator();
                 }
             }
 
@@ -302,7 +302,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 get
                 {
-                    return this.enumerator.Current.Value;
+                    return enumerator.Current.Value;
                 }
             }
 
@@ -311,11 +311,11 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public bool MoveNext()
             {
-                if (this.isNull)
+                if (isNull)
                 {
                     return false;
                 }
-                return this.enumerator.MoveNext();
+                return enumerator.MoveNext();
             }
 
             /// <summary>
@@ -323,7 +323,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             /// </summary>
             public void Dispose()
             {
-                this.enumerator.Dispose();
+                enumerator.Dispose();
             }
         }
     }

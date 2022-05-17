@@ -16,8 +16,6 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Globalization;
-
 namespace ExtEvents.OdinSerializer
 {
     using System;
@@ -45,16 +43,14 @@ namespace ExtEvents.OdinSerializer
                 Guid value;
                 if (reader.ReadGuid(out value) == false)
                 {
-                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry.ToString());
+                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry);
                 }
                 return value;
             }
-            else
-            {
-                reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.Guid.ToString() + ", but got entry '" + name + "' of type " + entry.ToString());
-                reader.SkipEntry();
-                return default(Guid);
-            }
+
+            reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.Guid + ", but got entry '" + name + "' of type " + entry);
+            reader.SkipEntry();
+            return default(Guid);
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ namespace ExtEvents.OdinSerializer
     using System.Collections.Generic;
 
     /// <summary>
-    /// Custom generic formatter for the generic type definition <see cref="Dictionary{TKey, TValue}"/>.
+    /// Custom generic formatter for the generic type definition <see cref="Dictionary{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">The type of the dictionary key.</typeparam>
     /// <typeparam name="TValue">The type of the dictionary value.</typeparam>
@@ -94,12 +94,12 @@ namespace ExtEvents.OdinSerializer
                     reader.EnterArray(out length);
                     Type type;
 
-                    value = object.ReferenceEquals(comparer, null) ?
+                    value = ReferenceEquals(comparer, null) ?
                         new Dictionary<TKey, TValue>((int)length) :
                         new Dictionary<TKey, TValue>((int)length, comparer);
 
                     // We must remember to register the dictionary reference ourselves, since we return null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any OnDeserializing callbacks on dictionaries that we're interested in.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);
@@ -119,7 +119,7 @@ namespace ExtEvents.OdinSerializer
                             TKey key = KeyReaderWriter.ReadValue(reader);
                             TValue val = ValueReaderWriter.ReadValue(reader);
 
-                            if (!KeyIsValueType && object.ReferenceEquals(key, null))
+                            if (!KeyIsValueType && ReferenceEquals(key, null))
                             {
                                 reader.Context.Config.DebugContext.LogWarning("Dictionary key of type '" + typeof(TKey).FullName + "' was null upon deserialization. A key has gone missing.");
                                 continue;

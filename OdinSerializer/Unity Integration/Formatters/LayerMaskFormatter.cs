@@ -39,7 +39,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref LayerMask value, IDataReader reader)
         {
-            value.value = LayerMaskFormatter.IntSerializer.ReadValue(reader);
+            value.value = IntSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref LayerMask value, IDataWriter writer)
         {
-            LayerMaskFormatter.IntSerializer.WriteValue(value.value, writer);
+            IntSerializer.WriteValue(value.value, writer);
         }
     }
 }

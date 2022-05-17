@@ -44,7 +44,7 @@ namespace ExtEvents.OdinSerializer
 
                 if (value != null)
                 {
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
                 }
             }
         }

@@ -39,8 +39,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref GradientAlphaKey value, IDataReader reader)
         {
-            value.alpha = GradientAlphaKeyFormatter.FloatSerializer.ReadValue(reader);
-            value.time = GradientAlphaKeyFormatter.FloatSerializer.ReadValue(reader);
+            value.alpha = FloatSerializer.ReadValue(reader);
+            value.time = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -50,8 +50,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref GradientAlphaKey value, IDataWriter writer)
         {
-            GradientAlphaKeyFormatter.FloatSerializer.WriteValue(value.alpha, writer);
-            GradientAlphaKeyFormatter.FloatSerializer.WriteValue(value.time, writer);
+            FloatSerializer.WriteValue(value.alpha, writer);
+            FloatSerializer.WriteValue(value.time, writer);
         }
     }
 }

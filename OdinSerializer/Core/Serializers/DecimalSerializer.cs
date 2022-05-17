@@ -41,16 +41,14 @@ namespace ExtEvents.OdinSerializer
                 decimal value;
                 if (reader.ReadDecimal(out value) == false)
                 {
-                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry of type " + entry.ToString());
+                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry of type " + entry);
                 }
                 return value;
             }
-            else
-            {
-                reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.FloatingPoint.ToString() + " or " + EntryType.Integer.ToString() + ", but got entry of type " + entry.ToString());
-                reader.SkipEntry();
-                return default(decimal);
-            }
+
+            reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.FloatingPoint + " or " + EntryType.Integer + ", but got entry of type " + entry);
+            reader.SkipEntry();
+            return default(decimal);
         }
 
         /// <summary>

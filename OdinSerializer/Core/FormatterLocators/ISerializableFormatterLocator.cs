@@ -22,9 +22,7 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using Utilities;
     using System;
-    using System.Collections.Generic;
     using System.Runtime.Serialization;
 
     internal class ISerializableFormatterLocator : IFormatterLocator

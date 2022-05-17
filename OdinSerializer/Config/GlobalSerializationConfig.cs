@@ -27,7 +27,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Gets the global configuration instance.
         /// </summary>
-        public static GlobalSerializationConfig Instance { get { return GlobalSerializationConfig.instance; } }
+        public static GlobalSerializationConfig Instance { get { return instance; } }
 
         /// <summary>
         /// Gets the logger.

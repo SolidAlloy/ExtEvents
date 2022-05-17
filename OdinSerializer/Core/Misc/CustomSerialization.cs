@@ -3,7 +3,6 @@
     using System;
     using System.Diagnostics;
     using Utilities;
-
 #if UNITY_EDITOR
     using UnityEditor;
 #endif

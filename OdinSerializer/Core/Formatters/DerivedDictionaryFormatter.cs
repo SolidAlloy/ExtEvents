@@ -38,7 +38,7 @@ namespace ExtEvents.OdinSerializer
         private static readonly Serializer<TKey> KeyReaderWriter = Serializer.Get<TKey>();
         private static readonly Serializer<TValue> ValueReaderWriter = Serializer.Get<TValue>();
 
-        private static readonly ConstructorInfo ComparerConstructor = typeof(TDictionary).GetConstructor(new Type[] { typeof(IEqualityComparer<TKey>) });
+        private static readonly ConstructorInfo ComparerConstructor = typeof(TDictionary).GetConstructor(new[] { typeof(IEqualityComparer<TKey>) });
 
         static DerivedDictionaryFormatter()
         {
@@ -46,10 +46,6 @@ namespace ExtEvents.OdinSerializer
             // which it otherwise seems prone to do, regardless of what might be defined in any link.xml file.
 
             new DerivedDictionaryFormatter<Dictionary<int, string>, int, string>();
-        }
-
-        public DerivedDictionaryFormatter()
-        {
         }
 
         /// <summary>
@@ -90,7 +86,7 @@ namespace ExtEvents.OdinSerializer
                     reader.EnterArray(out length);
                     Type type;
 
-                    if (!object.ReferenceEquals(comparer, null) && ComparerConstructor != null)
+                    if (!ReferenceEquals(comparer, null) && ComparerConstructor != null)
                     {
                         value = (TDictionary)ComparerConstructor.Invoke(new object[] { comparer });
                     }
@@ -100,7 +96,7 @@ namespace ExtEvents.OdinSerializer
                     }
 
                     // We must remember to register the dictionary reference ourselves, since we returned null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any OnDeserializing callbacks on dictionaries that we're interested in.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);
@@ -120,7 +116,7 @@ namespace ExtEvents.OdinSerializer
                             TKey key = KeyReaderWriter.ReadValue(reader);
                             TValue val = ValueReaderWriter.ReadValue(reader);
 
-                            if (!KeyIsValueType && object.ReferenceEquals(key, null))
+                            if (!KeyIsValueType && ReferenceEquals(key, null))
                             {
                                 reader.Context.Config.DebugContext.LogWarning("Dictionary key of type '" + typeof(TKey).FullName + "' was null upon deserialization. A key has gone missing.");
                                 continue;

@@ -28,7 +28,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 {
     using System;
     using System.Reflection;
-
+    using Object = UnityEngine.Object;
 #if CAN_EMIT
 
     using System.Reflection.Emit;
@@ -93,7 +93,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 #if UNITY_EDITOR
         private static Assembly EditorAssembly = typeof(UnityEditor.Editor).Assembly;
 #endif
-        private static Assembly EngineAssembly = typeof(UnityEngine.Object).Assembly;
+        private static Assembly EngineAssembly = typeof(Object).Assembly;
 
         private static bool EmitIsIllegalForMember(MemberInfo member)
         {

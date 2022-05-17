@@ -40,8 +40,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref GradientColorKey value, IDataReader reader)
         {
-            value.color = GradientColorKeyFormatter.ColorSerializer.ReadValue(reader);
-            value.time = GradientColorKeyFormatter.FloatSerializer.ReadValue(reader);
+            value.color = ColorSerializer.ReadValue(reader);
+            value.time = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -51,8 +51,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref GradientColorKey value, IDataWriter writer)
         {
-            GradientColorKeyFormatter.ColorSerializer.WriteValue(value.color, writer);
-            GradientColorKeyFormatter.FloatSerializer.WriteValue(value.time, writer);
+            ColorSerializer.WriteValue(value.color, writer);
+            FloatSerializer.WriteValue(value.time, writer);
         }
     }
 }

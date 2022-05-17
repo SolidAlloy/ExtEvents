@@ -74,10 +74,10 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentNullException("formatterConverter");
             }
 
-            this.streamingContext = context;
+            streamingContext = context;
             this.formatterConverter = formatterConverter;
 
-            this.ResetToDefault();
+            ResetToDefault();
         }
 
         /// <summary>
@@ -90,17 +90,17 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.binder == null)
+                if (binder == null)
                 {
-                    this.binder = DefaultSerializationBinder.Default;
+                    binder = DefaultSerializationBinder.Default;
                 }
 
-                return this.binder;
+                return binder;
             }
 
             set
             {
-                this.binder = value;
+                binder = value;
             }
         }
 
@@ -110,7 +110,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The streaming context.
         /// </value>
-        public StreamingContext StreamingContext { get { return this.streamingContext; } }
+        public StreamingContext StreamingContext { get { return streamingContext; } }
 
         /// <summary>
         /// Gets the formatter converter.
@@ -118,7 +118,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The formatter converter.
         /// </value>
-        public IFormatterConverter FormatterConverter { get { return this.formatterConverter; } }
+        public IFormatterConverter FormatterConverter { get { return formatterConverter; } }
 
         /// <summary>
         /// Gets or sets the index reference resolver.
@@ -154,17 +154,17 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.config == null)
+                if (config == null)
                 {
-                    this.config = new SerializationConfig();
+                    config = new SerializationConfig();
                 }
 
-                return this.config;
+                return config;
             }
 
             set
             {
-                this.config = value;
+                config = value;
             }
         }
 
@@ -176,7 +176,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns><c>true</c> if a reference was found, otherwise <c>false</c>.</returns>
         public bool TryGetInternalReferenceId(object reference, out int id)
         {
-            return this.internalReferenceIdMap.TryGetValue(reference, out id);
+            return internalReferenceIdMap.TryGetValue(reference, out id);
         }
 
         /// <summary>
@@ -187,10 +187,10 @@ namespace ExtEvents.OdinSerializer
         /// <returns><c>true</c> if the reference was registered, otherwise, <c>false</c> when the reference has already been registered.</returns>
         public bool TryRegisterInternalReference(object reference, out int id)
         {
-            if (this.internalReferenceIdMap.TryGetValue(reference, out id) == false)
+            if (internalReferenceIdMap.TryGetValue(reference, out id) == false)
             {
-                id = this.internalReferenceIdMap.Count;
-                this.internalReferenceIdMap.Add(reference, id);
+                id = internalReferenceIdMap.Count;
+                internalReferenceIdMap.Add(reference, id);
                 return true;
             }
 
@@ -205,13 +205,13 @@ namespace ExtEvents.OdinSerializer
         /// <returns><c>true</c> if the object could be referenced by index; otherwise, <c>false</c>.</returns>
         public bool TryRegisterExternalReference(object obj, out int index)
         {
-            if (this.IndexReferenceResolver == null)
+            if (IndexReferenceResolver == null)
             {
                 index = -1;
                 return false;
             }
 
-            if (this.IndexReferenceResolver.CanReference(obj, out index))
+            if (IndexReferenceResolver.CanReference(obj, out index))
             {
                 return true;
             }
@@ -228,13 +228,13 @@ namespace ExtEvents.OdinSerializer
         /// <returns><c>true</c> if the object could be referenced by guid; otherwise, <c>false</c>.</returns>
         public bool TryRegisterExternalReference(object obj, out Guid guid)
         {
-            if (this.GuidReferenceResolver == null)
+            if (GuidReferenceResolver == null)
             {
                 guid = Guid.Empty;
                 return false;
             }
 
-            var resolver = this.GuidReferenceResolver;
+            var resolver = GuidReferenceResolver;
 
             while (resolver != null)
             {
@@ -258,13 +258,13 @@ namespace ExtEvents.OdinSerializer
         /// <returns><c>true</c> if the object could be referenced by string; otherwise, <c>false</c>.</returns>
         public bool TryRegisterExternalReference(object obj, out string id)
         {
-            if (this.StringReferenceResolver == null)
+            if (StringReferenceResolver == null)
             {
                 id = null;
                 return false;
             }
 
-            var resolver = this.StringReferenceResolver;
+            var resolver = StringReferenceResolver;
 
             while (resolver != null)
             {
@@ -285,7 +285,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void ResetInternalReferences()
         {
-            this.internalReferenceIdMap.Clear();
+            internalReferenceIdMap.Clear();
         }
 
         /// <summary>
@@ -294,21 +294,21 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void ResetToDefault()
         {
-            if (!object.ReferenceEquals(this.config, null))
+            if (!ReferenceEquals(config, null))
             {
-                this.config.ResetToDefault();
+                config.ResetToDefault();
             }
 
-            this.internalReferenceIdMap.Clear();
-            this.IndexReferenceResolver = null;
-            this.GuidReferenceResolver = null;
-            this.StringReferenceResolver = null;
-            this.binder = null;
+            internalReferenceIdMap.Clear();
+            IndexReferenceResolver = null;
+            GuidReferenceResolver = null;
+            StringReferenceResolver = null;
+            binder = null;
         }
 
         void ICacheNotificationReceiver.OnFreed()
         {
-            this.ResetToDefault();
+            ResetToDefault();
         }
 
         void ICacheNotificationReceiver.OnClaimed()

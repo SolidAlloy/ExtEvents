@@ -19,6 +19,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System.Collections.Generic;
+    using UnityEngine;
     using Utilities;
 
     /// <summary>
@@ -28,56 +29,56 @@ namespace ExtEvents.OdinSerializer
     /// <seealso cref="ICacheNotificationReceiver" />
     public sealed class UnityReferenceResolver : IExternalIndexReferenceResolver, ICacheNotificationReceiver
     {
-        private Dictionary<UnityEngine.Object, int> referenceIndexMapping = new Dictionary<UnityEngine.Object, int>(32, ReferenceEqualityComparer<UnityEngine.Object>.Default);
-        private List<UnityEngine.Object> referencedUnityObjects;
+        private Dictionary<Object, int> referenceIndexMapping = new Dictionary<Object, int>(32, ReferenceEqualityComparer<Object>.Default);
+        private List<Object> referencedUnityObjects;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnityReferenceResolver"/> class.
         /// </summary>
         public UnityReferenceResolver()
         {
-            this.referencedUnityObjects = new List<UnityEngine.Object>();
+            referencedUnityObjects = new List<Object>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnityReferenceResolver"/> class with a list of Unity objects.
         /// </summary>
         /// <param name="referencedUnityObjects">The referenced Unity objects.</param>
-        public UnityReferenceResolver(List<UnityEngine.Object> referencedUnityObjects)
+        public UnityReferenceResolver(List<Object> referencedUnityObjects)
         {
-            this.SetReferencedUnityObjects(referencedUnityObjects);
+            SetReferencedUnityObjects(referencedUnityObjects);
         }
 
         /// <summary>
         /// Gets the currently referenced Unity objects.
         /// </summary>
         /// <returns>A list of the currently referenced Unity objects.</returns>
-        public List<UnityEngine.Object> GetReferencedUnityObjects()
+        public List<Object> GetReferencedUnityObjects()
         {
-            return this.referencedUnityObjects;
+            return referencedUnityObjects;
         }
 
         /// <summary>
         /// Sets the referenced Unity objects of the resolver to a given list, or a new list if the value is null.
         /// </summary>
         /// <param name="referencedUnityObjects">The referenced Unity objects to set, or null if a new list is required.</param>
-        public void SetReferencedUnityObjects(List<UnityEngine.Object> referencedUnityObjects)
+        public void SetReferencedUnityObjects(List<Object> referencedUnityObjects)
         {
             if (referencedUnityObjects == null)
             {
-                referencedUnityObjects = new List<UnityEngine.Object>();
+                referencedUnityObjects = new List<Object>();
             }
 
             this.referencedUnityObjects = referencedUnityObjects;
-            this.referenceIndexMapping.Clear();
+            referenceIndexMapping.Clear();
 
             for (int i = 0; i < this.referencedUnityObjects.Count; i++)
             {
-                if (object.ReferenceEquals(this.referencedUnityObjects[i], null) == false)
+                if (ReferenceEquals(this.referencedUnityObjects[i], null) == false)
                 {
-                    if (!this.referenceIndexMapping.ContainsKey(this.referencedUnityObjects[i]))
+                    if (!referenceIndexMapping.ContainsKey(this.referencedUnityObjects[i]))
                     {
-                        this.referenceIndexMapping.Add(this.referencedUnityObjects[i], i);
+                        referenceIndexMapping.Add(this.referencedUnityObjects[i], i);
                     }
                 }
             }
@@ -93,20 +94,20 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public bool CanReference(object value, out int index)
         {
-            if (this.referencedUnityObjects == null)
+            if (referencedUnityObjects == null)
             {
-                this.referencedUnityObjects = new List<UnityEngine.Object>(32);
+                referencedUnityObjects = new List<Object>(32);
             }
 
-            var obj = value as UnityEngine.Object;
+            var obj = value as Object;
 
-            if (object.ReferenceEquals(null, obj) == false)
+            if (ReferenceEquals(null, obj) == false)
             {
-                if (this.referenceIndexMapping.TryGetValue(obj, out index) == false)
+                if (referenceIndexMapping.TryGetValue(obj, out index) == false)
                 {
-                    index = this.referencedUnityObjects.Count;
-                    this.referenceIndexMapping.Add(obj, index);
-                    this.referencedUnityObjects.Add(obj);
+                    index = referencedUnityObjects.Count;
+                    referenceIndexMapping.Add(obj, index);
+                    referencedUnityObjects.Add(obj);
                 }
 
                 return true;
@@ -126,7 +127,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public bool TryResolveReference(int index, out object value)
         {
-            if (this.referencedUnityObjects == null || index < 0 || index >= this.referencedUnityObjects.Count)
+            if (referencedUnityObjects == null || index < 0 || index >= referencedUnityObjects.Count)
             {
                 // Sometimes something has destroyed the list of references in between serialization and deserialization
                 // (Unity prefab instances are especially bad at preserving such data), and in these cases we still don't
@@ -135,7 +136,7 @@ namespace ExtEvents.OdinSerializer
                 return true;
             }
 
-            value = this.referencedUnityObjects[index];
+            value = referencedUnityObjects[index];
             return true;
         }
 
@@ -144,13 +145,13 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void Reset()
         {
-            this.referencedUnityObjects = null;
-            this.referenceIndexMapping.Clear();
+            referencedUnityObjects = null;
+            referenceIndexMapping.Clear();
         }
 
         void ICacheNotificationReceiver.OnFreed()
         {
-            this.Reset();
+            Reset();
         }
 
         void ICacheNotificationReceiver.OnClaimed()

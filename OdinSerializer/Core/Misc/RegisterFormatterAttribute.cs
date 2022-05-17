@@ -28,8 +28,8 @@ namespace ExtEvents.OdinSerializer
 
         public RegisterFormatterAttribute(Type formatterType, int priority = 0)
         {
-            this.FormatterType = formatterType;
-            this.Priority = priority;
+            FormatterType = formatterType;
+            Priority = priority;
         }
     }
 }

@@ -46,7 +46,7 @@ namespace ExtEvents.OdinSerializer
 
             if (stream != null)
             {
-                this.Stream = stream;
+                Stream = stream;
             }
         }
 
@@ -62,7 +62,7 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                return this.stream;
+                return stream;
             }
             set
             {
@@ -76,7 +76,7 @@ namespace ExtEvents.OdinSerializer
                     throw new ArgumentException("Cannot write to stream");
                 }
 
-                this.stream = value;
+                stream = value;
             }
         }
 
@@ -90,16 +90,16 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.context == null)
+                if (context == null)
                 {
-                    this.context = new SerializationContext();
+                    context = new SerializationContext();
                 }
 
-                return this.context;
+                return context;
             }
             set
             {
-                this.context = value;
+                context = value;
             }
         }
 
@@ -108,7 +108,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public virtual void FlushToStream()
         {
-            this.Stream.Flush();
+            Stream.Flush();
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public virtual void PrepareNewSerializationSession()
         {
-            this.ClearNodes();
+            ClearNodes();
         }
 
         /// <summary>

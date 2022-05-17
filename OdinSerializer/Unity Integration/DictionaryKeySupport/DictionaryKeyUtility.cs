@@ -18,13 +18,14 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System.Globalization;
     using System;
     using System.Collections.Generic;
-    using Utilities;
+    using System.Globalization;
     using System.Linq;
-    using UnityEngine;
     using System.Reflection;
+    using UnityEngine;
+    using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Provides utility methods for handling dictionary keys in the prefab modification system.
@@ -33,7 +34,7 @@ namespace ExtEvents.OdinSerializer
     {
         private static readonly Dictionary<Type, bool> GetSupportedDictionaryKeyTypesResults = new Dictionary<Type, bool>();
 
-        private static readonly HashSet<Type> BaseSupportedDictionaryKeyTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> BaseSupportedDictionaryKeyTypes = new HashSet<Type>
         {
             typeof(string),
             typeof(char),
@@ -51,7 +52,7 @@ namespace ExtEvents.OdinSerializer
             typeof(Guid)
         };
 
-        private static readonly HashSet<char> AllowedSpecialKeyStrChars = new HashSet<char>()
+        private static readonly HashSet<char> AllowedSpecialKeyStrChars = new HashSet<char>
         {
             ',', '(', ')', '\\', '|', '-', '+'
         };
@@ -62,14 +63,14 @@ namespace ExtEvents.OdinSerializer
 
         private static readonly Dictionary<object, string> ObjectsToTempKeys = new Dictionary<object, string>();
         private static readonly Dictionary<string, object> TempKeysToObjects = new Dictionary<string, object>();
-        private static long tempKeyCounter = 0;
+        private static long tempKeyCounter;
 
         private class UnityObjectKeyComparer<T> : IComparer<T>
         {
             public int Compare(T x, T y)
             {
-                var a = (UnityEngine.Object)(object)x;
-                var b = (UnityEngine.Object)(object)y;
+                var a = (Object)(object)x;
+                var b = (Object)(object)y;
 
                 if (a == null && b == null) return 0;
 
@@ -103,19 +104,19 @@ namespace ExtEvents.OdinSerializer
 
                 if (TypeToKeyPathProviders.TryGetValue(typeof(T), out provider))
                 {
-                    this.actualComparer = (IComparer<T>)provider;
+                    actualComparer = (IComparer<T>)provider;
                 }
                 else if (typeof(IComparable).IsAssignableFrom(typeof(T)) || typeof(IComparable<T>).IsAssignableFrom(typeof(T)))
                 {
-                    this.actualComparer = Comparer<T>.Default;
+                    actualComparer = Comparer<T>.Default;
                 }
-                else if (typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
+                else if (typeof(Object).IsAssignableFrom(typeof(T)))
                 {
-                    this.actualComparer = new UnityObjectKeyComparer<T>();
+                    actualComparer = new UnityObjectKeyComparer<T>();
                 }
                 else
                 {
-                    this.actualComparer = new FallbackKeyComparer<T>();
+                    actualComparer = new FallbackKeyComparer<T>();
                 }
             }
 
@@ -127,7 +128,7 @@ namespace ExtEvents.OdinSerializer
             /// <returns>Not yet documented.</returns>
             public int Compare(T x, T y)
             {
-                return this.actualComparer.Compare(x, y);
+                return actualComparer.Compare(x, y);
             }
         }
 
@@ -232,7 +233,6 @@ namespace ExtEvents.OdinSerializer
                     if (!char.IsLetterOrDigit(id[i]))
                     {
                         LogInvalidKeyPathProvider(providerType, assembly, "Provider ID '" + id + "' cannot contain characters which are not letters or digits");
-                        continue;
                     }
                 }
 

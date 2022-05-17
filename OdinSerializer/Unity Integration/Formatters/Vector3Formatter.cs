@@ -39,9 +39,9 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref Vector3 value, IDataReader reader)
         {
-            value.x = Vector3Formatter.FloatSerializer.ReadValue(reader);
-            value.y = Vector3Formatter.FloatSerializer.ReadValue(reader);
-            value.z = Vector3Formatter.FloatSerializer.ReadValue(reader);
+            value.x = FloatSerializer.ReadValue(reader);
+            value.y = FloatSerializer.ReadValue(reader);
+            value.z = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Vector3 value, IDataWriter writer)
         {
-            Vector3Formatter.FloatSerializer.WriteValue(value.x, writer);
-            Vector3Formatter.FloatSerializer.WriteValue(value.y, writer);
-            Vector3Formatter.FloatSerializer.WriteValue(value.z, writer);
+            FloatSerializer.WriteValue(value.x, writer);
+            FloatSerializer.WriteValue(value.y, writer);
+            FloatSerializer.WriteValue(value.z, writer);
         }
     }
 }

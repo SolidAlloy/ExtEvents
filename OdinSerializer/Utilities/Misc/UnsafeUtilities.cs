@@ -28,7 +28,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Unsafe
         /// <summary>
         /// Blindly creates an array of structs from an array of bytes via direct memory copy/blit.
         /// </summary>
-        public static unsafe T[] StructArrayFromBytes<T>(byte[] bytes, int byteLength) where T : struct
+        public static T[] StructArrayFromBytes<T>(byte[] bytes, int byteLength) where T : struct
         {
             return StructArrayFromBytes<T>(bytes, 0, 0);
         }
@@ -36,7 +36,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Unsafe
         /// <summary>
         /// Blindly creates an array of structs from an array of bytes via direct memory copy/blit.
         /// </summary>
-        public static unsafe T[] StructArrayFromBytes<T>(byte[] bytes, int byteLength, int byteOffset) where T : struct
+        public static T[] StructArrayFromBytes<T>(byte[] bytes, int byteLength, int byteOffset) where T : struct
         {
             if (bytes == null)
             {
@@ -79,7 +79,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Unsafe
         /// <summary>
         /// Blindly copies an array of structs into an array of bytes via direct memory copy/blit.
         /// </summary>
-        public static unsafe byte[] StructArrayToBytes<T>(T[] array) where T : struct
+        public static byte[] StructArrayToBytes<T>(T[] array) where T : struct
         {
             byte[] bytes = null;
             return StructArrayToBytes(array, ref bytes, 0);
@@ -88,7 +88,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Unsafe
         /// <summary>
         /// Blindly copies an array of structs into an array of bytes via direct memory copy/blit.
         /// </summary>
-        public static unsafe byte[] StructArrayToBytes<T>(T[] array, ref byte[] bytes, int byteOffset) where T : struct
+        public static byte[] StructArrayToBytes<T>(T[] array, ref byte[] bytes, int byteOffset) where T : struct
         {
             if (array == null)
             {

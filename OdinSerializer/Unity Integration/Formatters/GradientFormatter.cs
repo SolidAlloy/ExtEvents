@@ -53,8 +53,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref Gradient value, IDataReader reader)
         {
-            value.alphaKeys = GradientFormatter.AlphaKeysSerializer.ReadValue(reader);
-            value.colorKeys = GradientFormatter.ColorKeysSerializer.ReadValue(reader);
+            value.alphaKeys = AlphaKeysSerializer.ReadValue(reader);
+            value.colorKeys = ColorKeysSerializer.ReadValue(reader);
 
             string name;
             reader.PeekEntry(out name);
@@ -86,8 +86,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Gradient value, IDataWriter writer)
         {
-            GradientFormatter.AlphaKeysSerializer.WriteValue(value.alphaKeys, writer);
-            GradientFormatter.ColorKeysSerializer.WriteValue(value.colorKeys, writer);
+            AlphaKeysSerializer.WriteValue(value.alphaKeys, writer);
+            ColorKeysSerializer.WriteValue(value.colorKeys, writer);
 
             if (ModeProperty != null)
             {

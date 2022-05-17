@@ -37,7 +37,7 @@ namespace ExtEvents.OdinSerializer
 
             while ((entry = reader.PeekEntry(out name)) != EntryType.EndOfNode && entry != EntryType.EndOfArray && entry != EntryType.EndOfStream)
             {
-                this.ReadDataEntry(ref value, name, entry, reader);
+                ReadDataEntry(ref value, name, entry, reader);
 
                 count++;
 
@@ -56,7 +56,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to serialize with.</param>
         protected sealed override void SerializeImplementation(ref T value, IDataWriter writer)
         {
-            this.WriteDataEntries(ref value, writer);
+            WriteDataEntries(ref value, writer);
         }
 
         /// <summary>

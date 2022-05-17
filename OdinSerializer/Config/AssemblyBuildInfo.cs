@@ -61,10 +61,8 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
                 {
                     return JIT;
                 }
-                else
-                {
-                    return AOT;
-                }
+
+                return AOT;
             }
         }
 
@@ -82,8 +80,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
             .Where(t => t >= 0 && typeof(BuildTarget).GetMember(t.ToString())[0].IsDefined(typeof(ObsoleteAttribute), false) == false)
             .ToArray();
 
-        public static readonly BuildTarget[] JITPlatforms = new BuildTarget[]
-        {
+        public static readonly BuildTarget[] JITPlatforms = {
 #if UNITY_2017_3_OR_NEWER
             BuildTarget.StandaloneOSX,
 #else

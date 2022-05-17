@@ -30,7 +30,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         public DoubleLookupDictionary()
         {
-            this.secondKeyComparer = EqualityComparer<TSecondKey>.Default;
+            secondKeyComparer = EqualityComparer<TSecondKey>.Default;
         }
 
         public DoubleLookupDictionary(IEqualityComparer<TFirstKey> firstKeyComparer, IEqualityComparer<TSecondKey> secondKeyComparer)
@@ -48,10 +48,10 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 Dictionary<TSecondKey, TValue> innerDict;
 
-                if (!this.TryGetValue(firstKey, out innerDict))
+                if (!TryGetValue(firstKey, out innerDict))
                 {
-                    innerDict = new Dictionary<TSecondKey, TValue>(this.secondKeyComparer);
-                    this.Add(firstKey, innerDict);
+                    innerDict = new Dictionary<TSecondKey, TValue>(secondKeyComparer);
+                    Add(firstKey, innerDict);
                 }
 
                 return innerDict;
@@ -65,7 +65,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             Dictionary<TSecondKey, TValue> innerDict;
 
-            if (this.TryGetValue(firstKey, out innerDict))
+            if (TryGetValue(firstKey, out innerDict))
             {
                 return innerDict.Count;
             }
@@ -80,9 +80,9 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             int count = 0;
 
-            if (this.Count > 0)
+            if (Count > 0)
             {
-                foreach (var innerDict in this.Values)
+                foreach (var innerDict in Values)
                 {
                     count += innerDict.Count;
                 }
@@ -98,7 +98,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             Dictionary<TSecondKey, TValue> innerDict;
 
-            return this.TryGetValue(firstKey, out innerDict) && innerDict.ContainsKey(secondKey);
+            return TryGetValue(firstKey, out innerDict) && innerDict.ContainsKey(secondKey);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             Dictionary<TSecondKey, TValue> innerDict;
 
-            if (this.TryGetValue(firstKey, out innerDict) && innerDict.TryGetValue(secondKey, out value))
+            if (TryGetValue(firstKey, out innerDict) && innerDict.TryGetValue(secondKey, out value))
             {
                 return true;
             }
@@ -122,9 +122,9 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public TValue AddInner(TFirstKey firstKey, TSecondKey secondKey, TValue value)
         {
-            if (this.ContainsKeys(firstKey, secondKey))
+            if (ContainsKeys(firstKey, secondKey))
             {
-                throw new ArgumentException("An element with the same keys already exists in the " + this.GetType().GetNiceName() + ".");
+                throw new ArgumentException("An element with the same keys already exists in the " + GetType().GetNiceName() + ".");
             }
 
             return this[firstKey][secondKey] = value;
@@ -137,13 +137,13 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             Dictionary<TSecondKey, TValue> innerDict;
 
-            if (this.TryGetValue(firstKey, out innerDict))
+            if (TryGetValue(firstKey, out innerDict))
             {
                 bool removed = innerDict.Remove(secondKey);
 
                 if (innerDict.Count == 0)
                 {
-                    this.Remove(firstKey);
+                    Remove(firstKey);
                 }
 
                 return removed;
@@ -174,7 +174,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
             for (int i = 0; i < toRemoveBufferFirstKey.Count; i++)
             {
-                this.RemoveInner(toRemoveBufferFirstKey[i], toRemoveBufferSecondKey[i]);
+                RemoveInner(toRemoveBufferFirstKey[i], toRemoveBufferSecondKey[i]);
             }
         }
     }

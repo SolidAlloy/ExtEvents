@@ -19,6 +19,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.ComponentModel;
 
     /// <summary>
     /// Implements functionality that is shared by both data readers and data writers.
@@ -28,7 +29,7 @@ namespace ExtEvents.OdinSerializer
         // Once, there was a stack here. But stacks are slow, so now there's no longer
         //  a stack here and we just do it ourselves.
         private NodeInfo[] nodes = new NodeInfo[32];
-        private int nodesLength = 0;
+        private int nodesLength;
 
         /// <summary>
         /// Gets or sets the context's or writer's serialization binder.
@@ -37,7 +38,7 @@ namespace ExtEvents.OdinSerializer
         /// The reader's or writer's serialization binder.
         /// </value>
         [Obsolete("Use the Binder member on the writer's SerializationContext/DeserializationContext instead.", error: false)]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public TwoWaySerializationBinder Binder
         {
             get
@@ -46,7 +47,8 @@ namespace ExtEvents.OdinSerializer
                 {
                     return (this as IDataWriter).Context.Binder;
                 }
-                else if (this is IDataReader)
+
+                if (this is IDataReader)
                 {
                     return (this as IDataReader).Context.Binder;
                 }
@@ -73,7 +75,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// <c>true</c> if the reader or writer is in an array node; otherwise, <c>false</c>.
         /// </value>
-        public bool IsInArrayNode { get { return this.nodesLength == 0 ? false : this.nodes[this.nodesLength - 1].IsArray; } }
+        public bool IsInArrayNode { get { return nodesLength == 0 ? false : nodes[nodesLength - 1].IsArray; } }
 
         /// <summary>
         /// Gets the current node depth. In other words, the current count of the node stack.
@@ -81,7 +83,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node depth.
         /// </value>
-        protected int NodeDepth { get { return this.nodesLength; } }
+        protected int NodeDepth { get { return nodesLength; } }
 
         /// <summary>
         /// Gets the current node, or <see cref="NodeInfo.Empty"/> if there is no current node.
@@ -89,7 +91,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node.
         /// </value>
-        protected NodeInfo CurrentNode { get { return this.nodesLength == 0 ? NodeInfo.Empty : this.nodes[this.nodesLength - 1]; } }
+        protected NodeInfo CurrentNode { get { return nodesLength == 0 ? NodeInfo.Empty : nodes[nodesLength - 1]; } }
 
         /// <summary>
         /// Pushes a node onto the node stack.
@@ -97,13 +99,13 @@ namespace ExtEvents.OdinSerializer
         /// <param name="node">The node to push.</param>
         protected void PushNode(NodeInfo node)
         {
-            if (this.nodesLength == this.nodes.Length)
+            if (nodesLength == nodes.Length)
             {
-                this.ExpandNodes();
+                ExpandNodes();
             }
 
-            this.nodes[this.nodesLength] = node;
-            this.nodesLength++;
+            nodes[nodesLength] = node;
+            nodesLength++;
         }
 
         /// <summary>
@@ -114,13 +116,13 @@ namespace ExtEvents.OdinSerializer
         /// <param name="type">The type of the node.</param>
         protected void PushNode(string name, int id, Type type)
         {
-            if (this.nodesLength == this.nodes.Length)
+            if (nodesLength == nodes.Length)
             {
-                this.ExpandNodes();
+                ExpandNodes();
             }
 
-            this.nodes[this.nodesLength] = new NodeInfo(name, id, type, false);
-            this.nodesLength++;
+            nodes[nodesLength] = new NodeInfo(name, id, type, false);
+            nodesLength++;
         }
 
         /// <summary>
@@ -128,36 +130,36 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         protected void PushArray()
         {
-            if (this.nodesLength == this.nodes.Length)
+            if (nodesLength == nodes.Length)
             {
-                this.ExpandNodes();
+                ExpandNodes();
             }
 
-            if (this.nodesLength == 0 || this.nodes[this.nodesLength - 1].IsArray)
+            if (nodesLength == 0 || nodes[nodesLength - 1].IsArray)
             {
-                this.nodes[this.nodesLength] = new NodeInfo(null, -1, null, true);
+                nodes[nodesLength] = new NodeInfo(null, -1, null, true);
             }
             else
             {
-                var current = this.nodes[this.nodesLength - 1];
-                this.nodes[this.nodesLength] = new NodeInfo(current.Name, current.Id, current.Type, true);
+                var current = nodes[nodesLength - 1];
+                nodes[nodesLength] = new NodeInfo(current.Name, current.Id, current.Type, true);
             }
             
-            this.nodesLength++;
+            nodesLength++;
         }
 
         private void ExpandNodes()
         {
-            var newArr = new NodeInfo[this.nodes.Length * 2];
+            var newArr = new NodeInfo[nodes.Length * 2];
 
-            var oldNodes = this.nodes;
+            var oldNodes = nodes;
 
             for (int i = 0; i < oldNodes.Length; i++)
             {
                 newArr[i] = oldNodes[i];
             }
 
-            this.nodes = newArr;
+            nodes = newArr;
         }
 
         /// <summary>
@@ -171,7 +173,7 @@ namespace ExtEvents.OdinSerializer
         /// </exception>
         protected void PopNode(string name)
         {
-            if (this.nodesLength == 0)
+            if (nodesLength == 0)
             {
                 throw new InvalidOperationException("There are no nodes to pop.");
             }
@@ -184,7 +186,7 @@ namespace ExtEvents.OdinSerializer
             //    throw new InvalidOperationException("Tried to pop node with name " + name + " but current node's name is " + current.Name);
             //}
 
-            this.nodesLength--;
+            nodesLength--;
         }
 
         /// <summary>
@@ -192,22 +194,22 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         protected void PopArray()
         {
-            if (this.nodesLength == 0)
+            if (nodesLength == 0)
             {
                 throw new InvalidOperationException("There are no nodes to pop.");
             }
 
-            if (this.nodes[this.nodesLength - 1].IsArray == false)
+            if (nodes[nodesLength - 1].IsArray == false)
             {
                 throw new InvalidOperationException("Was not in array when exiting array.");
             }
 
-            this.nodesLength--;
+            nodesLength--;
         }
 
         protected void ClearNodes()
         {
-            this.nodesLength = 0;
+            nodesLength = 0;
         }
     }
 }

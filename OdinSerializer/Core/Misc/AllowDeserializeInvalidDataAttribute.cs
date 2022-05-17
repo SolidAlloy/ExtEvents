@@ -31,7 +31,7 @@ namespace ExtEvents.OdinSerializer
     /// of global.
     /// </para>
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class AllowDeserializeInvalidDataAttribute : Attribute
     {
     }

@@ -65,7 +65,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Number of items in the list.
         /// </summary>
-        public int Count { get { return this.innerList.Count; } }
+        public int Count { get { return innerList.Count; } }
 
         /// <summary>
         ///	Immutable list cannot be changed directly, so it's size is always fixed.
@@ -80,18 +80,18 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Returns <c>true</c> if the inner list is synchronized.
         /// </summary>
-        public bool IsSynchronized { get { return this.innerList.IsSynchronized; } }
+        public bool IsSynchronized { get { return innerList.IsSynchronized; } }
 
         /// <summary>
         /// Gets the sync root object.
         /// </summary>
-        public object SyncRoot { get { return this.innerList.SyncRoot; } }
+        public object SyncRoot { get { return innerList.SyncRoot; } }
 
         object IList.this[int index]
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
 
             set
@@ -104,7 +104,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
 
             set
@@ -117,7 +117,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// Index accessor.
         /// </summary>
 		/// <param name="index">Index.</param>
-        public object this[int index] { get { return this.innerList[index]; } }
+        public object this[int index] { get { return innerList[index]; } }
 
         /// <summary>
         /// Returns <c>true</c> if the item is contained in the list.
@@ -125,7 +125,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 		/// <param name="value">The item's value.</param>
         public bool Contains(object value)
         {
-            return this.innerList.Contains(value);
+            return innerList.Contains(value);
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 		/// <param name="arrayIndex">Index.</param>
         public void CopyTo(object[] array, int arrayIndex)
         {
-            this.innerList.CopyTo(array, arrayIndex);
+            innerList.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 		/// <param name="index">Index.</param>
         public void CopyTo(Array array, int index)
         {
-            this.innerList.CopyTo(array, index);
+            innerList.CopyTo(array, index);
         }
 
         /// <summary>
@@ -153,17 +153,17 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public IEnumerator GetEnumerator()
         {
-            return this.innerList.GetEnumerator();
+            return innerList.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         IEnumerator<object> IEnumerable<object>.GetEnumerator()
         {
-            foreach (var obj in this.innerList)
+            foreach (var obj in innerList)
             {
                 yield return obj;
             }
@@ -200,7 +200,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 		/// <param name="value">The item's value.</param>
         public int IndexOf(object value)
         {
-            return this.innerList.IndexOf(value);
+            return innerList.IndexOf(value);
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public int Count { get { return this.innerList.Count; } }
+        public int Count { get { return innerList.Count; } }
 
         bool ICollection.IsSynchronized { get { return false; } }
         object ICollection.SyncRoot { get { return null; } }
@@ -303,7 +303,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
 
             set
@@ -319,7 +319,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
         }
 
@@ -328,7 +328,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public bool Contains(T item)
         {
-            return this.innerList.Contains(item);
+            return innerList.Contains(item);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            this.innerList.CopyTo(array, arrayIndex);
+            innerList.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -344,12 +344,12 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public IEnumerator<T> GetEnumerator()
         {
-            return this.innerList.GetEnumerator();
+            return innerList.GetEnumerator();
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            this.innerList.CopyTo((T[])array, index);
+            innerList.CopyTo((T[])array, index);
         }
 
         void ICollection<T>.Add(T item)
@@ -369,7 +369,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         int IList.Add(object value)
@@ -384,12 +384,12 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         bool IList.Contains(object value)
         {
-            return this.innerList.Contains((T)value);
+            return innerList.Contains((T)value);
         }
 
         int IList.IndexOf(object value)
         {
-            return this.innerList.IndexOf((T)value);
+            return innerList.IndexOf((T)value);
         }
 
         void IList.Insert(int index, object value)
@@ -417,7 +417,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public int IndexOf(T item)
         {
-            return this.innerList.IndexOf(item);
+            return innerList.IndexOf(item);
         }
 
         void IList<T>.RemoveAt(int index)
@@ -450,7 +450,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Number of items in the list.
         /// </summary>
-        public int Count { get { return this.innerList.Count; } }
+        public int Count { get { return innerList.Count; } }
 
         bool ICollection.IsSynchronized { get { return false; } }
         object ICollection.SyncRoot { get { return null; } }
@@ -479,7 +479,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
 
             set
@@ -496,7 +496,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             get
             {
-                return this.innerList[index];
+                return innerList[index];
             }
         }
 
@@ -505,7 +505,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public bool Contains(TElement item)
         {
-            return this.innerList.Contains(item);
+            return innerList.Contains(item);
         }
 
         /// <summary>
@@ -513,7 +513,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public void CopyTo(TElement[] array, int arrayIndex)
         {
-            this.innerList.CopyTo(array, arrayIndex);
+            innerList.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -521,12 +521,12 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public IEnumerator<TElement> GetEnumerator()
         {
-            return this.innerList.GetEnumerator();
+            return innerList.GetEnumerator();
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            this.innerList.CopyTo((TElement[])array, index);
+            innerList.CopyTo((TElement[])array, index);
         }
 
         void ICollection<TElement>.Add(TElement item)
@@ -546,7 +546,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         int IList.Add(object value)
@@ -561,12 +561,12 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         bool IList.Contains(object value)
         {
-            return this.innerList.Contains((TElement)value);
+            return innerList.Contains((TElement)value);
         }
 
         int IList.IndexOf(object value)
         {
-            return this.innerList.IndexOf((TElement)value);
+            return innerList.IndexOf((TElement)value);
         }
 
         void IList.Insert(int index, object value)
@@ -594,7 +594,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </summary>
         public int IndexOf(TElement item)
         {
-            return this.innerList.IndexOf(item);
+            return innerList.IndexOf(item);
         }
 
         void IList<TElement>.RemoveAt(int index)

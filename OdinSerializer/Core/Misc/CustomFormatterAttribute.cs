@@ -19,6 +19,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.ComponentModel;
 
     /// <summary>
     /// Attribute indicating that a class which implements the <see cref="IFormatter{T}" /> interface somewhere in its hierarchy is a custom formatter for the type T.
@@ -26,7 +27,7 @@ namespace ExtEvents.OdinSerializer
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Class)]
     [Obsolete("Use a RegisterFormatterAttribute applied to the containing assembly instead.", true)]
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class CustomFormatterAttribute : Attribute
     {
         /// <summary>
@@ -39,7 +40,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public CustomFormatterAttribute()
         {
-            this.Priority = 0;
+            Priority = 0;
         }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="priority">The priority of the formatter. Of all the available custom formatters, the formatter with the highest priority is always chosen.</param>
         public CustomFormatterAttribute(int priority = 0)
         {
-            this.Priority = priority;
+            Priority = priority;
         }
     }
 }

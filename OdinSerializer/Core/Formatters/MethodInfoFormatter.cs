@@ -232,7 +232,7 @@ namespace ExtEvents.OdinSerializer
                 return;
             }
 
-            this.RegisterReferenceID(value, reader);
+            RegisterReferenceID(value, reader);
         }
 
         /// <summary>

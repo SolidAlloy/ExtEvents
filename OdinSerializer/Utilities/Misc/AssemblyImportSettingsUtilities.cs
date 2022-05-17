@@ -82,11 +82,11 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
         static AssemblyImportSettingsUtilities()
         {
             // Different methods required for getting the current scripting backend from different versions of the Unity Editor.
-            getPropertyIntMethod = typeof(PlayerSettings).GetMethod("GetPropertyInt", Flags.StaticPublic, null, new Type[] { typeof(string), typeof(BuildTargetGroup) }, null);
-            getScriptingBackendMethod = typeof(PlayerSettings).GetMethod("GetScriptingBackend", Flags.StaticPublic, null, new Type[] { typeof(BuildTargetGroup) }, null);
+            getPropertyIntMethod = typeof(PlayerSettings).GetMethod("GetPropertyInt", Flags.StaticPublic, null, new[] { typeof(string), typeof(BuildTargetGroup) }, null);
+            getScriptingBackendMethod = typeof(PlayerSettings).GetMethod("GetScriptingBackend", Flags.StaticPublic, null, new[] { typeof(BuildTargetGroup) }, null);
 
             // Diffferent methods required for getting the current api level from different versions of the Unity Editor.
-            getApiCompatibilityLevelMethod = typeof(PlayerSettings).GetMethod("GetApiCompatibilityLevel", Flags.StaticPublic, null, new Type[] { typeof(BuildTargetGroup) }, null);
+            getApiCompatibilityLevelMethod = typeof(PlayerSettings).GetMethod("GetApiCompatibilityLevel", Flags.StaticPublic, null, new[] { typeof(BuildTargetGroup) }, null);
             var apiLevelProperty = typeof(PlayerSettings).GetProperty("apiCompatibilityLevel", Flags.StaticPublic);
             apiCompatibilityLevelProperty = apiLevelProperty != null ? apiLevelProperty.GetGetMethod() : null;
 
@@ -99,7 +99,7 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
             // All BuildTarget values that support JIT.
             JITPlatforms = new ImmutableList<BuildTarget>(Platforms
                 .Where(i => i.ToString().StartsWith("StandaloneOSX")) // Unity 2017.3 replaced StandaloneOSXIntel, StandaloneOSXIntel64 and StandaloneOSXUniversal with StandaloneOSX.
-                .Append(new BuildTarget[]
+                .Append(new[]
                 {
                     BuildTarget.StandaloneWindows,
                     BuildTarget.StandaloneWindows64,
@@ -111,14 +111,13 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
                 .ToArray());
 
             // All scripting backends that support JIT.
-            JITScriptingBackends = new ImmutableList<ScriptingImplementation>(new ScriptingImplementation[]
+            JITScriptingBackends = new ImmutableList<ScriptingImplementation>(new[]
             {
                 ScriptingImplementation.Mono2x,
             });
 
             // Names of all api levels that support JIT.
-            string[] jitApiNames = new string[]
-            {
+            string[] jitApiNames = {
                 "NET_2_0",
                 "NET_2_0_Subset",
                 "NET_4_6",
@@ -215,7 +214,8 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
             {
                 return (ScriptingImplementation)getScriptingBackendMethod.Invoke(null, new object[] { buildGroup });
             }
-            else if (getPropertyIntMethod != null)
+
+            if (getPropertyIntMethod != null)
             {
                 return (ScriptingImplementation)getPropertyIntMethod.Invoke(null, new object[] { "ScriptingBackend", buildGroup });
             }
@@ -234,7 +234,8 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
                 var buildGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
                 return (ApiCompatibilityLevel)getApiCompatibilityLevelMethod.Invoke(null, new object[] { buildGroup });
             }
-            else if (apiCompatibilityLevelProperty != null)
+
+            if (apiCompatibilityLevelProperty != null)
             {
                 return (ApiCompatibilityLevel)apiCompatibilityLevelProperty.Invoke(null, null);
             }

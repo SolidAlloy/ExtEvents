@@ -18,14 +18,17 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System.Globalization;
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.Serialization;
+    using UnityEditor;
     using UnityEngine;
+    using UnityEngine.Serialization;
+    using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Provides an array of utility methods which are commonly used by serialization formatters.
@@ -33,7 +36,7 @@ namespace ExtEvents.OdinSerializer
 
 #if UNITY_EDITOR
 
-    [UnityEditor.InitializeOnLoad]
+    [InitializeOnLoad]
 #endif
     public static class FormatterUtilities
     {
@@ -69,7 +72,7 @@ You probably need to assign the nullValue variable of the {0} script in the insp
         {
             // The required field is missing in Unity builds
 #if UNITY_EDITOR
-            UnityObjectRuntimeErrorStringField = typeof(UnityEngine.Object).GetField("m_UnityRuntimeErrorString", Flags.InstanceAnyVisibility);
+            UnityObjectRuntimeErrorStringField = typeof(Object).GetField("m_UnityRuntimeErrorString", Flags.InstanceAnyVisibility);
 
             if (UnityObjectRuntimeErrorStringField == null)
             {
@@ -148,24 +151,24 @@ You probably need to assign the nullValue variable of the {0} script in the insp
         /// or
         /// The type given in the owningType parameter is not a Unity object.
         /// </exception>
-        public static UnityEngine.Object CreateUnityNull(Type nullType, Type owningType)
+        public static Object CreateUnityNull(Type nullType, Type owningType)
         {
             if (nullType == null || owningType == null)
             {
                 throw new ArgumentNullException();
             }
 
-            if (nullType.ImplementsOrInherits(typeof(UnityEngine.Object)) == false)
+            if (nullType.ImplementsOrInherits(typeof(Object)) == false)
             {
                 throw new ArgumentException("Type " + nullType.Name + " is not a Unity object.");
             }
 
-            if (owningType.ImplementsOrInherits(typeof(UnityEngine.Object)) == false)
+            if (owningType.ImplementsOrInherits(typeof(Object)) == false)
             {
                 throw new ArgumentException("Type " + owningType.Name + " is not a Unity object.");
             }
 
-            UnityEngine.Object nullValue = (UnityEngine.Object)FormatterServices.GetUninitializedObject(nullType);
+            Object nullValue = (Object)FormatterServices.GetUninitializedObject(nullType);
 
             if (UnityObjectRuntimeErrorStringField != null)
             {
@@ -215,14 +218,13 @@ You probably need to assign the nullValue variable of the {0} script in the insp
             {
                 return (member as FieldInfo).FieldType;
             }
-            else if (member is PropertyInfo)
+
+            if (member is PropertyInfo)
             {
                 return (member as PropertyInfo).PropertyType;
             }
-            else
-            {
-                throw new ArgumentException("Can't get the contained type of a " + member.GetType().Name);
-            }
+
+            throw new ArgumentException("Can't get the contained type of a " + member.GetType().Name);
         }
 
         /// <summary>
@@ -238,14 +240,13 @@ You probably need to assign the nullValue variable of the {0} script in the insp
             {
                 return (member as FieldInfo).GetValue(obj);
             }
-            else if (member is PropertyInfo)
+
+            if (member is PropertyInfo)
             {
                 return (member as PropertyInfo).GetGetMethod(true).Invoke(obj, null);
             }
-            else
-            {
-                throw new ArgumentException("Can't get the value of a " + member.GetType().Name);
-            }
+
+            throw new ArgumentException("Can't get the value of a " + member.GetType().Name);
         }
 
         /// <summary>
@@ -271,7 +272,7 @@ You probably need to assign the nullValue variable of the {0} script in the insp
 
                 if (method != null)
                 {
-                    method.Invoke(obj, new object[] { value });
+                    method.Invoke(obj, new[] { value });
                 }
                 else
                 {
@@ -290,7 +291,7 @@ You probably need to assign the nullValue variable of the {0} script in the insp
 
             foreach (var member in map.Values.ToList())
             {
-                var serializedAsAttributes = member.GetAttributes<UnityEngine.Serialization.FormerlySerializedAsAttribute>();
+                var serializedAsAttributes = member.GetAttributes<FormerlySerializedAsAttribute>();
 
                 foreach (var attr in serializedAsAttributes)
                 {
@@ -346,32 +347,28 @@ You probably need to assign the nullValue variable of the {0} script in the insp
                 {
                     return new MemberAliasFieldInfo(member as FieldInfo, prefixString ?? member.DeclaringType.Name, separatorString);
                 }
-                else
-                {
-                    return new MemberAliasFieldInfo(member as FieldInfo, prefixString ?? member.DeclaringType.Name);
-                }
+
+                return new MemberAliasFieldInfo(member as FieldInfo, prefixString ?? member.DeclaringType.Name);
             }
-            else if (member is PropertyInfo)
+
+            if (member is PropertyInfo)
             {
                 if (separatorString != null)
                 {
                     return new MemberAliasPropertyInfo(member as PropertyInfo, prefixString ?? member.DeclaringType.Name, separatorString);
                 }
-                else
-                {
-                    return new MemberAliasPropertyInfo(member as PropertyInfo, prefixString ?? member.DeclaringType.Name);
-                }
+
+                return new MemberAliasPropertyInfo(member as PropertyInfo, prefixString ?? member.DeclaringType.Name);
             }
-            else if (member is MethodInfo)
+
+            if (member is MethodInfo)
             {
                 if (separatorString != null)
                 {
                     return new MemberAliasMethodInfo(member as MethodInfo, prefixString ?? member.DeclaringType.Name, separatorString);
                 }
-                else
-                {
-                    return new MemberAliasMethodInfo(member as MethodInfo, prefixString ?? member.DeclaringType.Name);
-                }
+
+                return new MemberAliasMethodInfo(member as MethodInfo, prefixString ?? member.DeclaringType.Name);
             }
 
             throw new NotImplementedException();
@@ -383,7 +380,8 @@ You probably need to assign the nullValue variable of the {0} script in the insp
             {
                 return (member as FieldInfo).IsPrivate;
             }
-            else if (member is PropertyInfo)
+
+            if (member is PropertyInfo)
             {
                 var prop = member as PropertyInfo;
                 var getter = prop.GetGetMethod();
@@ -391,7 +389,8 @@ You probably need to assign the nullValue variable of the {0} script in the insp
 
                 return getter != null && setter != null && getter.IsPrivate && setter.IsPrivate;
             }
-            else if (member is MethodInfo)
+
+            if (member is MethodInfo)
             {
                 return (member as MethodInfo).IsPrivate;
             }

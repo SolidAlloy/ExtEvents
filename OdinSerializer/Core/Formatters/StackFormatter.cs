@@ -22,9 +22,9 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using Utilities;
     using System;
     using System.Collections.Generic;
+    using Utilities;
 
     /// <summary>
     /// Custom generic formatter for the generic type definition <see cref="Stack{T}"/> and types derived from it.
@@ -43,10 +43,6 @@ namespace ExtEvents.OdinSerializer
             // which it otherwise seems prone to do, regardless of what might be defined in any link.xml file.
 
             new StackFormatter<Stack<int>, int>();
-        }
-
-        public StackFormatter()
-        {
         }
 
         /// <summary>
@@ -87,7 +83,7 @@ namespace ExtEvents.OdinSerializer
                     }
 
                     // We must remember to register the stack reference ourselves, since we return null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any OnDeserializing callbacks on stacks.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);

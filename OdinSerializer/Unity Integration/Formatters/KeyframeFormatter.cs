@@ -22,8 +22,8 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using UnityEngine;
+    using Utilities;
 
     /// <summary>
     /// Custom formatter for the <see cref="Keyframe"/> type.
@@ -81,13 +81,13 @@ namespace ExtEvents.OdinSerializer
             else
             {
                 // Legacy Keyframe deserialization code
-                value.inTangent = KeyframeFormatter.FloatSerializer.ReadValue(reader);
-                value.outTangent = KeyframeFormatter.FloatSerializer.ReadValue(reader);
-                value.time = KeyframeFormatter.FloatSerializer.ReadValue(reader);
-                value.value = KeyframeFormatter.FloatSerializer.ReadValue(reader);
+                value.inTangent = FloatSerializer.ReadValue(reader);
+                value.outTangent = FloatSerializer.ReadValue(reader);
+                value.time = FloatSerializer.ReadValue(reader);
+                value.value = FloatSerializer.ReadValue(reader);
 
 #pragma warning disable 0618
-                value.tangentMode = KeyframeFormatter.IntSerializer.ReadValue(reader);
+                value.tangentMode = IntSerializer.ReadValue(reader);
 #pragma warning restore 0618
             }
         }
@@ -107,13 +107,13 @@ namespace ExtEvents.OdinSerializer
             else
             {
                 // Legacy Keyframe serialization code
-                KeyframeFormatter.FloatSerializer.WriteValue(value.inTangent, writer);
-                KeyframeFormatter.FloatSerializer.WriteValue(value.outTangent, writer);
-                KeyframeFormatter.FloatSerializer.WriteValue(value.time, writer);
-                KeyframeFormatter.FloatSerializer.WriteValue(value.value, writer);
+                FloatSerializer.WriteValue(value.inTangent, writer);
+                FloatSerializer.WriteValue(value.outTangent, writer);
+                FloatSerializer.WriteValue(value.time, writer);
+                FloatSerializer.WriteValue(value.value, writer);
 
 #pragma warning disable 0618
-                KeyframeFormatter.IntSerializer.WriteValue(value.tangentMode, writer);
+                IntSerializer.WriteValue(value.tangentMode, writer);
 #pragma warning restore 0618
             }
         }

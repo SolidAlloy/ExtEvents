@@ -22,6 +22,7 @@ namespace ExtEvents.OdinSerializer
     using System.Linq;
     using System.Reflection;
     using Utilities;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Formatter for all delegate types.
@@ -267,9 +268,9 @@ namespace ExtEvents.OdinSerializer
             {
                 Type targetType = methodInfo.DeclaringType;
 
-                if (typeof(UnityEngine.Object).IsAssignableFrom(targetType))
+                if (typeof(Object).IsAssignableFrom(targetType))
                 {
-                    if ((target as UnityEngine.Object) == null)
+                    if ((target as Object) == null)
                     {
                         reader.Context.Config.DebugContext.LogWarning("Method '" + declaringType.GetNiceFullName() + "." + methodInfo.GetNiceName() + "' of delegate to deserialize is an instance method, but Unity object target of type '" + targetType.GetNiceFullName() + "' was null on deserialization. Did something destroy it, or did you apply a delegate value targeting a scene-based UnityEngine.Object instance to a prefab?");
                         return;
@@ -277,7 +278,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    if (object.ReferenceEquals(target, null))
+                    if (ReferenceEquals(target, null))
                     {
                         reader.Context.Config.DebugContext.LogWarning("Method '" + declaringType.GetNiceFullName() + "." + methodInfo.GetNiceName() + "' of delegate to deserialize is an instance method, but no valid instance target of type '" + targetType.GetNiceFullName() + "' was in the serialization data. Has something been renamed since serialization?");
                         return;
@@ -293,8 +294,8 @@ namespace ExtEvents.OdinSerializer
                 return;
             }
 
-            this.RegisterReferenceID(value, reader);
-            this.InvokeOnDeserializingCallbacks(ref value, reader.Context);
+            RegisterReferenceID(value, reader);
+            InvokeOnDeserializingCallbacks(ref value, reader.Context);
         }
 
         /// <summary>

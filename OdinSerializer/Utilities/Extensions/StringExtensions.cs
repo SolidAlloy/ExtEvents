@@ -18,7 +18,6 @@
 
 namespace ExtEvents.OdinSerializer.Utilities
 {
-    using System;
     using System.Globalization;
     using System.Text;
 

@@ -49,22 +49,22 @@ namespace ExtEvents.OdinSerializer
         /// <param name="context">The deserialization context to use.</param>
         public JsonDataReader(Stream stream, DeserializationContext context) : base(stream, context)
         {
-            this.primitiveArrayReaders = new Dictionary<Type, Delegate>()
+            primitiveArrayReaders = new Dictionary<Type, Delegate>
             {
-                { typeof(char), (Func<char>)(() => { char v; this.ReadChar(out v); return v; }) },
-                { typeof(sbyte), (Func<sbyte>)(() => { sbyte v; this.ReadSByte(out v); return v; }) },
-                { typeof(short), (Func<short>)(() => { short v; this.ReadInt16(out v); return v; }) },
-                { typeof(int), (Func<int>)(() => { int v; this.ReadInt32(out v); return v; })  },
-                { typeof(long), (Func<long>)(() => { long v; this.ReadInt64(out v); return v; })  },
-                { typeof(byte), (Func<byte>)(() => { byte v; this.ReadByte(out v); return v; })  },
-                { typeof(ushort), (Func<ushort>)(() => { ushort v; this.ReadUInt16(out v); return v; })  },
-                { typeof(uint),   (Func<uint>)(() => { uint v; this.ReadUInt32(out v); return v; })  },
-                { typeof(ulong),  (Func<ulong>)(() => { ulong v; this.ReadUInt64(out v); return v; })  },
-                { typeof(decimal),   (Func<decimal>)(() => { decimal v; this.ReadDecimal(out v); return v; })  },
-                { typeof(bool),  (Func<bool>)(() => { bool v; this.ReadBoolean(out v); return v; })  },
-                { typeof(float),  (Func<float>)(() => { float v; this.ReadSingle(out v); return v; })  },
-                { typeof(double),  (Func<double>)(() => { double v; this.ReadDouble(out v); return v; })  },
-                { typeof(Guid),  (Func<Guid>)(() => { Guid v; this.ReadGuid(out v); return v; })  }
+                { typeof(char), (Func<char>)(() => { char v; ReadChar(out v); return v; }) },
+                { typeof(sbyte), (Func<sbyte>)(() => { sbyte v; ReadSByte(out v); return v; }) },
+                { typeof(short), (Func<short>)(() => { short v; ReadInt16(out v); return v; }) },
+                { typeof(int), (Func<int>)(() => { int v; ReadInt32(out v); return v; })  },
+                { typeof(long), (Func<long>)(() => { long v; ReadInt64(out v); return v; })  },
+                { typeof(byte), (Func<byte>)(() => { byte v; ReadByte(out v); return v; })  },
+                { typeof(ushort), (Func<ushort>)(() => { ushort v; ReadUInt16(out v); return v; })  },
+                { typeof(uint),   (Func<uint>)(() => { uint v; ReadUInt32(out v); return v; })  },
+                { typeof(ulong),  (Func<ulong>)(() => { ulong v; ReadUInt64(out v); return v; })  },
+                { typeof(decimal),   (Func<decimal>)(() => { decimal v; ReadDecimal(out v); return v; })  },
+                { typeof(bool),  (Func<bool>)(() => { bool v; ReadBoolean(out v); return v; })  },
+                { typeof(float),  (Func<float>)(() => { float v; ReadSingle(out v); return v; })  },
+                { typeof(double),  (Func<double>)(() => { double v; ReadDouble(out v); return v; })  },
+                { typeof(Guid),  (Func<Guid>)(() => { Guid v; ReadGuid(out v); return v; })  }
             };
         }
 
@@ -88,7 +88,7 @@ namespace ExtEvents.OdinSerializer
             set
             {
                 base.Stream = value;
-                this.reader = new JsonTextReader(base.Stream, this.Context);
+                reader = new JsonTextReader(base.Stream, Context);
             }
         }
 
@@ -101,7 +101,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override void Dispose()
         {
-            this.reader.Dispose();
+            reader.Dispose();
         }
 
         /// <summary>
@@ -113,16 +113,16 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override EntryType PeekEntry(out string name)
         {
-            if (this.peekedEntryType != null)
+            if (peekedEntryType != null)
             {
-                name = this.peekedEntryName;
-                return this.peekedEntryType.Value;
+                name = peekedEntryName;
+                return peekedEntryType.Value;
             }
 
             EntryType entry;
-            this.reader.ReadToNextEntry(out name, out this.peekedEntryContent, out entry);
-            this.peekedEntryName = name;
-            this.peekedEntryType = entry;
+            reader.ReadToNextEntry(out name, out peekedEntryContent, out entry);
+            peekedEntryName = name;
+            peekedEntryType = entry;
 
             return entry;
         }
@@ -139,42 +139,42 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool EnterNode(out Type type)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.StartOfNode)
+            if (peekedEntryType == EntryType.StartOfNode)
             {
-                string nodeName = this.peekedEntryName;
+                string nodeName = peekedEntryName;
                 int id = -1;
 
-                this.ReadToNextEntry();
+                ReadToNextEntry();
 
-                if (this.peekedEntryName == JsonConfig.ID_SIG)
+                if (peekedEntryName == JsonConfig.ID_SIG)
                 {
-                    if (int.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out id) == false)
+                    if (int.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out id) == false)
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse id: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse id: " + peekedEntryContent);
                         id = -1;
                     }
 
-                    this.ReadToNextEntry();
+                    ReadToNextEntry();
                 }
 
-                if (this.peekedEntryName == JsonConfig.TYPE_SIG && this.peekedEntryContent != null && this.peekedEntryContent.Length > 0)
+                if (peekedEntryName == JsonConfig.TYPE_SIG && peekedEntryContent != null && peekedEntryContent.Length > 0)
                 {
-                    if (this.peekedEntryType == EntryType.Integer)
+                    if (peekedEntryType == EntryType.Integer)
                     {
                         int typeID;
 
-                        if (this.ReadInt32(out typeID))
+                        if (ReadInt32(out typeID))
                         {
-                            if (this.seenTypes.TryGetValue(typeID, out type) == false)
+                            if (seenTypes.TryGetValue(typeID, out type) == false)
                             {
-                                this.Context.Config.DebugContext.LogError("Missing type id for node with reference id " + id + ": " + typeID);
+                                Context.Config.DebugContext.LogError("Missing type id for node with reference id " + id + ": " + typeID);
                             }
                         }
                         else
                         {
-                            this.Context.Config.DebugContext.LogError("Failed to read type id for node with reference id " + id);
+                            Context.Config.DebugContext.LogError("Failed to read type id for node with reference id " + id);
                             type = null;
                         }
                     }
@@ -182,12 +182,12 @@ namespace ExtEvents.OdinSerializer
                     {
                         int typeNameStartIndex = 1;
                         int typeID = -1;
-                        int idSplitIndex = this.peekedEntryContent.IndexOf('|');
+                        int idSplitIndex = peekedEntryContent.IndexOf('|');
 
                         if (idSplitIndex >= 0)
                         {
                             typeNameStartIndex = idSplitIndex + 1;
-                            string idStr = this.peekedEntryContent.Substring(1, idSplitIndex - 1);
+                            string idStr = peekedEntryContent.Substring(1, idSplitIndex - 1);
 
                             if (int.TryParse(idStr, NumberStyles.Any, CultureInfo.InvariantCulture, out typeID) == false)
                             {
@@ -195,14 +195,14 @@ namespace ExtEvents.OdinSerializer
                             }
                         }
 
-                        type = this.Context.Binder.BindToType(this.peekedEntryContent.Substring(typeNameStartIndex, this.peekedEntryContent.Length - (1 + typeNameStartIndex)), this.Context.Config.DebugContext);
+                        type = Context.Binder.BindToType(peekedEntryContent.Substring(typeNameStartIndex, peekedEntryContent.Length - (1 + typeNameStartIndex)), Context.Config.DebugContext);
 
                         if (typeID >= 0)
                         {
-                            this.seenTypes[typeID] = type;
+                            seenTypes[typeID] = type;
                         }
 
-                        this.peekedEntryType = null;
+                        peekedEntryType = null;
                     }
                 }
                 else
@@ -210,15 +210,13 @@ namespace ExtEvents.OdinSerializer
                     type = null;
                 }
 
-                this.PushNode(nodeName, id, type);
+                PushNode(nodeName, id, type);
                 return true;
             }
-            else
-            {
-                this.SkipEntry();
-                type = null;
-                return false;
-            }
+
+            SkipEntry();
+            type = null;
+            return false;
         }
 
         /// <summary>
@@ -233,25 +231,25 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ExitNode()
         {
-            this.PeekEntry();
+            PeekEntry();
 
             // Read to next end of node
-            while (this.peekedEntryType != EntryType.EndOfNode && this.peekedEntryType != EntryType.EndOfStream)
+            while (peekedEntryType != EntryType.EndOfNode && peekedEntryType != EntryType.EndOfStream)
             {
-                if (this.peekedEntryType == EntryType.EndOfArray)
+                if (peekedEntryType == EntryType.EndOfArray)
                 {
-                    this.Context.Config.DebugContext.LogError("Data layout mismatch; skipping past array boundary when exiting node.");
-                    this.peekedEntryType = null;
+                    Context.Config.DebugContext.LogError("Data layout mismatch; skipping past array boundary when exiting node.");
+                    peekedEntryType = null;
                     //this.MarkEntryConsumed();
                 }
 
-                this.SkipEntry();
+                SkipEntry();
             }
 
-            if (this.peekedEntryType == EntryType.EndOfNode)
+            if (peekedEntryType == EntryType.EndOfNode)
             {
-                this.peekedEntryType = null;
-                this.PopNode(this.CurrentNodeName);
+                peekedEntryType = null;
+                PopNode(CurrentNodeName);
                 return true;
             }
 
@@ -270,50 +268,46 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool EnterArray(out long length)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.StartOfArray)
+            if (peekedEntryType == EntryType.StartOfArray)
             {
-                this.PushArray();
+                PushArray();
 
-                if (this.peekedEntryName != JsonConfig.REGULAR_ARRAY_LENGTH_SIG)
+                if (peekedEntryName != JsonConfig.REGULAR_ARRAY_LENGTH_SIG)
                 {
-                    this.Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
+                    Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
                     length = 0; // No array content for you!
                     return true;
                 }
-                else
+
+                int intLength;
+
+                if (int.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out intLength) == false)
                 {
-                    int intLength;
-
-                    if (int.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out intLength) == false)
-                    {
-                        this.Context.Config.DebugContext.LogError("Failed to parse array length: " + this.peekedEntryContent);
-                        length = 0; // No array content for you!
-                        return true;
-                    }
-
-                    length = intLength;
-
-                    this.ReadToNextEntry();
-
-                    if (this.peekedEntryName != JsonConfig.REGULAR_ARRAY_CONTENT_SIG)
-                    {
-                        this.Context.Config.DebugContext.LogError("Failed to find regular array content entry after array length entry!");
-                        length = 0; // No array content for you!
-                        return true;
-                    }
-
-                    this.peekedEntryType = null;
+                    Context.Config.DebugContext.LogError("Failed to parse array length: " + peekedEntryContent);
+                    length = 0; // No array content for you!
                     return true;
                 }
+
+                length = intLength;
+
+                ReadToNextEntry();
+
+                if (peekedEntryName != JsonConfig.REGULAR_ARRAY_CONTENT_SIG)
+                {
+                    Context.Config.DebugContext.LogError("Failed to find regular array content entry after array length entry!");
+                    length = 0; // No array content for you!
+                    return true;
+                }
+
+                peekedEntryType = null;
+                return true;
             }
-            else
-            {
-                this.SkipEntry();
-                length = 0;
-                return false;
-            }
+
+            SkipEntry();
+            length = 0;
+            return false;
         }
 
         /// <summary>
@@ -328,25 +322,25 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ExitArray()
         {
-            this.PeekEntry();
+            PeekEntry();
 
             // Read to next end of array
-            while (this.peekedEntryType != EntryType.EndOfArray && this.peekedEntryType != EntryType.EndOfStream)
+            while (peekedEntryType != EntryType.EndOfArray && peekedEntryType != EntryType.EndOfStream)
             {
-                if (this.peekedEntryType == EntryType.EndOfNode)
+                if (peekedEntryType == EntryType.EndOfNode)
                 {
-                    this.Context.Config.DebugContext.LogError("Data layout mismatch; skipping past node boundary when exiting array.");
-                    this.peekedEntryType = null;
+                    Context.Config.DebugContext.LogError("Data layout mismatch; skipping past node boundary when exiting array.");
+                    peekedEntryType = null;
                     //this.MarkEntryConsumed();
                 }
 
-                this.SkipEntry();
+                SkipEntry();
             }
 
-            if (this.peekedEntryType == EntryType.EndOfArray)
+            if (peekedEntryType == EntryType.EndOfArray)
             {
-                this.peekedEntryType = null;
-                this.PopArray();
+                peekedEntryType = null;
+                PopArray();
                 return true;
             }
 
@@ -371,58 +365,54 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentException("Type " + typeof(T).Name + " is not a valid primitive array type.");
             }
 
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.PrimitiveArray)
+            if (peekedEntryType == EntryType.PrimitiveArray)
             {
-                this.PushArray();
+                PushArray();
 
-                if (this.peekedEntryName != JsonConfig.PRIMITIVE_ARRAY_LENGTH_SIG)
+                if (peekedEntryName != JsonConfig.PRIMITIVE_ARRAY_LENGTH_SIG)
                 {
-                    this.Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
+                    Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
                     array = null; // No array content for you!
                     return false;
                 }
-                else
+
+                int intLength;
+
+                if (int.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out intLength) == false)
                 {
-                    int intLength;
-
-                    if (int.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out intLength) == false)
-                    {
-                        this.Context.Config.DebugContext.LogError("Failed to parse array length: " + this.peekedEntryContent);
-                        array = null; // No array content for you!
-                        return false;
-                    }
-
-                    this.ReadToNextEntry();
-
-                    if (this.peekedEntryName != JsonConfig.PRIMITIVE_ARRAY_CONTENT_SIG)
-                    {
-                        this.Context.Config.DebugContext.LogError("Failed to find primitive array content entry after array length entry!");
-                        array = null; // No array content for you!
-                        return false;
-                    }
-
-                    this.peekedEntryType = null;
-
-                    Func<T> reader = (Func<T>)this.primitiveArrayReaders[typeof(T)];
-                    array = new T[intLength];
-
-                    for (int i = 0; i < intLength; i++)
-                    {
-                        array[i] = reader();
-                    }
-
-                    this.ExitArray();
-                    return true;
+                    Context.Config.DebugContext.LogError("Failed to parse array length: " + peekedEntryContent);
+                    array = null; // No array content for you!
+                    return false;
                 }
+
+                ReadToNextEntry();
+
+                if (peekedEntryName != JsonConfig.PRIMITIVE_ARRAY_CONTENT_SIG)
+                {
+                    Context.Config.DebugContext.LogError("Failed to find primitive array content entry after array length entry!");
+                    array = null; // No array content for you!
+                    return false;
+                }
+
+                peekedEntryType = null;
+
+                Func<T> reader = (Func<T>)primitiveArrayReaders[typeof(T)];
+                array = new T[intLength];
+
+                for (int i = 0; i < intLength; i++)
+                {
+                    array[i] = reader();
+                }
+
+                ExitArray();
+                return true;
             }
-            else
-            {
-                this.SkipEntry();
-                array = null;
-                return false;
-            }
+
+            SkipEntry();
+            array = null;
+            return false;
         }
 
         /// <summary>
@@ -436,26 +426,24 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadBoolean(out bool value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.Boolean)
+            if (peekedEntryType == EntryType.Boolean)
             {
                 try
                 {
-                    value = this.peekedEntryContent == "true";
+                    value = peekedEntryContent == "true";
                     return true;
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(bool);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(bool);
+            return false;
         }
 
         /// <summary>
@@ -469,25 +457,23 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadInternalReference(out int id)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.InternalReference)
+            if (peekedEntryType == EntryType.InternalReference)
             {
                 try
                 {
-                    return this.ReadAnyIntReference(out id);
+                    return ReadAnyIntReference(out id);
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                id = -1;
-                return false;
-            }
+
+            SkipEntry();
+            id = -1;
+            return false;
         }
 
         /// <summary>
@@ -501,25 +487,23 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadExternalReference(out int index)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.ExternalReferenceByIndex)
+            if (peekedEntryType == EntryType.ExternalReferenceByIndex)
             {
                 try
                 {
-                    return this.ReadAnyIntReference(out index);
+                    return ReadAnyIntReference(out index);
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                index = -1;
-                return false;
-            }
+
+            SkipEntry();
+            index = -1;
+            return false;
         }
 
         /// <summary>
@@ -533,11 +517,11 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadExternalReference(out Guid guid)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.ExternalReferenceByGuid)
+            if (peekedEntryType == EntryType.ExternalReferenceByGuid)
             {
-                var guidStr = this.peekedEntryContent;
+                var guidStr = peekedEntryContent;
 
                 if (guidStr.StartsWith(JsonConfig.EXTERNAL_GUID_REF_SIG))
                 {
@@ -561,15 +545,13 @@ namespace ExtEvents.OdinSerializer
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                guid = Guid.Empty;
-                return false;
-            }
+
+            SkipEntry();
+            guid = Guid.Empty;
+            return false;
         }
 
         /// <summary>
@@ -583,11 +565,11 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadExternalReference(out string id)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.ExternalReferenceByString)
+            if (peekedEntryType == EntryType.ExternalReferenceByString)
             {
-                id = this.peekedEntryContent;
+                id = peekedEntryContent;
 
                 if (id.StartsWith(JsonConfig.EXTERNAL_STRING_REF_SIG_OLD))
                 {
@@ -598,15 +580,13 @@ namespace ExtEvents.OdinSerializer
                     id = id.Substring(JsonConfig.EXTERNAL_STRING_REF_SIG_FIXED.Length + 2, id.Length - (JsonConfig.EXTERNAL_STRING_REF_SIG_FIXED.Length + 3));
                 }
 
-                this.MarkEntryConsumed();
+                MarkEntryConsumed();
                 return true;
             }
-            else
-            {
-                this.SkipEntry();
-                id = null;
-                return false;
-            }
+
+            SkipEntry();
+            id = null;
+            return false;
         }
 
         /// <summary>
@@ -622,26 +602,24 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadChar(out char value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.String)
+            if (peekedEntryType == EntryType.String)
             {
                 try
                 {
-                    value = this.peekedEntryContent[1];
+                    value = peekedEntryContent[1];
                     return true;
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(char);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(char);
+            return false;
         }
 
         /// <summary>
@@ -655,26 +633,24 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadString(out string value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.String)
+            if (peekedEntryType == EntryType.String)
             {
                 try
                 {
-                    value = this.peekedEntryContent.Substring(1, this.peekedEntryContent.Length - 2);
+                    value = peekedEntryContent.Substring(1, peekedEntryContent.Length - 2);
                     return true;
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = null;
-                return false;
-            }
+
+            SkipEntry();
+            value = null;
+            return false;
         }
 
         /// <summary>
@@ -688,15 +664,15 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadGuid(out Guid value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.Guid)
+            if (peekedEntryType == EntryType.Guid)
             {
                 try
                 {
                     try
                     {
-                        value = new Guid(this.peekedEntryContent);
+                        value = new Guid(peekedEntryContent);
                         return true;
                     }
                     //// These exceptions can safely be swallowed - it just means the parse failed
@@ -713,15 +689,13 @@ namespace ExtEvents.OdinSerializer
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = Guid.Empty;
-                return false;
-            }
+
+            SkipEntry();
+            value = Guid.Empty;
+            return false;
         }
 
         /// <summary>
@@ -739,7 +713,7 @@ namespace ExtEvents.OdinSerializer
         {
             long longValue;
 
-            if (this.ReadInt64(out longValue))
+            if (ReadInt64(out longValue))
             {
                 checked
                 {
@@ -775,7 +749,7 @@ namespace ExtEvents.OdinSerializer
         {
             long longValue;
 
-            if (this.ReadInt64(out longValue))
+            if (ReadInt64(out longValue))
             {
                 checked
                 {
@@ -811,7 +785,7 @@ namespace ExtEvents.OdinSerializer
         {
             long longValue;
 
-            if (this.ReadInt64(out longValue))
+            if (ReadInt64(out longValue))
             {
                 checked
                 {
@@ -845,33 +819,31 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadInt64(out long value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.Integer)
+            if (peekedEntryType == EntryType.Integer)
             {
                 try
                 {
-                    if (long.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                    if (long.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                     {
                         return true;
                     }
                     else
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse long from: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse long from: " + peekedEntryContent);
                         return false;
                     }
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(long);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(long);
+            return false;
         }
 
         /// <summary>
@@ -889,7 +861,7 @@ namespace ExtEvents.OdinSerializer
         {
             ulong ulongValue;
 
-            if (this.ReadUInt64(out ulongValue))
+            if (ReadUInt64(out ulongValue))
             {
                 checked
                 {
@@ -925,7 +897,7 @@ namespace ExtEvents.OdinSerializer
         {
             ulong ulongValue;
 
-            if (this.ReadUInt64(out ulongValue))
+            if (ReadUInt64(out ulongValue))
             {
                 checked
                 {
@@ -961,7 +933,7 @@ namespace ExtEvents.OdinSerializer
         {
             ulong ulongValue;
 
-            if (this.ReadUInt64(out ulongValue))
+            if (ReadUInt64(out ulongValue))
             {
                 checked
                 {
@@ -995,33 +967,31 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadUInt64(out ulong value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.Integer)
+            if (peekedEntryType == EntryType.Integer)
             {
                 try
                 {
-                    if (ulong.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                    if (ulong.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                     {
                         return true;
                     }
                     else
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse ulong from: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse ulong from: " + peekedEntryContent);
                         return false;
                     }
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(ulong);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(ulong);
+            return false;
         }
 
         /// <summary>
@@ -1037,33 +1007,31 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadDecimal(out decimal value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.FloatingPoint || this.peekedEntryType == EntryType.Integer)
+            if (peekedEntryType == EntryType.FloatingPoint || peekedEntryType == EntryType.Integer)
             {
                 try
                 {
-                    if (decimal.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                    if (decimal.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                     {
                         return true;
                     }
                     else
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse decimal from: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse decimal from: " + peekedEntryContent);
                         return false;
                     }
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(decimal);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(decimal);
+            return false;
         }
 
         /// <summary>
@@ -1079,33 +1047,31 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadSingle(out float value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.FloatingPoint || this.peekedEntryType == EntryType.Integer)
+            if (peekedEntryType == EntryType.FloatingPoint || peekedEntryType == EntryType.Integer)
             {
                 try
                 {
-                    if (float.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                    if (float.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                     {
                         return true;
                     }
                     else
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse float from: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse float from: " + peekedEntryContent);
                         return false;
                     }
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(float);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(float);
+            return false;
         }
 
         /// <summary>
@@ -1121,33 +1087,31 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadDouble(out double value)
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.FloatingPoint || this.peekedEntryType == EntryType.Integer)
+            if (peekedEntryType == EntryType.FloatingPoint || peekedEntryType == EntryType.Integer)
             {
                 try
                 {
-                    if (double.TryParse(this.peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                    if (double.TryParse(peekedEntryContent, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                     {
                         return true;
                     }
                     else
                     {
-                        this.Context.Config.DebugContext.LogError("Failed to parse double from: " + this.peekedEntryContent);
+                        Context.Config.DebugContext.LogError("Failed to parse double from: " + peekedEntryContent);
                         return false;
                     }
                 }
                 finally
                 {
-                    this.MarkEntryConsumed();
+                    MarkEntryConsumed();
                 }
             }
-            else
-            {
-                this.SkipEntry();
-                value = default(double);
-                return false;
-            }
+
+            SkipEntry();
+            value = default(double);
+            return false;
         }
 
         /// <summary>
@@ -1160,18 +1124,16 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override bool ReadNull()
         {
-            this.PeekEntry();
+            PeekEntry();
 
-            if (this.peekedEntryType == EntryType.Null)
+            if (peekedEntryType == EntryType.Null)
             {
-                this.MarkEntryConsumed();
+                MarkEntryConsumed();
                 return true;
             }
-            else
-            {
-                this.SkipEntry();
-                return false;
-            }
+
+            SkipEntry();
+            return false;
         }
 
         /// <summary>
@@ -1181,28 +1143,28 @@ namespace ExtEvents.OdinSerializer
         public override void PrepareNewSerializationSession()
         {
             base.PrepareNewSerializationSession();
-            this.peekedEntryType = null;
-            this.peekedEntryContent = null;
-            this.peekedEntryName = null;
-            this.seenTypes.Clear();
-            this.reader.Reset();
+            peekedEntryType = null;
+            peekedEntryContent = null;
+            peekedEntryName = null;
+            seenTypes.Clear();
+            reader.Reset();
         }
 
         public override string GetDataDump()
         {
-            if (!this.Stream.CanSeek)
+            if (!Stream.CanSeek)
             {
                 return "Json data stream cannot seek; cannot dump data.";
             }
 
-            var oldPosition = this.Stream.Position;
+            var oldPosition = Stream.Position;
 
-            var bytes = new byte[this.Stream.Length];
+            var bytes = new byte[Stream.Length];
 
-            this.Stream.Position = 0;
-            this.Stream.Read(bytes, 0, bytes.Length);
+            Stream.Position = 0;
+            Stream.Read(bytes, 0, bytes.Length);
 
-            this.Stream.Position = oldPosition;
+            Stream.Position = oldPosition;
 
             return "Json: " + Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
@@ -1214,7 +1176,7 @@ namespace ExtEvents.OdinSerializer
         protected override EntryType PeekEntry()
         {
             string name;
-            return this.PeekEntry(out name);
+            return PeekEntry(out name);
         }
 
         /// <summary>
@@ -1223,18 +1185,18 @@ namespace ExtEvents.OdinSerializer
         /// <returns>The next entry.</returns>
         protected override EntryType ReadToNextEntry()
         {
-            this.peekedEntryType = null;
+            peekedEntryType = null;
             string name;
-            return this.PeekEntry(out name);
+            return PeekEntry(out name);
         }
 
         private void MarkEntryConsumed()
         {
             // After a common read, we cannot skip EndOfArray and EndOfNode entries (meaning the read has failed),
             //   as only the ExitArray and ExitNode methods are allowed to exit nodes and arrays
-            if (this.peekedEntryType != EntryType.EndOfArray && this.peekedEntryType != EntryType.EndOfNode)
+            if (peekedEntryType != EntryType.EndOfArray && peekedEntryType != EntryType.EndOfNode)
             {
-                this.peekedEntryType = null;
+                peekedEntryType = null;
             }
         }
 
@@ -1242,30 +1204,28 @@ namespace ExtEvents.OdinSerializer
         {
             int separatorIndex = -1;
 
-            for (int i = 0; i < this.peekedEntryContent.Length; i++)
+            for (int i = 0; i < peekedEntryContent.Length; i++)
             {
-                if (this.peekedEntryContent[i] == ':')
+                if (peekedEntryContent[i] == ':')
                 {
                     separatorIndex = i;
                     break;
                 }
             }
 
-            if (separatorIndex == -1 || separatorIndex == this.peekedEntryContent.Length - 1)
+            if (separatorIndex == -1 || separatorIndex == peekedEntryContent.Length - 1)
             {
-                this.Context.Config.DebugContext.LogError("Failed to parse id from: " + this.peekedEntryContent);
+                Context.Config.DebugContext.LogError("Failed to parse id from: " + peekedEntryContent);
             }
 
-            string idStr = this.peekedEntryContent.Substring(separatorIndex + 1);
+            string idStr = peekedEntryContent.Substring(separatorIndex + 1);
 
             if (int.TryParse(idStr, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
             {
                 return true;
             }
-            else
-            {
-                this.Context.Config.DebugContext.LogError("Failed to parse id: " + idStr);
-            }
+
+            Context.Config.DebugContext.LogError("Failed to parse id: " + idStr);
 
             value = -1;
             return false;

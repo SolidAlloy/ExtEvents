@@ -18,12 +18,12 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using Utilities;
 
     /// <summary>
     /// An attribute that lets you help the DefaultSerializationBinder bind type names to types. This is useful if you're renaming a type,
@@ -63,8 +63,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="newType">The new type.</param>
         public BindTypeNameToTypeAttribute(string oldFullTypeName, Type newType)
         {
-            this.OldTypeName = oldFullTypeName;
-            this.NewType = newType;
+            OldTypeName = oldFullTypeName;
+            NewType = newType;
         }
     }
 
@@ -323,7 +323,7 @@ namespace ExtEvents.OdinSerializer
             {
                 if (typeMap.TryGetValue(typeName, out result) == false)
                 {
-                    result = this.ParseTypeName(typeName, debugContext);
+                    result = ParseTypeName(typeName, debugContext);
 
                     if (result == null && debugContext != null)
                     {
@@ -440,10 +440,8 @@ namespace ExtEvents.OdinSerializer
                 typeName = fullName.Trim(',', ' ');
                 return;
             }
-            else
-            {
-                typeName = fullName.Substring(0, firstComma);
-            }
+
+            typeName = fullName.Substring(0, firstComma);
 
             int secondComma = fullName.IndexOf(',', firstComma + 1);
 
@@ -468,7 +466,7 @@ namespace ExtEvents.OdinSerializer
 
             if (!TryParseGenericAndOrArrayTypeName(typeName, out actualTypeName, out isGeneric, out genericArgNames, out isArray, out arrayRank)) return null;
 
-            Type type = this.BindToType(actualTypeName, debugContext);
+            Type type = BindToType(actualTypeName, debugContext);
 
             if (type == null) return null;
 
@@ -481,7 +479,7 @@ namespace ExtEvents.OdinSerializer
 
                 for (int i = 0; i < genericArgNames.Count; i++)
                 {
-                    Type arg = this.BindToType(genericArgNames[i], debugContext);
+                    Type arg = BindToType(genericArgNames[i], debugContext);
                     if (arg == null) return null;
                     args.Add(arg);
                 }

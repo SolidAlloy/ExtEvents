@@ -22,12 +22,12 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
+    using Utilities;
 
     /// <summary>
-    /// Custom Odin serialization formatter for <see cref="DoubleLookupDictionary{TFirstKey, TSecondKey, TValue}"/>.
+    /// Custom Odin serialization formatter for <see cref="DoubleLookupDictionary{TFirstKey,TSecondKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TPrimary">Type of primary key.</typeparam>
     /// <typeparam name="TSecondary">Type of secondary key.</typeparam>
@@ -121,7 +121,7 @@ namespace ExtEvents.OdinSerializer
                     Type type;
                     value = new DoubleLookupDictionary<TPrimary, TSecondary, TValue>();
 
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     for (int i = 0; i < length; i++)
                     {

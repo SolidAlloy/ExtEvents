@@ -46,7 +46,7 @@ namespace ExtEvents.OdinSerializer
 
             if (stream != null)
             {
-                this.Stream = stream;
+                Stream = stream;
             }
         }
 
@@ -56,7 +56,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node id.
         /// </value>
-        public int CurrentNodeId { get { return this.CurrentNode.Id; } }
+        public int CurrentNodeId { get { return CurrentNode.Id; } }
 
         /// <summary>
         /// Gets the current node depth. In other words, the current count of the node stack.
@@ -64,7 +64,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node depth.
         /// </value>
-        public int CurrentNodeDepth { get { return this.NodeDepth; } }
+        public int CurrentNodeDepth { get { return NodeDepth; } }
 
         /// <summary>
         /// Gets the name of the current node.
@@ -72,7 +72,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The name of the current node.
         /// </value>
-        public string CurrentNodeName { get { return this.CurrentNode.Name; } }
+        public string CurrentNodeName { get { return CurrentNode.Name; } }
 
         /// <summary>
         /// Gets or sets the base stream of the reader.
@@ -86,7 +86,7 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                return this.stream;
+                return stream;
             }
             set
             {
@@ -100,7 +100,7 @@ namespace ExtEvents.OdinSerializer
                     throw new ArgumentException("Cannot read from stream");
                 }
 
-                this.stream = value;
+                stream = value;
             }
         }
 
@@ -114,16 +114,16 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.context == null)
+                if (context == null)
                 {
-                    this.context = new DeserializationContext();
+                    context = new DeserializationContext();
                 }
 
-                return this.context;
+                return context;
             }
             set
             {
-                this.context = value;
+                context = value;
             }
         }
 
@@ -396,7 +396,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public virtual void SkipEntry()
         {
-            var peekedEntry = this.PeekEntry();
+            var peekedEntry = PeekEntry();
 
             if (peekedEntry == EntryType.StartOfNode)
             {
@@ -404,7 +404,7 @@ namespace ExtEvents.OdinSerializer
 
                 bool exitNode = true;
 
-                this.EnterNode(out type);
+                EnterNode(out type);
 
                 try
                 {
@@ -420,19 +420,19 @@ namespace ExtEvents.OdinSerializer
                             var serializer = Serializer.Get(type);
                             object value = serializer.ReadValueWeak(this);
 
-                            if (this.CurrentNodeId >= 0)
+                            if (CurrentNodeId >= 0)
                             {
-                                this.Context.RegisterInternalReference(this.CurrentNodeId, value);
+                                Context.RegisterInternalReference(CurrentNodeId, value);
                             }
                         }
                         else
                         {
-                            var formatter = FormatterLocator.GetFormatter(type, this.Context.Config.SerializationPolicy);
+                            var formatter = FormatterLocator.GetFormatter(type, Context.Config.SerializationPolicy);
                             object value = formatter.Deserialize(this);
 
-                            if (this.CurrentNodeId >= 0)
+                            if (CurrentNodeId >= 0)
                             {
-                                this.Context.RegisterInternalReference(this.CurrentNodeId, value);
+                                Context.RegisterInternalReference(CurrentNodeId, value);
                             }
                         }
                     }
@@ -442,23 +442,25 @@ namespace ExtEvents.OdinSerializer
                         // We must read until a node on the same level terminates
                         while (true)
                         {
-                            peekedEntry = this.PeekEntry();
+                            peekedEntry = PeekEntry();
 
                             if (peekedEntry == EntryType.EndOfStream)
                             {
                                 break;
                             }
-                            else if (peekedEntry == EntryType.EndOfNode)
+
+                            if (peekedEntry == EntryType.EndOfNode)
                             {
                                 break;
                             }
-                            else if (peekedEntry == EntryType.EndOfArray)
+
+                            if (peekedEntry == EntryType.EndOfArray)
                             {
-                                this.ReadToNextEntry(); // Consume end of arrays that we can potentially get stuck on
+                                ReadToNextEntry(); // Consume end of arrays that we can potentially get stuck on
                             }
                             else
                             {
-                                this.SkipEntry();
+                                SkipEntry();
                             }
                         }
                     }
@@ -472,41 +474,43 @@ namespace ExtEvents.OdinSerializer
                 {
                     if (exitNode)
                     {
-                        this.ExitNode();
+                        ExitNode();
                     }
                 }
             }
             else if (peekedEntry == EntryType.StartOfArray)
             {
                 // We must read until an array on the same level terminates
-                this.ReadToNextEntry(); // Consume start of array
+                ReadToNextEntry(); // Consume start of array
 
                 while (true)
                 {
-                    peekedEntry = this.PeekEntry();
+                    peekedEntry = PeekEntry();
 
                     if (peekedEntry == EntryType.EndOfStream)
                     {
                         break;
                     }
-                    else if (peekedEntry == EntryType.EndOfArray)
+
+                    if (peekedEntry == EntryType.EndOfArray)
                     {
-                        this.ReadToNextEntry(); // Consume end of array and break
+                        ReadToNextEntry(); // Consume end of array and break
                         break;
                     }
-                    else if (peekedEntry == EntryType.EndOfNode)
+
+                    if (peekedEntry == EntryType.EndOfNode)
                     {
-                        this.ReadToNextEntry(); // Consume end of nodes that we can potentially get stuck on
+                        ReadToNextEntry(); // Consume end of nodes that we can potentially get stuck on
                     }
                     else
                     {
-                        this.SkipEntry();
+                        SkipEntry();
                     }
                 }
             }
             else if (peekedEntry != EntryType.EndOfArray && peekedEntry != EntryType.EndOfNode) // We can't skip end of arrays and end of nodes
             {
-                this.ReadToNextEntry(); // We can just skip a single value entry
+                ReadToNextEntry(); // We can just skip a single value entry
             }
         }
 
@@ -521,7 +525,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public virtual void PrepareNewSerializationSession()
         {
-            this.ClearNodes();
+            ClearNodes();
         }
 
         /// <summary>

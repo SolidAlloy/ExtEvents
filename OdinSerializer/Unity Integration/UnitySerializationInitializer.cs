@@ -18,6 +18,7 @@
 
 namespace ExtEvents.OdinSerializer
 {
+    using UnityEditor;
     using UnityEngine;
 
     /// <summary>
@@ -26,7 +27,7 @@ namespace ExtEvents.OdinSerializer
     public static class UnitySerializationInitializer
     {
         private static readonly object LOCK = new object();
-        private static bool initialized = false;
+        private static bool initialized;
 
         public static bool Initialized { get { return initialized; } }
 
@@ -90,7 +91,7 @@ namespace ExtEvents.OdinSerializer
 
 #if UNITY_EDITOR
 
-        [UnityEditor.InitializeOnLoadMethod]
+        [InitializeOnLoadMethod]
         private static void InitializeEditor()
         {
             Initialize();

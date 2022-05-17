@@ -42,10 +42,6 @@ namespace ExtEvents.OdinSerializer
             new ListFormatter<int>();
         }
 
-        public ListFormatter()
-        {
-        }
-
         /// <summary>
         /// Returns null.
         /// </summary>
@@ -76,7 +72,7 @@ namespace ExtEvents.OdinSerializer
                     value = new List<T>((int)length);
 
                     // We must remember to register the list reference ourselves, since we return null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any OnDeserializing callbacks on lists.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);

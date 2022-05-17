@@ -16,11 +16,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Globalization;
-
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.Globalization;
     using System.Text;
 
     /// <summary>
@@ -138,7 +137,7 @@ namespace ExtEvents.OdinSerializer
                 value = (TArray)(object)Array.CreateInstance(typeof(TElement), lengths);
 
                 // We must remember to register the array reference ourselves, since we return null in GetUninitializedObject
-                this.RegisterReferenceID(value, reader);
+                RegisterReferenceID(value, reader);
 
                 // There aren't any OnDeserializing callbacks on arrays.
                 // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);
@@ -146,7 +145,7 @@ namespace ExtEvents.OdinSerializer
 
                 try
                 {
-                    this.IterateArrayWrite(
+                    IterateArrayWrite(
                         (Array)(object)value,
                         () =>
                         {
@@ -221,9 +220,9 @@ namespace ExtEvents.OdinSerializer
 
                 writer.WriteString(RANKS_NAME, lengthStr);
 
-                this.IterateArrayRead(
+                IterateArrayRead(
                     (Array)(object)value,
-                    (v) =>
+                    v =>
                     {
                         ValueReaderWriter.WriteValue(v, writer);
                     });
@@ -237,7 +236,7 @@ namespace ExtEvents.OdinSerializer
         private void IterateArrayWrite(Array a, Func<TElement> write)
         {
             int[] indices = new int[ArrayRank];
-            this.IterateArrayWrite(a, 0, indices, write);
+            IterateArrayWrite(a, 0, indices, write);
         }
 
         private void IterateArrayWrite(Array a, int rank, int[] indices, Func<TElement> write)
@@ -248,7 +247,7 @@ namespace ExtEvents.OdinSerializer
 
                 if (rank + 1 < a.Rank)
                 {
-                    this.IterateArrayWrite(a, rank + 1, indices, write);
+                    IterateArrayWrite(a, rank + 1, indices, write);
                 }
                 else
                 {
@@ -260,7 +259,7 @@ namespace ExtEvents.OdinSerializer
         private void IterateArrayRead(Array a, Action<TElement> read)
         {
             int[] indices = new int[ArrayRank];
-            this.IterateArrayRead(a, 0, indices, read);
+            IterateArrayRead(a, 0, indices, read);
         }
 
         private void IterateArrayRead(Array a, int rank, int[] indices, Action<TElement> read)
@@ -271,7 +270,7 @@ namespace ExtEvents.OdinSerializer
 
                 if (rank + 1 < a.Rank)
                 {
-                    this.IterateArrayRead(a, rank + 1, indices, read);
+                    IterateArrayRead(a, rank + 1, indices, read);
                 }
                 else
                 {

@@ -20,16 +20,20 @@
 
 namespace ExtEvents.OdinSerializer.Editor
 {
-    using Utilities;
     using System;
+    using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
     using System.Linq;
+    using System.Reflection;
     using UnityEditor;
     using UnityEditor.SceneManagement;
     using UnityEngine;
-    using System.Reflection;
     using UnityEngine.SceneManagement;
-    using System.Collections;
+    using Utilities;
+    using Debug = UnityEngine.Debug;
+    using Object = UnityEngine.Object;
 
     public sealed class AOTSupportScanner : IDisposable
     {
@@ -37,22 +41,22 @@ namespace ExtEvents.OdinSerializer.Editor
         private bool allowRegisteringScannedTypes;
         private HashSet<Type> seenSerializedTypes = new HashSet<Type>();
 
-        private static System.Diagnostics.Stopwatch smartProgressBarWatch = System.Diagnostics.Stopwatch.StartNew();
-        private static int smartProgressBarDisplaysSinceLastUpdate = 0;
+        private static Stopwatch smartProgressBarWatch = Stopwatch.StartNew();
+        private static int smartProgressBarDisplaysSinceLastUpdate;
 
         private static readonly MethodInfo PlayerSettings_GetPreloadedAssets_Method = typeof(PlayerSettings).GetMethod("GetPreloadedAssets", BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
         private static readonly PropertyInfo Debug_Logger_Property = typeof(Debug).GetProperty("unityLogger") ?? typeof(Debug).GetProperty("logger");
 
         public void BeginScan()
         {
-            this.scanning = true;
+            scanning = true;
             allowRegisteringScannedTypes = false;
 
-            this.seenSerializedTypes.Clear();
+            seenSerializedTypes.Clear();
 
-            FormatterLocator.OnLocatedEmittableFormatterForType += this.OnLocatedEmitType;
-            FormatterLocator.OnLocatedFormatter += this.OnLocatedFormatter;
-            Serializer.OnSerializedType += this.OnSerializedType;
+            FormatterLocator.OnLocatedEmittableFormatterForType += OnLocatedEmitType;
+            FormatterLocator.OnLocatedFormatter += OnLocatedFormatter;
+            Serializer.OnSerializedType += OnSerializedType;
         }
 
         public bool ScanPreloadedAssets(bool showProgressBar)
@@ -60,7 +64,7 @@ namespace ExtEvents.OdinSerializer.Editor
             // The API does not exist in this version of Unity
             if (PlayerSettings_GetPreloadedAssets_Method == null) return true;
 
-            UnityEngine.Object[] assets = (UnityEngine.Object[])PlayerSettings_GetPreloadedAssets_Method.Invoke(null, null);
+            Object[] assets = (Object[])PlayerSettings_GetPreloadedAssets_Method.Invoke(null, null);
 
             if (assets == null) return true;
 
@@ -81,12 +85,12 @@ namespace ExtEvents.OdinSerializer.Editor
                     {
                         // Scan the asset and all its dependencies
                         var path = AssetDatabase.GetAssetPath(asset);
-                        this.ScanAsset(path, true);
+                        ScanAsset(path, true);
                     }
                     else
                     {
                         // Just scan the asset
-                        this.ScanObject(asset);
+                        ScanObject(asset);
                     }
                 }
             }
@@ -107,7 +111,7 @@ namespace ExtEvents.OdinSerializer.Editor
             
             foreach (var asset in assets)
             {
-                this.ScanAsset(asset, true);
+                ScanAsset(asset, true);
             }
 
             return true;
@@ -128,7 +132,7 @@ namespace ExtEvents.OdinSerializer.Editor
                         return false;
                     }
 
-                    this.ScanAssetBundle(bundle);
+                    ScanAssetBundle(bundle);
                 }
             }
             finally
@@ -220,9 +224,9 @@ namespace ExtEvents.OdinSerializer.Editor
                     if (AddressableAssetGroup_Type == null)
                     {
                         AddressableAssetGroup_Type = group.GetType();
-                        AddressableAssetGroup_HasSchema = AddressableAssetGroup_Type.GetMethod("HasSchema", Flags.InstancePublic, null, new Type[] { typeof(Type) }, null);
+                        AddressableAssetGroup_HasSchema = AddressableAssetGroup_Type.GetMethod("HasSchema", Flags.InstancePublic, null, new[] { typeof(Type) }, null);
                         if (AddressableAssetGroup_HasSchema == null) throw new NotSupportedException("AddressableAssetGroup.HasSchema(Type type) method not found");
-                        AddressableAssetGroup_GatherAllAssets = AddressableAssetGroup_Type.GetMethod("GatherAllAssets", Flags.InstancePublic, null, new Type[] { List_AddressableAssetEntry_Type, typeof(bool), typeof(bool), typeof(bool), Func_AddressableAssetEntry_bool_Type }, null);
+                        AddressableAssetGroup_GatherAllAssets = AddressableAssetGroup_Type.GetMethod("GatherAllAssets", Flags.InstancePublic, null, new[] { List_AddressableAssetEntry_Type, typeof(bool), typeof(bool), typeof(bool), Func_AddressableAssetEntry_bool_Type }, null);
                         if (AddressableAssetGroup_GatherAllAssets == null) throw new NotSupportedException("AddressableAssetGroup.GatherAllAssets(List<AddressableAssetEntry> results, bool includeSelf, bool recurseAll, bool includeSubObjects, Func<AddressableAssetEntry, bool> entryFilter) method not found");
                     }
 
@@ -235,7 +239,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
                     for (int i = 0; i < results.Count; i++)
                     {
-                        object entry = (object)results[i];
+                        object entry = results[i];
                         if (entry == null) continue;
                         string assetPath = (string)AddressableAssetEntry_AssetPath.GetValue(entry, null);
 
@@ -250,7 +254,7 @@ namespace ExtEvents.OdinSerializer.Editor
                         }
 
                         // Finally!
-                        this.ScanAsset(assetPath, includeAssetDependencies);
+                        ScanAsset(assetPath, includeAssetDependencies);
                     }
                 }
             }
@@ -278,7 +282,7 @@ namespace ExtEvents.OdinSerializer.Editor
         {
             if (resourcesPaths == null)
             {
-                resourcesPaths = new List<string>() {""};
+                resourcesPaths = new List<string> {""};
             }
 
             try
@@ -316,7 +320,6 @@ namespace ExtEvents.OdinSerializer.Editor
                         {
                             Debug.LogError("A resource threw a missing reference exception when scanning. Skipping resource and continuing scan.", resource);
                             Debug.LogException(ex, resource);
-                            continue;
                         }
                     }
                 }
@@ -339,13 +342,12 @@ namespace ExtEvents.OdinSerializer.Editor
                         // Exclude editor-only resources
                         if (assetPath.ToLower().Contains("/editor/")) continue;
 
-                        this.ScanAsset(assetPath, includeAssetDependencies: includeResourceDependencies);
+                        ScanAsset(assetPath, includeAssetDependencies: includeResourceDependencies);
                     }
                     catch (MissingReferenceException ex)
                     {
                         Debug.LogError("A resource '" + resourcePaths[i] + "' threw a missing reference exception when scanning. Skipping resource and continuing scan.");
                         Debug.LogException(ex);
-                        continue;
                     }
                 }
 
@@ -367,7 +369,7 @@ namespace ExtEvents.OdinSerializer.Editor
                 .Select(n => n.path)
                 .ToArray();
 
-            return this.ScanScenes(scenePaths, includeSceneDependencies, showProgressBar);
+            return ScanScenes(scenePaths, includeSceneDependencies, showProgressBar);
         }
 
         public bool ScanScenes(string[] scenePaths, bool includeSceneDependencies, bool showProgressBar)
@@ -409,7 +411,7 @@ namespace ExtEvents.OdinSerializer.Editor
                             return false;
                         }
 
-                        if (!System.IO.File.Exists(scenePath))
+                        if (!File.Exists(scenePath))
                         {
                             Debug.LogWarning("Skipped AOT scanning scene '" + scenePath + "' for a file not existing at the scene path.");
                             continue;
@@ -439,7 +441,7 @@ namespace ExtEvents.OdinSerializer.Editor
                                 {
                                     try
                                     {
-                                        this.allowRegisteringScannedTypes = true;
+                                        allowRegisteringScannedTypes = true;
                                         component.OnBeforeSerialize();
 
                                         var prefabSupporter = component as ISupportsPrefabSerialization;
@@ -448,14 +450,14 @@ namespace ExtEvents.OdinSerializer.Editor
                                         {
                                             // Also force a serialization of the object's prefab modifications, in case there are unknown types in there
 
-                                            List<UnityEngine.Object> objs = null;
+                                            List<Object> objs = null;
                                             var mods = UnitySerializationUtility.DeserializePrefabModifications(prefabSupporter.SerializationData.PrefabModifications, prefabSupporter.SerializationData.PrefabModificationsReferencedUnityObjects);
                                             UnitySerializationUtility.SerializePrefabModifications(mods, ref objs);
                                         }
                                     }
                                     finally
                                     {
-                                        this.allowRegisteringScannedTypes = false;
+                                        allowRegisteringScannedTypes = false;
                                     }
                                 }
                             }
@@ -467,11 +469,11 @@ namespace ExtEvents.OdinSerializer.Editor
                     // Additionally, also eat any debug logs that happen here, because logged errors can stop the build process, and we don't want
                     // that to happen.
 
-                    UnityEngine.ILogger logger = null;
+                    ILogger logger = null;
 
                     if (Debug_Logger_Property != null)
                     {
-                        logger = (UnityEngine.ILogger)Debug_Logger_Property.GetValue(null, null);
+                        logger = (ILogger)Debug_Logger_Property.GetValue(null, null);
                     }
 
                     bool previous = true;
@@ -522,7 +524,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
                         foreach (var dependency in dependencies)
                         {
-                            this.ScanAsset(dependency, includeAssetDependencies: false); // All dependencies of this asset were already included recursively by Unity
+                            ScanAsset(dependency, includeAssetDependencies: false); // All dependencies of this asset were already included recursively by Unity
                         }
                     }
                 }
@@ -544,7 +546,7 @@ namespace ExtEvents.OdinSerializer.Editor
         {
             if (assetPath.EndsWith(".unity"))
             {
-                return this.ScanScenes(new string[] { assetPath }, includeAssetDependencies, false);
+                return ScanScenes(new[] { assetPath }, includeAssetDependencies, false);
             }
 
             if (!(assetPath.EndsWith(".asset") || assetPath.EndsWith(".prefab")))
@@ -570,7 +572,7 @@ namespace ExtEvents.OdinSerializer.Editor
                 {
                     if (asset == null) continue;
 
-                    this.ScanObject(asset);
+                    ScanObject(asset);
                 }
 
                 if (includeAssetDependencies)
@@ -579,7 +581,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
                     foreach (var dependency in dependencies)
                     {
-                        this.ScanAsset(dependency, includeAssetDependencies: false); // All dependencies were already included recursively by Unity
+                        ScanAsset(dependency, includeAssetDependencies: false); // All dependencies were already included recursively by Unity
                     }
                 }
 
@@ -591,7 +593,7 @@ namespace ExtEvents.OdinSerializer.Editor
             }
         }
 
-        public void ScanObject(UnityEngine.Object obj)
+        public void ScanObject(Object obj)
         {
             if (obj is ISerializationCallbackReceiver)
             {
@@ -600,12 +602,12 @@ namespace ExtEvents.OdinSerializer.Editor
                 try
                 {
                     UnitySerializationUtility.ForceEditorModeSerialization = true;
-                    this.allowRegisteringScannedTypes = true;
+                    allowRegisteringScannedTypes = true;
                     (obj as ISerializationCallbackReceiver).OnBeforeSerialize();
                 }
                 finally
                 {
-                    this.allowRegisteringScannedTypes = false;
+                    allowRegisteringScannedTypes = false;
                     UnitySerializationUtility.ForceEditorModeSerialization = formerForceEditorModeSerialization;
                 }
             }
@@ -613,24 +615,24 @@ namespace ExtEvents.OdinSerializer.Editor
 
         public List<Type> EndScan()
         {
-            if (!this.scanning) throw new InvalidOperationException("Cannot end a scan when scanning has not begun.");
+            if (!scanning) throw new InvalidOperationException("Cannot end a scan when scanning has not begun.");
 
-            var result = this.seenSerializedTypes.ToList();
-            this.Dispose();
+            var result = seenSerializedTypes.ToList();
+            Dispose();
             return result;
         }
 
         public void Dispose()
         {
-            if (this.scanning)
+            if (scanning)
             {
-                FormatterLocator.OnLocatedEmittableFormatterForType -= this.OnLocatedEmitType;
-                FormatterLocator.OnLocatedFormatter -= this.OnLocatedFormatter;
-                Serializer.OnSerializedType -= this.OnSerializedType;
+                FormatterLocator.OnLocatedEmittableFormatterForType -= OnLocatedEmitType;
+                FormatterLocator.OnLocatedFormatter -= OnLocatedFormatter;
+                Serializer.OnSerializedType -= OnSerializedType;
 
-                this.scanning = false;
-                this.seenSerializedTypes.Clear();
-                this.allowRegisteringScannedTypes = false;
+                scanning = false;
+                seenSerializedTypes.Clear();
+                allowRegisteringScannedTypes = false;
             }
         }
 
@@ -638,14 +640,14 @@ namespace ExtEvents.OdinSerializer.Editor
         {
             if (!AllowRegisterType(type)) return;
 
-            this.RegisterType(type);
+            RegisterType(type);
         }
 
         private void OnSerializedType(Type type)
         {
             if (!AllowRegisterType(type)) return;
 
-            this.RegisterType(type);
+            RegisterType(type);
         }
 
         private void OnLocatedFormatter(IFormatter formatter)
@@ -654,7 +656,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
             if (type == null) return;
             if (!AllowRegisterType(type)) return;
-            this.RegisterType(type);
+            RegisterType(type);
         }
 
         private static bool AllowRegisterType(Type type)
@@ -678,7 +680,7 @@ namespace ExtEvents.OdinSerializer.Editor
             return EditorAssemblyNames.Contains(assembly.GetName().Name);
         }
 
-        private static HashSet<string> EditorAssemblyNames = new HashSet<string>()
+        private static HashSet<string> EditorAssemblyNames = new HashSet<string>
         {
             "Assembly-CSharp-Editor",
             "Assembly-UnityScript-Editor",
@@ -691,7 +693,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
         private void RegisterType(Type type)
         {
-            if (!this.allowRegisteringScannedTypes) return;
+            if (!allowRegisteringScannedTypes) return;
             //if (type.IsAbstract || type.IsInterface) return;
             if (type.IsGenericType && (type.IsGenericTypeDefinition || !type.IsFullyConstructedGenericType())) return;
 
@@ -700,13 +702,13 @@ namespace ExtEvents.OdinSerializer.Editor
             //    Debug.Log("Added " + type.GetNiceFullName());
             //}
 
-            this.seenSerializedTypes.Add(type);
+            seenSerializedTypes.Add(type);
 
             if (type.IsGenericType)
             {
                 foreach (var arg in type.GetGenericArguments())
                 {
-                    this.RegisterType(arg);
+                    RegisterType(arg);
                 }
             }
         }

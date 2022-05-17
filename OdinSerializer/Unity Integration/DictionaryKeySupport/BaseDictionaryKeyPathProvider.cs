@@ -54,17 +54,17 @@ namespace ExtEvents.OdinSerializer
 
         int IDictionaryKeyPathProvider.Compare(object x, object y)
         {
-            return this.Compare((T)x, (T)y);
+            return Compare((T)x, (T)y);
         }
 
         object IDictionaryKeyPathProvider.GetKeyFromPathString(string pathStr)
         {
-            return this.GetKeyFromPathString(pathStr);
+            return GetKeyFromPathString(pathStr);
         }
 
         string IDictionaryKeyPathProvider.GetPathStringFromKey(object key)
         {
-            return this.GetPathStringFromKey((T)key);
+            return GetPathStringFromKey((T)key);
         }
     }
 }

@@ -18,13 +18,12 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
-    using ExtEvents.OdinSerializer.Utilities.Unsafe;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
+    using Utilities;
+    using Utilities.Unsafe;
 
     /// <summary>
     /// Writes data to a stream that can be read by a <see cref="BinaryDataReader"/>.

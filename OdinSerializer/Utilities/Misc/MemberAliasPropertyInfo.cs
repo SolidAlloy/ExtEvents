@@ -45,8 +45,8 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="namePrefix">The name prefix to use.</param>
         public MemberAliasPropertyInfo(PropertyInfo prop, string namePrefix)
         {
-            this.aliasedProperty = prop;
-            this.mangledName = string.Concat(namePrefix, FakeNameSeparatorString, this.aliasedProperty.Name);
+            aliasedProperty = prop;
+            mangledName = string.Concat(namePrefix, FakeNameSeparatorString, aliasedProperty.Name);
         }
 
         /// <summary>
@@ -57,39 +57,39 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="separatorString">The separator string to use.</param>
         public MemberAliasPropertyInfo(PropertyInfo prop, string namePrefix, string separatorString)
         {
-            this.aliasedProperty = prop;
-            this.mangledName = string.Concat(namePrefix, separatorString, this.aliasedProperty.Name);
+            aliasedProperty = prop;
+            mangledName = string.Concat(namePrefix, separatorString, aliasedProperty.Name);
         }
 
         /// <summary>
         /// The backing PropertyInfo that is being aliased.
         /// </summary>
-        public PropertyInfo AliasedProperty { get { return this.aliasedProperty; } }
+        public PropertyInfo AliasedProperty { get { return aliasedProperty; } }
 
         /// <summary>
         /// Gets the module in which the type that declares the member represented by the current <see cref="T:System.Reflection.MemberInfo" /> is defined.
         /// </summary>
-        public override Module Module { get { return this.aliasedProperty.Module; } }
+        public override Module Module { get { return aliasedProperty.Module; } }
 
         /// <summary>
         /// Gets a value that identifies a metadata element.
         /// </summary>
-        public override int MetadataToken { get { return this.aliasedProperty.MetadataToken; } }
+        public override int MetadataToken { get { return aliasedProperty.MetadataToken; } }
 
         /// <summary>
         /// Gets the name of the current member.
         /// </summary>
-        public override string Name { get { return this.mangledName; } }
+        public override string Name { get { return mangledName; } }
 
         /// <summary>
         /// Gets the class that declares this member.
         /// </summary>
-        public override Type DeclaringType { get { return this.aliasedProperty.DeclaringType; } }
+        public override Type DeclaringType { get { return aliasedProperty.DeclaringType; } }
 
         /// <summary>
         /// Gets the class object that was used to obtain this instance of MemberInfo.
         /// </summary>
-        public override Type ReflectedType { get { return this.aliasedProperty.ReflectedType; } }
+        public override Type ReflectedType { get { return aliasedProperty.ReflectedType; } }
 
         /// <summary>
         /// Gets the type of the property.
@@ -97,7 +97,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The type of the property.
         /// </value>
-        public override Type PropertyType { get { return this.aliasedProperty.PropertyType; } }
+        public override Type PropertyType { get { return aliasedProperty.PropertyType; } }
 
         /// <summary>
         /// Gets the attributes.
@@ -105,7 +105,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The attributes.
         /// </value>
-        public override PropertyAttributes Attributes { get { return this.aliasedProperty.Attributes; } }
+        public override PropertyAttributes Attributes { get { return aliasedProperty.Attributes; } }
 
         /// <summary>
         /// Gets a value indicating whether this instance can read.
@@ -113,7 +113,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         ///   <c>true</c> if this instance can read; otherwise, <c>false</c>.
         /// </value>
-        public override bool CanRead { get { return this.aliasedProperty.CanRead; } }
+        public override bool CanRead { get { return aliasedProperty.CanRead; } }
 
         /// <summary>
         /// Gets a value indicating whether this instance can write.
@@ -121,7 +121,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         ///   <c>true</c> if this instance can write; otherwise, <c>false</c>.
         /// </value>
-        public override bool CanWrite { get { return this.aliasedProperty.CanWrite; } }
+        public override bool CanWrite { get { return aliasedProperty.CanWrite; } }
 
         /// <summary>
         /// When overridden in a derived class, returns an array of all custom attributes applied to this member.
@@ -132,7 +132,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return this.aliasedProperty.GetCustomAttributes(inherit);
+            return aliasedProperty.GetCustomAttributes(inherit);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            return this.aliasedProperty.GetCustomAttributes(attributeType, inherit);
+            return aliasedProperty.GetCustomAttributes(attributeType, inherit);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return this.aliasedProperty.IsDefined(attributeType, inherit);
+            return aliasedProperty.IsDefined(attributeType, inherit);
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override MethodInfo[] GetAccessors(bool nonPublic)
         {
-            return this.aliasedProperty.GetAccessors(nonPublic);
+            return aliasedProperty.GetAccessors(nonPublic);
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override MethodInfo GetGetMethod(bool nonPublic)
         {
-            return this.aliasedProperty.GetGetMethod(nonPublic);
+            return aliasedProperty.GetGetMethod(nonPublic);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <returns>The index parameters of the property.</returns>
         public override ParameterInfo[] GetIndexParameters()
         {
-            return this.aliasedProperty.GetIndexParameters();
+            return aliasedProperty.GetIndexParameters();
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override MethodInfo GetSetMethod(bool nonPublic)
         {
-            return this.aliasedProperty.GetSetMethod(nonPublic);
+            return aliasedProperty.GetSetMethod(nonPublic);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <returns>The value of the property on the given instance.</returns>
         public override object GetValue(object obj, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
         {
-            return this.aliasedProperty.GetValue(obj, invokeAttr, binder, index, culture);
+            return aliasedProperty.GetValue(obj, invokeAttr, binder, index, culture);
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="culture">The culture to use.</param>
         public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
         {
-            this.aliasedProperty.SetValue(obj, value, invokeAttr, binder, index, culture);
+            aliasedProperty.SetValue(obj, value, invokeAttr, binder, index, culture);
         }
     }
 }

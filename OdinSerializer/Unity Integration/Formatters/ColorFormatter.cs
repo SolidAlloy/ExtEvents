@@ -39,10 +39,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref Color value, IDataReader reader)
         {
-            value.r = ColorFormatter.FloatSerializer.ReadValue(reader);
-            value.g = ColorFormatter.FloatSerializer.ReadValue(reader);
-            value.b = ColorFormatter.FloatSerializer.ReadValue(reader);
-            value.a = ColorFormatter.FloatSerializer.ReadValue(reader);
+            value.r = FloatSerializer.ReadValue(reader);
+            value.g = FloatSerializer.ReadValue(reader);
+            value.b = FloatSerializer.ReadValue(reader);
+            value.a = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -52,10 +52,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Color value, IDataWriter writer)
         {
-            ColorFormatter.FloatSerializer.WriteValue(value.r, writer);
-            ColorFormatter.FloatSerializer.WriteValue(value.g, writer);
-            ColorFormatter.FloatSerializer.WriteValue(value.b, writer);
-            ColorFormatter.FloatSerializer.WriteValue(value.a, writer);
+            FloatSerializer.WriteValue(value.r, writer);
+            FloatSerializer.WriteValue(value.g, writer);
+            FloatSerializer.WriteValue(value.b, writer);
+            FloatSerializer.WriteValue(value.a, writer);
         }
     }
 }

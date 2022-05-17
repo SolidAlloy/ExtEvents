@@ -43,9 +43,9 @@ namespace ExtEvents.OdinSerializer
         private Dictionary<Type, int> seenTypes = new Dictionary<Type, int>(16);
 
         private byte[] buffer = new byte[1024 * 100];
-        private int bufferIndex = 0;
+        private int bufferIndex;
 
-        public JsonDataWriter() : this(null, null, true)
+        public JsonDataWriter() : this(null, null)
         {
         }
 
@@ -57,26 +57,26 @@ namespace ExtEvents.OdinSerializer
         /// <param name="formatAsReadable">Whether the json should be packed, or formatted as human-readable.</param>
         public JsonDataWriter(Stream stream, SerializationContext context, bool formatAsReadable = true) : base(stream, context)
         {
-            this.FormatAsReadable = formatAsReadable;
-            this.justStarted = true;
-            this.EnableTypeOptimization = true;
+            FormatAsReadable = formatAsReadable;
+            justStarted = true;
+            EnableTypeOptimization = true;
 
-            this.primitiveTypeWriters = new Dictionary<Type, Delegate>()
+            primitiveTypeWriters = new Dictionary<Type, Delegate>
             {
-                { typeof(char), (Action<string, char>)this.WriteChar },
-                { typeof(sbyte), (Action<string, sbyte>)this.WriteSByte },
-                { typeof(short), (Action<string, short>)this.WriteInt16 },
-                { typeof(int), (Action<string, int>)this.WriteInt32 },
-                { typeof(long), (Action<string, long>)this.WriteInt64 },
-                { typeof(byte), (Action<string, byte>)this.WriteByte },
-                { typeof(ushort), (Action<string, ushort>)this.WriteUInt16 },
-                { typeof(uint),   (Action<string, uint>)this.WriteUInt32 },
-                { typeof(ulong),  (Action<string, ulong>)this.WriteUInt64 },
-                { typeof(decimal),   (Action<string, decimal>)this.WriteDecimal },
-                { typeof(bool),  (Action<string, bool>)this.WriteBoolean },
-                { typeof(float),  (Action<string, float>)this.WriteSingle },
-                { typeof(double),  (Action<string, double>)this.WriteDouble },
-                { typeof(Guid),  (Action<string, Guid>)this.WriteGuid }
+                { typeof(char), (Action<string, char>)WriteChar },
+                { typeof(sbyte), (Action<string, sbyte>)WriteSByte },
+                { typeof(short), (Action<string, short>)WriteInt16 },
+                { typeof(int), (Action<string, int>)WriteInt32 },
+                { typeof(long), (Action<string, long>)WriteInt64 },
+                { typeof(byte), (Action<string, byte>)WriteByte },
+                { typeof(ushort), (Action<string, ushort>)WriteUInt16 },
+                { typeof(uint),   (Action<string, uint>)WriteUInt32 },
+                { typeof(ulong),  (Action<string, ulong>)WriteUInt64 },
+                { typeof(decimal),   (Action<string, decimal>)WriteDecimal },
+                { typeof(bool),  (Action<string, bool>)WriteBoolean },
+                { typeof(float),  (Action<string, float>)WriteSingle },
+                { typeof(double),  (Action<string, double>)WriteDouble },
+                { typeof(Guid),  (Action<string, Guid>)WriteGuid }
             };
         }
 
@@ -98,7 +98,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void MarkJustStarted()
         {
-            this.justStarted = true;
+            justStarted = true;
         }
 
         /// <summary>
@@ -106,10 +106,10 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override void FlushToStream()
         {
-            if (this.bufferIndex > 0)
+            if (bufferIndex > 0)
             {
-                this.Stream.Write(this.buffer, 0, this.bufferIndex);
-                this.bufferIndex = 0;
+                Stream.Write(buffer, 0, bufferIndex);
+                bufferIndex = 0;
             }
 
             base.FlushToStream();
@@ -125,14 +125,14 @@ namespace ExtEvents.OdinSerializer
         /// <param name="id">The id of the reference node. This id is acquired by calling <see cref="SerializationContext.TryRegisterInternalReference(object, out int)" />.</param>
         public override void BeginReferenceNode(string name, Type type, int id)
         {
-            this.WriteEntry(name, "{");
-            this.PushNode(name, id, type);
-            this.forceNoSeparatorNextLine = true;
-            this.WriteInt32(JsonConfig.ID_SIG, id);
+            WriteEntry(name, "{");
+            PushNode(name, id, type);
+            forceNoSeparatorNextLine = true;
+            WriteInt32(JsonConfig.ID_SIG, id);
 
             if (type != null)
             {
-                this.WriteTypeEntry(type);
+                WriteTypeEntry(type);
             }
         }
 
@@ -145,13 +145,13 @@ namespace ExtEvents.OdinSerializer
         /// <param name="type">The type of the struct node. If null, no type metadata will be written.</param>
         public override void BeginStructNode(string name, Type type)
         {
-            this.WriteEntry(name, "{");
-            this.PushNode(name, -1, type);
-            this.forceNoSeparatorNextLine = true;
+            WriteEntry(name, "{");
+            PushNode(name, -1, type);
+            forceNoSeparatorNextLine = true;
 
             if (type != null)
             {
-                this.WriteTypeEntry(type);
+                WriteTypeEntry(type);
             }
         }
 
@@ -161,11 +161,11 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The name of the node to end. This has to be the name of the current node.</param>
         public override void EndNode(string name)
         {
-            this.PopNode(name);
-            this.StartNewLine(true);
+            PopNode(name);
+            StartNewLine(true);
 
-            this.EnsureBufferSpace(1);
-            this.buffer[this.bufferIndex++] = (byte)'}';
+            EnsureBufferSpace(1);
+            buffer[bufferIndex++] = (byte)'}';
         }
 
         /// <summary>
@@ -174,10 +174,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="length">The length of the array to come.</param>
         public override void BeginArrayNode(long length)
         {
-            this.WriteInt64(JsonConfig.REGULAR_ARRAY_LENGTH_SIG, length);
-            this.WriteEntry(JsonConfig.REGULAR_ARRAY_CONTENT_SIG, "[");
-            this.forceNoSeparatorNextLine = true;
-            this.PushArray();
+            WriteInt64(JsonConfig.REGULAR_ARRAY_LENGTH_SIG, length);
+            WriteEntry(JsonConfig.REGULAR_ARRAY_CONTENT_SIG, "[");
+            forceNoSeparatorNextLine = true;
+            PushArray();
         }
 
         /// <summary>
@@ -185,11 +185,11 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override void EndArrayNode()
         {
-            this.PopArray();
-            this.StartNewLine(true);
+            PopArray();
+            StartNewLine(true);
 
-            this.EnsureBufferSpace(1);
-            this.buffer[this.bufferIndex++] = (byte)']';
+            EnsureBufferSpace(1);
+            buffer[bufferIndex++] = (byte)']';
         }
 
         /// <summary>
@@ -211,23 +211,23 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentNullException("array");
             }
 
-            Action<string, T> writer = (Action<string, T>)this.primitiveTypeWriters[typeof(T)];
+            Action<string, T> writer = (Action<string, T>)primitiveTypeWriters[typeof(T)];
 
-            this.WriteInt64(JsonConfig.PRIMITIVE_ARRAY_LENGTH_SIG, array.Length);
-            this.WriteEntry(JsonConfig.PRIMITIVE_ARRAY_CONTENT_SIG, "[");
-            this.forceNoSeparatorNextLine = true;
-            this.PushArray();
+            WriteInt64(JsonConfig.PRIMITIVE_ARRAY_LENGTH_SIG, array.Length);
+            WriteEntry(JsonConfig.PRIMITIVE_ARRAY_CONTENT_SIG, "[");
+            forceNoSeparatorNextLine = true;
+            PushArray();
 
             for (int i = 0; i < array.Length; i++)
             {
                 writer(null, array[i]);
             }
 
-            this.PopArray();
-            this.StartNewLine(true);
+            PopArray();
+            StartNewLine(true);
 
-            this.EnsureBufferSpace(1);
-            this.buffer[this.bufferIndex++] = (byte)']';
+            EnsureBufferSpace(1);
+            buffer[bufferIndex++] = (byte)']';
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteBoolean(string name, bool value)
         {
-            this.WriteEntry(name, value ? "true" : "false");
+            WriteEntry(name, value ? "true" : "false");
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteByte(string name, byte value)
         {
-            this.WriteUInt64(name, value);
+            WriteUInt64(name, value);
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteChar(string name, char value)
         {
-            this.WriteString(name, value.ToString(CultureInfo.InvariantCulture));
+            WriteString(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteDecimal(string name, decimal value)
         {
-            this.WriteEntry(name, value.ToString("G", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("G", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteDouble(string name, double value)
         {
-            this.WriteEntry(name, value.ToString("R", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("R", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteInt32(string name, int value)
         {
-            this.WriteInt64(name, value);
+            WriteInt64(name, value);
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteInt64(string name, long value)
         {
-            this.WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The name of the value. If this is null, no name will be written.</param>
         public override void WriteNull(string name)
         {
-            this.WriteEntry(name, "null");
+            WriteEntry(name, "null");
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="id">The value to write.</param>
         public override void WriteInternalReference(string name, int id)
         {
-            this.WriteEntry(name, JsonConfig.INTERNAL_REF_SIG + ":" + id.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, JsonConfig.INTERNAL_REF_SIG + ":" + id.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteSByte(string name, sbyte value)
         {
-            this.WriteInt64(name, value);
+            WriteInt64(name, value);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteInt16(string name, short value)
         {
-            this.WriteInt64(name, value);
+            WriteInt64(name, value);
         }
 
         /// <summary>
@@ -346,7 +346,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteSingle(string name, float value)
         {
-            this.WriteEntry(name, value.ToString("R", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("R", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -356,34 +356,34 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteString(string name, string value)
         {
-            this.StartNewLine();
+            StartNewLine();
 
             if (name != null)
             {
-                this.EnsureBufferSpace(name.Length + value.Length + 6);
+                EnsureBufferSpace(name.Length + value.Length + 6);
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)'"';
 
                 for (int i = 0; i < name.Length; i++)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)name[i];
+                    buffer[bufferIndex++] = (byte)name[i];
                 }
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
-                this.buffer[this.bufferIndex++] = (byte)':';
+                buffer[bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)':';
 
-                if (this.FormatAsReadable)
+                if (FormatAsReadable)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)' ';
+                    buffer[bufferIndex++] = (byte)' ';
                 }
             }
-            else this.EnsureBufferSpace(value.Length + 2);
+            else EnsureBufferSpace(value.Length + 2);
 
-            this.buffer[this.bufferIndex++] = (byte)'"';
+            buffer[bufferIndex++] = (byte)'"';
 
-            this.Buffer_WriteString_WithEscape(value);
+            Buffer_WriteString_WithEscape(value);
 
-            this.buffer[this.bufferIndex++] = (byte)'"';
+            buffer[bufferIndex++] = (byte)'"';
         }
 
         /// <summary>
@@ -393,7 +393,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteGuid(string name, Guid value)
         {
-            this.WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteUInt32(string name, uint value)
         {
-            this.WriteUInt64(name, value);
+            WriteUInt64(name, value);
         }
 
         /// <summary>
@@ -413,7 +413,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteUInt64(string name, ulong value)
         {
-            this.WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, value.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="index">The value to write.</param>
         public override void WriteExternalReference(string name, int index)
         {
-            this.WriteEntry(name, JsonConfig.EXTERNAL_INDEX_REF_SIG + ":" + index.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, JsonConfig.EXTERNAL_INDEX_REF_SIG + ":" + index.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -433,7 +433,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="guid">The value to write.</param>
         public override void WriteExternalReference(string name, Guid guid)
         {
-            this.WriteEntry(name, JsonConfig.EXTERNAL_GUID_REF_SIG + ":" + guid.ToString("D", CultureInfo.InvariantCulture));
+            WriteEntry(name, JsonConfig.EXTERNAL_GUID_REF_SIG + ":" + guid.ToString("D", CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -448,12 +448,12 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentNullException("id");
             }
 
-            this.WriteEntry(name, JsonConfig.EXTERNAL_STRING_REF_SIG_FIXED);
-            this.EnsureBufferSpace(id.Length + 3);
-            this.buffer[this.bufferIndex++] = (byte)':';
-            this.buffer[this.bufferIndex++] = (byte)'"';
-            this.Buffer_WriteString_WithEscape(id);
-            this.buffer[this.bufferIndex++] = (byte)'"';
+            WriteEntry(name, JsonConfig.EXTERNAL_STRING_REF_SIG_FIXED);
+            EnsureBufferSpace(id.Length + 3);
+            buffer[bufferIndex++] = (byte)':';
+            buffer[bufferIndex++] = (byte)'"';
+            Buffer_WriteString_WithEscape(id);
+            buffer[bufferIndex++] = (byte)'"';
         }
 
         /// <summary>
@@ -463,7 +463,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         public override void WriteUInt16(string name, ushort value)
         {
-            this.WriteUInt64(name, value);
+            WriteUInt64(name, value);
         }
 
         /// <summary>
@@ -481,153 +481,153 @@ namespace ExtEvents.OdinSerializer
         public override void PrepareNewSerializationSession()
         {
             base.PrepareNewSerializationSession();
-            this.seenTypes.Clear();
-            this.justStarted = true;
+            seenTypes.Clear();
+            justStarted = true;
         }
 
         public override string GetDataDump()
         {
-            if (!this.Stream.CanRead)
+            if (!Stream.CanRead)
             {
                 return "Json data stream for writing cannot be read; cannot dump data.";
             }
 
-            if (!this.Stream.CanSeek)
+            if (!Stream.CanSeek)
             {
                 return "Json data stream cannot seek; cannot dump data.";
             }
 
-            var oldPosition = this.Stream.Position;
+            var oldPosition = Stream.Position;
 
             var bytes = new byte[oldPosition];
 
-            this.Stream.Position = 0;
-            this.Stream.Read(bytes, 0, (int)oldPosition);
+            Stream.Position = 0;
+            Stream.Read(bytes, 0, (int)oldPosition);
 
-            this.Stream.Position = oldPosition;
+            Stream.Position = oldPosition;
 
             return "Json: " + Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
 
         private void WriteEntry(string name, string contents)
         {
-            this.StartNewLine();
+            StartNewLine();
 
             if (name != null)
             {
-                this.EnsureBufferSpace(name.Length + contents.Length + 4);
+                EnsureBufferSpace(name.Length + contents.Length + 4);
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)'"';
 
                 for (int i = 0; i < name.Length; i++)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)name[i];
+                    buffer[bufferIndex++] = (byte)name[i];
                 }
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
-                this.buffer[this.bufferIndex++] = (byte)':';
+                buffer[bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)':';
 
-                if (this.FormatAsReadable)
+                if (FormatAsReadable)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)' ';
+                    buffer[bufferIndex++] = (byte)' ';
                 }
             }
-            else this.EnsureBufferSpace(contents.Length);
+            else EnsureBufferSpace(contents.Length);
 
             for (int i = 0; i < contents.Length; i++)
             {
-                this.buffer[this.bufferIndex++] = (byte)contents[i];
+                buffer[bufferIndex++] = (byte)contents[i];
             }
         }
 
         private void WriteEntry(string name, string contents, char surroundContentsWith)
         {
-            this.StartNewLine();
+            StartNewLine();
 
             if (name != null)
             {
-                this.EnsureBufferSpace(name.Length + contents.Length + 6);
+                EnsureBufferSpace(name.Length + contents.Length + 6);
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)'"';
 
                 for (int i = 0; i < name.Length; i++)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)name[i];
+                    buffer[bufferIndex++] = (byte)name[i];
                 }
 
-                this.buffer[this.bufferIndex++] = (byte)'"';
-                this.buffer[this.bufferIndex++] = (byte)':';
+                buffer[bufferIndex++] = (byte)'"';
+                buffer[bufferIndex++] = (byte)':';
 
-                if (this.FormatAsReadable)
+                if (FormatAsReadable)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)' ';
+                    buffer[bufferIndex++] = (byte)' ';
                 }
             }
-            else this.EnsureBufferSpace(contents.Length + 2);
+            else EnsureBufferSpace(contents.Length + 2);
 
-            this.buffer[this.bufferIndex++] = (byte)surroundContentsWith;
+            buffer[bufferIndex++] = (byte)surroundContentsWith;
 
             for (int i = 0; i < contents.Length; i++)
             {
-                this.buffer[this.bufferIndex++] = (byte)contents[i];
+                buffer[bufferIndex++] = (byte)contents[i];
             }
 
-            this.buffer[this.bufferIndex++] = (byte)surroundContentsWith;
+            buffer[bufferIndex++] = (byte)surroundContentsWith;
         }
 
         private void WriteTypeEntry(Type type)
         {
             int id;
 
-            if (this.EnableTypeOptimization)
+            if (EnableTypeOptimization)
             {
-                if (this.seenTypes.TryGetValue(type, out id))
+                if (seenTypes.TryGetValue(type, out id))
                 {
-                    this.WriteInt32(JsonConfig.TYPE_SIG, id);
+                    WriteInt32(JsonConfig.TYPE_SIG, id);
                 }
                 else
                 {
-                    id = this.seenTypes.Count;
-                    this.seenTypes.Add(type, id);
-                    this.WriteString(JsonConfig.TYPE_SIG, id + "|" + this.Context.Binder.BindToName(type, this.Context.Config.DebugContext));
+                    id = seenTypes.Count;
+                    seenTypes.Add(type, id);
+                    WriteString(JsonConfig.TYPE_SIG, id + "|" + Context.Binder.BindToName(type, Context.Config.DebugContext));
                 }
             }
             else
             {
-                this.WriteString(JsonConfig.TYPE_SIG, this.Context.Binder.BindToName(type, this.Context.Config.DebugContext));
+                WriteString(JsonConfig.TYPE_SIG, Context.Binder.BindToName(type, Context.Config.DebugContext));
             }
         }
 
         private void StartNewLine(bool noSeparator = false)
         {
-            if (this.justStarted)
+            if (justStarted)
             {
-                this.justStarted = false;
+                justStarted = false;
                 return;
             }
 
-            if (noSeparator == false && this.forceNoSeparatorNextLine == false)
+            if (noSeparator == false && forceNoSeparatorNextLine == false)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)',';
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)',';
             }
 
-            this.forceNoSeparatorNextLine = false;
+            forceNoSeparatorNextLine = false;
 
-            if (this.FormatAsReadable)
+            if (FormatAsReadable)
             {
-                int count = this.NodeDepth * 4;
+                int count = NodeDepth * 4;
 
-                this.EnsureBufferSpace(NEW_LINE.Length + count);
+                EnsureBufferSpace(NEW_LINE.Length + count);
 
                 for (int i = 0; i < NEW_LINE.Length; i++)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)NEW_LINE[i];
+                    buffer[bufferIndex++] = (byte)NEW_LINE[i];
                 }
 
                 for (int i = 0; i < count; i++)
                 {
-                    this.buffer[this.bufferIndex++] = (byte)' ';
+                    buffer[bufferIndex++] = (byte)' ';
                 }
             }
         }
@@ -635,22 +635,22 @@ namespace ExtEvents.OdinSerializer
 
         private void EnsureBufferSpace(int space)
         {
-            var length = this.buffer.Length;
+            var length = buffer.Length;
 
             if (space > length)
             {
                 throw new Exception("Insufficient buffer capacity");
             }
 
-            if (this.bufferIndex + space > length)
+            if (bufferIndex + space > length)
             {
-                this.FlushToStream();
+                FlushToStream();
             }
         }
 
         private void Buffer_WriteString_WithEscape(string str)
         {
-            this.EnsureBufferSpace(str.Length);
+            EnsureBufferSpace(str.Length);
 
             for (int i = 0; i < str.Length; i++)
             {
@@ -661,78 +661,78 @@ namespace ExtEvents.OdinSerializer
                     // We're outside the "standard" character range - so we write the character as a hexadecimal value instead
                     // This ensures that we don't break the Json formatting.
 
-                    this.EnsureBufferSpace((str.Length - i) + 6);
+                    EnsureBufferSpace((str.Length - i) + 6);
 
-                    this.buffer[this.bufferIndex++] = (byte)'\\';
-                    this.buffer[this.bufferIndex++] = (byte)'u';
+                    buffer[bufferIndex++] = (byte)'\\';
+                    buffer[bufferIndex++] = (byte)'u';
 
                     var byte1 = c >> 8;
                     var byte2 = (byte)c;
 
                     var lookup = ByteToHexCharLookup[byte1];
 
-                    this.buffer[this.bufferIndex++] = (byte)lookup;
-                    this.buffer[this.bufferIndex++] = (byte)(lookup >> 16);
+                    buffer[bufferIndex++] = (byte)lookup;
+                    buffer[bufferIndex++] = (byte)(lookup >> 16);
 
                     lookup = ByteToHexCharLookup[byte2];
 
-                    this.buffer[this.bufferIndex++] = (byte)lookup;
-                    this.buffer[this.bufferIndex++] = (byte)(lookup >> 16);
+                    buffer[bufferIndex++] = (byte)lookup;
+                    buffer[bufferIndex++] = (byte)(lookup >> 16);
                     continue;
                 }
 
-                this.EnsureBufferSpace(2);
+                EnsureBufferSpace(2);
 
                 // Escape any characters that need to be escaped, default to no escape
                 switch (c)
                 {
                     case '"':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'"';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'"';
                         break;
 
                     case '\\':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'\\';
                         break;
 
                     case '\a':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'a';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'a';
                         break;
 
                     case '\b':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'b';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'b';
                         break;
 
                     case '\f':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'f';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'f';
                         break;
 
                     case '\n':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'n';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'n';
                         break;
 
                     case '\r':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'r';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'r';
                         break;
 
                     case '\t':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'t';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'t';
                         break;
 
                     case '\0':
-                        this.buffer[this.bufferIndex++] = (byte)'\\';
-                        this.buffer[this.bufferIndex++] = (byte)'0';
+                        buffer[bufferIndex++] = (byte)'\\';
+                        buffer[bufferIndex++] = (byte)'0';
                         break;
 
                     default:
-                        this.buffer[this.bufferIndex++] = (byte)c;
+                        buffer[bufferIndex++] = (byte)c;
                         break;
                 }
             }
@@ -745,7 +745,7 @@ namespace ExtEvents.OdinSerializer
             for (int i = 0; i < 256; i++)
             {
                 string s = i.ToString("x2", CultureInfo.InvariantCulture);
-                result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
+                result[i] = s[0] + ((uint)s[1] << 16);
             }
 
             return result;

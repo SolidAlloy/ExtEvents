@@ -74,10 +74,10 @@ namespace ExtEvents.OdinSerializer
                 throw new ArgumentNullException("formatterConverter");
             }
 
-            this.streamingContext = context;
+            streamingContext = context;
             this.formatterConverter = formatterConverter;
 
-            this.Reset();
+            Reset();
         }
 
         /// <summary>
@@ -90,17 +90,17 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.binder == null)
+                if (binder == null)
                 {
-                    this.binder = DefaultSerializationBinder.Default;
+                    binder = DefaultSerializationBinder.Default;
                 }
 
-                return this.binder;
+                return binder;
             }
 
             set
             {
-                this.binder = value;
+                binder = value;
             }
         }
 
@@ -134,7 +134,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The streaming context.
         /// </value>
-        public StreamingContext StreamingContext { get { return this.streamingContext; } }
+        public StreamingContext StreamingContext { get { return streamingContext; } }
 
         /// <summary>
         /// Gets the formatter converter.
@@ -142,7 +142,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The formatter converter.
         /// </value>
-        public IFormatterConverter FormatterConverter { get { return this.formatterConverter; } }
+        public IFormatterConverter FormatterConverter { get { return formatterConverter; } }
 
         /// <summary>
         /// Gets or sets the serialization configuration.
@@ -154,17 +154,17 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (this.config == null)
+                if (config == null)
                 {
-                    this.config = new SerializationConfig();
+                    config = new SerializationConfig();
                 }
 
-                return this.config;
+                return config;
             }
 
             set
             {
-                this.config = value;
+                config = value;
             }
         }
 
@@ -175,7 +175,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reference">The reference to register.</param>
         public void RegisterInternalReference(int id, object reference)
         {
-            this.internalIdReferenceMap[id] = reference;
+            internalIdReferenceMap[id] = reference;
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace ExtEvents.OdinSerializer
         public object GetInternalReference(int id)
         {
             object result;
-            this.internalIdReferenceMap.TryGetValue(id, out result);
+            internalIdReferenceMap.TryGetValue(id, out result);
             return result;
         }
 
@@ -197,20 +197,20 @@ namespace ExtEvents.OdinSerializer
         /// <returns>An external object reference by the given index, or null if the index could not be resolved.</returns>
         public object GetExternalObject(int index)
         {
-            if (this.IndexReferenceResolver == null)
+            if (IndexReferenceResolver == null)
             {
-                this.Config.DebugContext.LogWarning("Tried to resolve external reference by index (" + index + "), but no index reference resolver is assigned to the deserialization context. External reference has been lost.");
+                Config.DebugContext.LogWarning("Tried to resolve external reference by index (" + index + "), but no index reference resolver is assigned to the deserialization context. External reference has been lost.");
                 return null;
             }
 
             object result;
 
-            if (this.IndexReferenceResolver.TryResolveReference(index, out result))
+            if (IndexReferenceResolver.TryResolveReference(index, out result))
             {
                 return result;
             }
 
-            this.Config.DebugContext.LogWarning("Failed to resolve external reference by index (" + index + "); the index resolver could not resolve the index. Reference lost.");
+            Config.DebugContext.LogWarning("Failed to resolve external reference by index (" + index + "); the index resolver could not resolve the index. Reference lost.");
             return null;
         }
 
@@ -221,13 +221,13 @@ namespace ExtEvents.OdinSerializer
         /// <returns>An external object reference by the given guid, or null if the guid could not be resolved.</returns>
         public object GetExternalObject(Guid guid)
         {
-            if (this.GuidReferenceResolver == null)
+            if (GuidReferenceResolver == null)
             {
-                this.Config.DebugContext.LogWarning("Tried to resolve external reference by guid (" + guid + "), but no guid reference resolver is assigned to the deserialization context. External reference has been lost.");
+                Config.DebugContext.LogWarning("Tried to resolve external reference by guid (" + guid + "), but no guid reference resolver is assigned to the deserialization context. External reference has been lost.");
                 return null;
             }
 
-            var resolver = this.GuidReferenceResolver;
+            var resolver = GuidReferenceResolver;
             object result;
 
             while (resolver != null)
@@ -240,7 +240,7 @@ namespace ExtEvents.OdinSerializer
                 resolver = resolver.NextResolver;
             }
 
-            this.Config.DebugContext.LogWarning("Failed to resolve external reference by guid (" + guid + "); no guid resolver could resolve the guid. Reference lost.");
+            Config.DebugContext.LogWarning("Failed to resolve external reference by guid (" + guid + "); no guid resolver could resolve the guid. Reference lost.");
             return null;
         }
 
@@ -251,13 +251,13 @@ namespace ExtEvents.OdinSerializer
         /// <returns>An external object reference by an id string, or null if the id string could not be resolved.</returns>
         public object GetExternalObject(string id)
         {
-            if (this.StringReferenceResolver == null)
+            if (StringReferenceResolver == null)
             {
-                this.Config.DebugContext.LogWarning("Tried to resolve external reference by string (" + id + "), but no string reference resolver is assigned to the deserialization context. External reference has been lost.");
+                Config.DebugContext.LogWarning("Tried to resolve external reference by string (" + id + "), but no string reference resolver is assigned to the deserialization context. External reference has been lost.");
                 return null;
             }
 
-            var resolver = this.StringReferenceResolver;
+            var resolver = StringReferenceResolver;
             object result;
 
             while (resolver != null)
@@ -270,7 +270,7 @@ namespace ExtEvents.OdinSerializer
                 resolver = resolver.NextResolver;
             }
 
-            this.Config.DebugContext.LogWarning("Failed to resolve external reference by string (" + id + "); no string resolver could resolve the string. Reference lost.");
+            Config.DebugContext.LogWarning("Failed to resolve external reference by string (" + id + "); no string resolver could resolve the string. Reference lost.");
             return null;
         }
 
@@ -280,21 +280,21 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public void Reset()
         {
-            if (!object.ReferenceEquals(this.config, null))
+            if (!ReferenceEquals(config, null))
             {
-                this.config.ResetToDefault();
+                config.ResetToDefault();
             }
 
-            this.internalIdReferenceMap.Clear();
-            this.IndexReferenceResolver = null;
-            this.GuidReferenceResolver = null;
-            this.StringReferenceResolver = null;
-            this.binder = null;
+            internalIdReferenceMap.Clear();
+            IndexReferenceResolver = null;
+            GuidReferenceResolver = null;
+            StringReferenceResolver = null;
+            binder = null;
         }
 
         void ICacheNotificationReceiver.OnFreed()
         {
-            this.Reset();
+            Reset();
         }
 
         void ICacheNotificationReceiver.OnClaimed()

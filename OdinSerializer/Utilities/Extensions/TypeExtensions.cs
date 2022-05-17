@@ -52,7 +52,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         private static readonly Stack<Type> GenericArgumentsContainsTypes_ArgsToCheckCached = new Stack<Type>();
 
-        private static HashSet<string> ReservedCSharpKeywords = new HashSet<string>()
+        private static HashSet<string> ReservedCSharpKeywords = new HashSet<string>
         {
             "abstract",
             "as",
@@ -143,7 +143,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// Type name alias lookup.
         /// TypeNameAlternatives["Single"] will give you "float", "UInt16" will give you "ushort", "Boolean[]" will give you "bool[]" etc..
         /// </summary>
-        public static readonly Dictionary<string, string> TypeNameAlternatives = new Dictionary<string, string>()
+        public static readonly Dictionary<string, string> TypeNameAlternatives = new Dictionary<string, string>
         {
             { "Single",     "float"     },
             { "Double",     "double"    },
@@ -249,42 +249,42 @@ namespace ExtEvents.OdinSerializer.Utilities
 
         private static readonly Type VoidPointerType = typeof(void).MakePointerType();
 
-        private static readonly Dictionary<Type, HashSet<Type>> PrimitiveImplicitCasts = new Dictionary<Type, HashSet<Type>>()
+        private static readonly Dictionary<Type, HashSet<Type>> PrimitiveImplicitCasts = new Dictionary<Type, HashSet<Type>>
         {
-            { typeof(Int64),    new HashSet<Type>() { typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(Int32),    new HashSet<Type>() { typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(Int16),    new HashSet<Type>() { typeof(Int32), typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(SByte),    new HashSet<Type>() { typeof(Int16), typeof(Int32), typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(UInt64),   new HashSet<Type>() { typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(UInt32),   new HashSet<Type>() { typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(UInt16),   new HashSet<Type>() { typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(Byte),     new HashSet<Type>() { typeof(Int16), typeof(UInt16), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(Char),     new HashSet<Type>() { typeof(UInt16), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
-            { typeof(Boolean),  new HashSet<Type>() { } },
-            { typeof(Decimal),  new HashSet<Type>() { } },
-            { typeof(Single),   new HashSet<Type>() { typeof(Double) } },
-            { typeof(Double),   new HashSet<Type>() { } },
-            { typeof(IntPtr),   new HashSet<Type>() { } },
-            { typeof(UIntPtr),  new HashSet<Type>() { } },
-            { VoidPointerType,  new HashSet<Type>() { } },
+            { typeof(Int64),    new HashSet<Type> { typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(Int32),    new HashSet<Type> { typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(Int16),    new HashSet<Type> { typeof(Int32), typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(SByte),    new HashSet<Type> { typeof(Int16), typeof(Int32), typeof(Int64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(UInt64),   new HashSet<Type> { typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(UInt32),   new HashSet<Type> { typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(UInt16),   new HashSet<Type> { typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(Byte),     new HashSet<Type> { typeof(Int16), typeof(UInt16), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(Char),     new HashSet<Type> { typeof(UInt16), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) } },
+            { typeof(Boolean),  new HashSet<Type>() },
+            { typeof(Decimal),  new HashSet<Type>() },
+            { typeof(Single),   new HashSet<Type> { typeof(Double) } },
+            { typeof(Double),   new HashSet<Type>() },
+            { typeof(IntPtr),   new HashSet<Type>() },
+            { typeof(UIntPtr),  new HashSet<Type>() },
+            { VoidPointerType,  new HashSet<Type>() },
         };
 
-        private static readonly HashSet<Type> ExplicitCastIntegrals = new HashSet<Type>()
+        private static readonly HashSet<Type> ExplicitCastIntegrals = new HashSet<Type>
         {
-            { typeof(Int64) },
-            { typeof(Int32) },
-            { typeof(Int16) },
-            { typeof(SByte) },
-            { typeof(UInt64) },
-            { typeof(UInt32) },
-            { typeof(UInt16) },
-            { typeof(Byte) },
-            { typeof(Char) },
-            { typeof(Decimal) },
-            { typeof(Single) },
-            { typeof(Double) },
-            { typeof(IntPtr) },
-            { typeof(UIntPtr) }
+            typeof(Int64),
+            typeof(Int32),
+            typeof(Int16),
+            typeof(SByte),
+            typeof(UInt64),
+            typeof(UInt32),
+            typeof(UInt16),
+            typeof(Byte),
+            typeof(Char),
+            typeof(Decimal),
+            typeof(Single),
+            typeof(Double),
+            typeof(IntPtr),
+            typeof(UIntPtr)
         };
 
         internal static bool HasCastDefined(this Type from, Type to, bool requireImplicitCast)
@@ -305,33 +305,33 @@ namespace ExtEvents.OdinSerializer.Utilities
                 {
                     return PrimitiveImplicitCasts[from].Contains(to);
                 }
-                else
+
+                if (from == typeof(IntPtr))
                 {
-                    if (from == typeof(IntPtr))
+                    if (to == typeof(UIntPtr))
                     {
-                        if (to == typeof(UIntPtr))
-                        {
-                            return false;
-                        }
-                        else if (to == VoidPointerType)
-                        {
-                            return true;
-                        }
-                    }
-                    else if (from == typeof(UIntPtr))
-                    {
-                        if (to == typeof(IntPtr))
-                        {
-                            return false;
-                        }
-                        else if (to == VoidPointerType)
-                        {
-                            return true;
-                        }
+                        return false;
                     }
 
-                    return ExplicitCastIntegrals.Contains(from) && ExplicitCastIntegrals.Contains(to);
+                    if (to == VoidPointerType)
+                    {
+                        return true;
+                    }
                 }
+                else if (from == typeof(UIntPtr))
+                {
+                    if (to == typeof(IntPtr))
+                    {
+                        return false;
+                    }
+
+                    if (to == VoidPointerType)
+                    {
+                        return true;
+                    }
+                }
+
+                return ExplicitCastIntegrals.Contains(from) && ExplicitCastIntegrals.Contains(to);
             }
 
             return from.GetCastMethod(to, requireImplicitCast) != null;
@@ -440,7 +440,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
                     if (method != null)
                     {
-                        result = (obj) => method.Invoke(null, new object[] { obj });
+                        result = obj => method.Invoke(null, new[] { obj });
                     }
 
                     WeaklyTypedTypeCastDelegates.AddInner(from, to, result);
@@ -540,9 +540,9 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             if (typeof(T) == typeof(float))
                 return (Func<T, T, bool>)(object)FloatEqualityComparerFunc;
-            else if (typeof(T) == typeof(double))
+            if (typeof(T) == typeof(double))
                 return (Func<T, T, bool>)(object)DoubleEqualityComparerFunc;
-            else if (typeof(T) == typeof(Quaternion))
+            if (typeof(T) == typeof(Quaternion))
                 return (Func<T, T, bool>)(object)QuaternionEqualityComparerFunc;
 
             Func<T, T, bool> result = null;
@@ -561,18 +561,17 @@ namespace ExtEvents.OdinSerializer.Utilities
                 {
                     result = (a, b) =>
                     {
-                        if (object.ReferenceEquals(a, b))
+                        if (ReferenceEquals(a, b))
                         {
                             return true;
                         }
-                        else if (object.ReferenceEquals(a, null))
+
+                        if (ReferenceEquals(a, null))
                         {
                             return false;
                         }
-                        else
-                        {
-                            return ((IEquatable<T>)a).Equals(b);
-                        }
+
+                        return ((IEquatable<T>)a).Equals(b);
                     };
                 }
             }
@@ -616,10 +615,8 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 return null;
             }
-            else
-            {
-                return (T)attrs[0];
-            }
+
+            return (T)attrs[0];
         }
 
         /// <summary>
@@ -641,7 +638,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         public static bool ImplementsOpenGenericType(this Type candidateType, Type openGenericType)
         {
             if (openGenericType.IsInterface) return candidateType.ImplementsOpenGenericInterface(openGenericType);
-            else return candidateType.ImplementsOpenGenericClass(openGenericType);
+            return candidateType.ImplementsOpenGenericClass(openGenericType);
         }
 
         /// <summary>
@@ -696,7 +693,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         public static Type[] GetArgumentsOfInheritedOpenGenericType(this Type candidateType, Type openGenericType)
         {
             if (openGenericType.IsInterface) return candidateType.GetArgumentsOfInheritedOpenGenericInterface(openGenericType);
-            else return candidateType.GetArgumentsOfInheritedOpenGenericClass(openGenericType);
+            return candidateType.GetArgumentsOfInheritedOpenGenericClass(openGenericType);
         }
 
         /// <summary>
@@ -730,7 +727,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             //   you can't actually use an enum array as if it was an IList<int>.
             if ((openGenericInterfaceType == GenericListInterface || openGenericInterfaceType == GenericCollectionInterface) && candidateType.IsArray)
             {
-                return new Type[] { candidateType.GetElementType() };
+                return new[] { candidateType.GetElementType() };
             }
 
             if (candidateType == openGenericInterfaceType)
@@ -1213,7 +1210,7 @@ namespace ExtEvents.OdinSerializer.Utilities
             var result = GetBaseClasses(type, includeSelf).Concat(type.GetInterfaces());
             if (includeSelf && type.IsInterface)
             {
-                result.Concat(new Type[] { type });
+                result.Concat(new[] { type });
             }
             return result;
         }
@@ -1493,7 +1490,8 @@ namespace ExtEvents.OdinSerializer.Utilities
                     {
                         return false;
                     }
-                    else if (methodParams[i].ParameterType != paramTypes[i])
+
+                    if (methodParams[i].ParameterType != paramTypes[i])
                     {
                         return false;
                     }
@@ -1548,14 +1546,13 @@ namespace ExtEvents.OdinSerializer.Utilities
             {
                 return (member as FieldInfo).GetValue(obj);
             }
-            else if (member is PropertyInfo)
+
+            if (member is PropertyInfo)
             {
                 return (member as PropertyInfo).GetGetMethod(true).Invoke(obj, null);
             }
-            else
-            {
-                throw new ArgumentException("Can't get the value of a " + member.GetType().Name);
-            }
+
+            throw new ArgumentException("Can't get the value of a " + member.GetType().Name);
         }
 
         /// <summary>
@@ -1581,7 +1578,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
                 if (method != null)
                 {
-                    method.Invoke(obj, new object[] { value });
+                    method.Invoke(obj, new[] { value });
                 }
                 else
                 {
@@ -2260,7 +2257,8 @@ namespace ExtEvents.OdinSerializer.Utilities
                 {
                     return false;
                 }
-                else if (!arg.IsFullyConstructedGenericType())
+
+                if (!arg.IsFullyConstructedGenericType())
                 {
                     return false;
                 }

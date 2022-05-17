@@ -22,8 +22,8 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using System.Globalization;
     using System;
+    using System.Globalization;
 
     /// <summary>
     /// Custom formatter for the <see cref="DateTimeOffset"/> type.

@@ -39,8 +39,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to use.</param>
         protected override void Read(ref Vector2 value, IDataReader reader)
         {
-            value.x = Vector2Formatter.FloatSerializer.ReadValue(reader);
-            value.y = Vector2Formatter.FloatSerializer.ReadValue(reader);
+            value.x = FloatSerializer.ReadValue(reader);
+            value.y = FloatSerializer.ReadValue(reader);
         }
 
         /// <summary>
@@ -50,8 +50,8 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Vector2 value, IDataWriter writer)
         {
-            Vector2Formatter.FloatSerializer.WriteValue(value.x, writer);
-            Vector2Formatter.FloatSerializer.WriteValue(value.y, writer);
+            FloatSerializer.WriteValue(value.x, writer);
+            FloatSerializer.WriteValue(value.y, writer);
         }
     }
 }

@@ -18,11 +18,12 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Reflection;
+    using Utilities;
+    using Debug = UnityEngine.Debug;
 
     /// <summary>
     /// Serializes and deserializes a given type, and wraps serialization and deserialization with all the proper calls to free formatters from tedious boilerplate.
@@ -35,7 +36,7 @@ namespace ExtEvents.OdinSerializer
     /// </summary>
     public abstract class Serializer
     {
-        private static readonly Dictionary<Type, Type> PrimitiveReaderWriterTypes = new Dictionary<Type, Type>()
+        private static readonly Dictionary<Type, Type> PrimitiveReaderWriterTypes = new Dictionary<Type, Type>
         {
             { typeof(char), typeof(CharSerializer) },
             { typeof(string), typeof(StringSerializer) },
@@ -90,14 +91,12 @@ namespace ExtEvents.OdinSerializer
         /// <returns>A <see cref="Serializer"/> for the given value.</returns>
         public static Serializer GetForValue(object value)
         {
-            if (object.ReferenceEquals(value, null))
+            if (ReferenceEquals(value, null))
             {
                 return Get(typeof(object));
             }
-            else
-            {
-                return Get(value.GetType());
-            }
+
+            return Get(value.GetType());
         }
 
         /// <summary>
@@ -107,7 +106,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>A <see cref="Serializer"/> for type T.</returns>
         public static Serializer<T> Get<T>()
         {
-            return (Serializer<T>)Serializer.Get(typeof(T));
+            return (Serializer<T>)Get(typeof(T));
         }
 
         /// <summary>
@@ -151,7 +150,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         public void WriteValueWeak(object value, IDataWriter writer)
         {
-            this.WriteValueWeak(null, value, writer);
+            WriteValueWeak(null, value, writer);
         }
 
         /// <summary>
@@ -180,7 +179,7 @@ namespace ExtEvents.OdinSerializer
                     }
                     catch (KeyNotFoundException)
                     {
-                        UnityEngine.Debug.LogError("Failed to find primitive serializer for " + type.Name);
+                        Debug.LogError("Failed to find primitive serializer for " + type.Name);
                     }
                 }
                 else
@@ -200,10 +199,8 @@ namespace ExtEvents.OdinSerializer
                     LogAOTError(type, ex.GetBaseException() as ExecutionEngineException);
                     return null;
                 }
-                else
-                {
-                    throw ex;
-                }
+
+                throw ex;
             }
             catch (TypeInitializationException ex)
             {
@@ -212,10 +209,8 @@ namespace ExtEvents.OdinSerializer
                     LogAOTError(type, ex.GetBaseException() as ExecutionEngineException);
                     return null;
                 }
-                else
-                {
-                    throw ex;
-                }
+
+                throw ex;
             }
             catch (ExecutionEngineException ex)
             {
@@ -226,10 +221,10 @@ namespace ExtEvents.OdinSerializer
 
         private static void LogAOTError(Type type, ExecutionEngineException ex)
         {
-            UnityEngine.Debug.LogError("No AOT serializer was pre-generated for the type '" + type.GetNiceFullName() + "'. " +
-                "Please use Odin's AOT generation feature to generate an AOT dll before building, and ensure that '" +
-                type.GetNiceFullName() + "' is in the list of supported types after a scan. If it is not, please " +
-                "report an issue and add it to the list manually.");
+            Debug.LogError("No AOT serializer was pre-generated for the type '" + type.GetNiceFullName() + "'. " +
+                           "Please use Odin's AOT generation feature to generate an AOT dll before building, and ensure that '" +
+                           type.GetNiceFullName() + "' is in the list of supported types after a scan. If it is not, please " +
+                           "report an issue and add it to the list manually.");
 
             throw new SerializationAbortException("AOT serializer was missing for type '" + type.GetNiceFullName() + "'.");
         }
@@ -258,7 +253,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public override object ReadValueWeak(IDataReader reader)
         {
-            return this.ReadValue(reader);
+            return ReadValue(reader);
         }
 
         /// <summary>
@@ -269,7 +264,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         public override void WriteValueWeak(string name, object value, IDataWriter writer)
         {
-            this.WriteValue(name, (T)value, writer);
+            WriteValue(name, (T)value, writer);
         }
 
         /// <summary>
@@ -288,7 +283,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         public void WriteValue(T value, IDataWriter writer)
         {
-            this.WriteValue(null, value, writer);
+            WriteValue(null, value, writer);
         }
 
         /// <summary>

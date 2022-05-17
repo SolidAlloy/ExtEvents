@@ -22,8 +22,6 @@ using ExtEvents.OdinSerializer;
 
 namespace ExtEvents.OdinSerializer
 {
-    using System;
-
     /// <summary>
     /// Formatter for all <see cref="System.Nullable{T}"/> types.
     /// </summary>

@@ -40,7 +40,7 @@ namespace ExtEvents.OdinSerializer
 
             do
             {
-                constructor = current.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(SerializationInfo), typeof(StreamingContext) }, null);
+                constructor = current.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(SerializationInfo), typeof(StreamingContext) }, null);
                 current = current.BaseType;
             }
             while (constructor == null && current != typeof(object) && current != null);
@@ -81,24 +81,22 @@ namespace ExtEvents.OdinSerializer
         /// <param name="reader">The reader to deserialize with.</param>
         protected override void DeserializeImplementation(ref T value, IDataReader reader)
         {
-            if (SerializableFormatter<T>.ISerializableConstructor != null)
+            if (ISerializableConstructor != null)
             {
-                var info = this.ReadSerializationInfo(reader);
+                var info = ReadSerializationInfo(reader);
 
                 if (info != null)
                 {
                     try
                     {
-                        value = SerializableFormatter<T>.ISerializableConstructor(info, reader.Context.StreamingContext);
+                        value = ISerializableConstructor(info, reader.Context.StreamingContext);
 
-                        this.InvokeOnDeserializingCallbacks(ref value, reader.Context);
+                        InvokeOnDeserializingCallbacks(ref value, reader.Context);
 
                         if (IsValueType == false)
                         {
-                            this.RegisterReferenceID(value, reader);
+                            RegisterReferenceID(value, reader);
                         }
-
-                        return;
                     }
                     catch (Exception ex)
                     {
@@ -110,11 +108,11 @@ namespace ExtEvents.OdinSerializer
             {
                 value = ReflectionFormatter.Deserialize(reader);
 
-                this.InvokeOnDeserializingCallbacks(ref value, reader.Context);
+                InvokeOnDeserializingCallbacks(ref value, reader.Context);
 
                 if (IsValueType == false)
                 {
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
                 }
             }
         }
@@ -126,7 +124,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to serialize with.</param>
         protected override void SerializeImplementation(ref T value, IDataWriter writer)
         {
-            if (SerializableFormatter<T>.ISerializableConstructor != null)
+            if (ISerializableConstructor != null)
             {
                 var serializable = value as ISerializable;
                 var info = new SerializationInfo(value.GetType(), writer.Context.FormatterConverter);
@@ -140,7 +138,7 @@ namespace ExtEvents.OdinSerializer
                     writer.Context.Config.DebugContext.LogException(ex);
                 }
 
-                this.WriteSerializationInfo(info, writer);
+                WriteSerializationInfo(info, writer);
             }
             else
             {

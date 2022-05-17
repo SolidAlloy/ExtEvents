@@ -20,7 +20,6 @@ namespace ExtEvents.OdinSerializer
 {
     using System;
     using System.Reflection;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// Final fallback formatter for all types which have no other formatters. This formatter relies on reflection to work, and is thus comparatively slow and creates more garbage than a custom formatter.
@@ -35,7 +34,7 @@ namespace ExtEvents.OdinSerializer
 
         public ReflectionFormatter(ISerializationPolicy overridePolicy)
         {
-            this.OverridePolicy = overridePolicy;
+            OverridePolicy = overridePolicy;
         }
 
         public ISerializationPolicy OverridePolicy { get; private set; }
@@ -51,7 +50,7 @@ namespace ExtEvents.OdinSerializer
             // At least we only box these once.
             object boxedValue = value;
 
-            var members = FormatterUtilities.GetSerializableMembersMap(typeof(T), this.OverridePolicy ?? reader.Context.Config.SerializationPolicy);
+            var members = FormatterUtilities.GetSerializableMembersMap(typeof(T), OverridePolicy ?? reader.Context.Config.SerializationPolicy);
 
             EntryType entryType;
             string name;
@@ -98,7 +97,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to serialize with.</param>
         protected override void SerializeImplementation(ref T value, IDataWriter writer)
         {
-            var members = FormatterUtilities.GetSerializableMembers(typeof(T), this.OverridePolicy ?? writer.Context.Config.SerializationPolicy);
+            var members = FormatterUtilities.GetSerializableMembers(typeof(T), OverridePolicy ?? writer.Context.Config.SerializationPolicy);
 
             for (int i = 0; i < members.Length; i++)
             {

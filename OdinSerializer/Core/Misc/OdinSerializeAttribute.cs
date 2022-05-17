@@ -19,12 +19,13 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using JetBrains.Annotations;
 
     /// <summary>
     /// Indicates that an instance field or auto-property should be serialized by Odin.
     /// </summary>
     /// <seealso cref="System.Attribute" />
-    [JetBrains.Annotations.MeansImplicitUse]
+    [MeansImplicitUse]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class OdinSerializeAttribute : Attribute
     {

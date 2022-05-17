@@ -17,9 +17,9 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer
 {
-    using ExtEvents.OdinSerializer.Utilities;
     using System;
     using System.Collections.Generic;
+    using Utilities;
 
     /// <summary>
     /// Utility class for the <see cref="GenericCollectionFormatter{TCollection, TElement}"/> class.

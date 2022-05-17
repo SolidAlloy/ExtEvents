@@ -42,10 +42,6 @@ namespace ExtEvents.OdinSerializer
             new HashSetFormatter<int>();
         }
 
-        public HashSetFormatter()
-        {
-        }
-
         /// <summary>
         /// Returns null.
         /// </summary>
@@ -76,7 +72,7 @@ namespace ExtEvents.OdinSerializer
                     value = new HashSet<T>();
 
                     // We must remember to register the hashset reference ourselves, since we return null in GetUninitializedObject
-                    this.RegisterReferenceID(value, reader);
+                    RegisterReferenceID(value, reader);
 
                     // There aren't any relevant OnDeserializing callbacks on hash sets.
                     // Hence we don't invoke this.InvokeOnDeserializingCallbacks(value, reader, context);

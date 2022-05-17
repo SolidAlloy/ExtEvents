@@ -19,11 +19,10 @@
 // Tested and verified to work
 #pragma warning disable 0675
 
-using System.Globalization;
-
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.Globalization;
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -37,7 +36,7 @@ namespace ExtEvents.OdinSerializer
         private static readonly uint[] ByteToHexCharLookupUpperCase = CreateByteToHexLookup(true);
 
         // 16x16 table, set up for direct visual correlation to Unicode table with hex coords
-        private static readonly byte[] HexToByteLookup = new byte[] {
+        private static readonly byte[] HexToByteLookup = {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -65,7 +64,7 @@ namespace ExtEvents.OdinSerializer
                 for (int i = 0; i < 256; i++)
                 {
                     string s = i.ToString("X2", CultureInfo.InvariantCulture);
-                    result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
+                    result[i] = s[0] + ((uint)s[1] << 16);
                 }
             }
             else
@@ -73,7 +72,7 @@ namespace ExtEvents.OdinSerializer
                 for (int i = 0; i < 256; i++)
                 {
                     string s = i.ToString("x2", CultureInfo.InvariantCulture);
-                    result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
+                    result[i] = s[0] + ((uint)s[1] << 16);
                 }
             }
 

@@ -45,8 +45,8 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="namePrefix">The name prefix to use.</param>
         public MemberAliasFieldInfo(FieldInfo field, string namePrefix)
         {
-            this.aliasedField = field;
-            this.mangledName = string.Concat(namePrefix, FAKE_NAME_SEPARATOR_STRING, this.aliasedField.Name);
+            aliasedField = field;
+            mangledName = string.Concat(namePrefix, FAKE_NAME_SEPARATOR_STRING, aliasedField.Name);
         }
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="separatorString">The separator string to use.</param>
         public MemberAliasFieldInfo(FieldInfo field, string namePrefix, string separatorString)
         {
-            this.aliasedField = field;
-            this.mangledName = string.Concat(namePrefix, separatorString, this.aliasedField.Name);
+            aliasedField = field;
+            mangledName = string.Concat(namePrefix, separatorString, aliasedField.Name);
         }
 
         /// <summary>
@@ -67,32 +67,32 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The aliased field.
         /// </value>
-        public FieldInfo AliasedField { get { return this.aliasedField; } }
+        public FieldInfo AliasedField { get { return aliasedField; } }
 
         /// <summary>
         /// Gets the module in which the type that declares the member represented by the current <see cref="T:System.Reflection.MemberInfo" /> is defined.
         /// </summary>
-        public override Module Module { get { return this.aliasedField.Module; } }
+        public override Module Module { get { return aliasedField.Module; } }
 
         /// <summary>
         /// Gets a value that identifies a metadata element.
         /// </summary>
-        public override int MetadataToken { get { return this.aliasedField.MetadataToken; } }
+        public override int MetadataToken { get { return aliasedField.MetadataToken; } }
 
         /// <summary>
         /// Gets the name of the current member.
         /// </summary>
-        public override string Name { get { return this.mangledName; } }
+        public override string Name { get { return mangledName; } }
 
         /// <summary>
         /// Gets the class that declares this member.
         /// </summary>
-        public override Type DeclaringType { get { return this.aliasedField.DeclaringType; } }
+        public override Type DeclaringType { get { return aliasedField.DeclaringType; } }
 
         /// <summary>
         /// Gets the class object that was used to obtain this instance of MemberInfo.
         /// </summary>
-        public override Type ReflectedType { get { return this.aliasedField.ReflectedType; } }
+        public override Type ReflectedType { get { return aliasedField.ReflectedType; } }
 
         /// <summary>
         /// Gets the type of the field.
@@ -100,12 +100,12 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The type of the field.
         /// </value>
-        public override Type FieldType { get { return this.aliasedField.FieldType; } }
+        public override Type FieldType { get { return aliasedField.FieldType; } }
 
         /// <summary>
         /// Gets a RuntimeFieldHandle, which is a handle to the internal metadata representation of a field.
         /// </summary>
-        public override RuntimeFieldHandle FieldHandle { get { return this.aliasedField.FieldHandle; } }
+        public override RuntimeFieldHandle FieldHandle { get { return aliasedField.FieldHandle; } }
 
         /// <summary>
         /// Gets the attributes.
@@ -113,7 +113,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The attributes.
         /// </value>
-        public override FieldAttributes Attributes { get { return this.aliasedField.Attributes; } }
+        public override FieldAttributes Attributes { get { return aliasedField.Attributes; } }
 
         /// <summary>
         /// When overridden in a derived class, returns an array of all custom attributes applied to this member.
@@ -124,7 +124,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return this.aliasedField.GetCustomAttributes(inherit);
+            return aliasedField.GetCustomAttributes(inherit);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            return this.aliasedField.GetCustomAttributes(attributeType, inherit);
+            return aliasedField.GetCustomAttributes(attributeType, inherit);
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return this.aliasedField.IsDefined(attributeType, inherit);
+            return aliasedField.IsDefined(attributeType, inherit);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <returns>The value of the field.</returns>
         public override object GetValue(object obj)
         {
-            return this.aliasedField.GetValue(obj);
+            return aliasedField.GetValue(obj);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="culture">The software preferences of a particular culture.</param>
         public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture)
         {
-            this.aliasedField.SetValue(obj, value, invokeAttr, binder, culture);
+            aliasedField.SetValue(obj, value, invokeAttr, binder, culture);
         }
     }
 }

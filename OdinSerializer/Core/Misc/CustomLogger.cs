@@ -61,7 +61,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="warning">The warning to log.</param>
         public void LogWarning(string warning)
         {
-            this.logWarningDelegate(warning);
+            logWarningDelegate(warning);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="error">The error to log.</param>
         public void LogError(string error)
         {
-            this.logErrorDelegate(error);
+            logErrorDelegate(error);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="exception">The exception to log.</param>
         public void LogException(Exception exception)
         {
-            this.logExceptionDelegate(exception);
+            logExceptionDelegate(exception);
         }
     }
 }

@@ -48,8 +48,8 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="namePrefix">The name prefix to use.</param>
         public MemberAliasMethodInfo(MethodInfo method, string namePrefix)
         {
-            this.aliasedMethod = method;
-            this.mangledName = string.Concat(namePrefix, FAKE_NAME_SEPARATOR_STRING, this.aliasedMethod.Name);
+            aliasedMethod = method;
+            mangledName = string.Concat(namePrefix, FAKE_NAME_SEPARATOR_STRING, aliasedMethod.Name);
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <param name="separatorString">The separator string to use.</param>
         public MemberAliasMethodInfo(MethodInfo method, string namePrefix, string separatorString)
         {
-            this.aliasedMethod = method;
-            this.mangledName = string.Concat(namePrefix, separatorString, this.aliasedMethod.Name);
+            aliasedMethod = method;
+            mangledName = string.Concat(namePrefix, separatorString, aliasedMethod.Name);
         }
 
         /// <summary>
@@ -70,39 +70,39 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The aliased method.
         /// </value>
-        public MethodInfo AliasedMethod { get { return this.aliasedMethod; } }
+        public MethodInfo AliasedMethod { get { return aliasedMethod; } }
 
         /// <summary>
         /// Gets the custom attributes for the return type.
         /// </summary>
-        public override ICustomAttributeProvider ReturnTypeCustomAttributes { get { return this.aliasedMethod.ReturnTypeCustomAttributes; } }
+        public override ICustomAttributeProvider ReturnTypeCustomAttributes { get { return aliasedMethod.ReturnTypeCustomAttributes; } }
 
         /// <summary>
         /// Gets a handle to the internal metadata representation of a method.
         /// </summary>
-        public override RuntimeMethodHandle MethodHandle { get { return this.aliasedMethod.MethodHandle; } }
+        public override RuntimeMethodHandle MethodHandle { get { return aliasedMethod.MethodHandle; } }
 
         /// <summary>
         /// Gets the attributes associated with this method.
         /// </summary>
-        public override MethodAttributes Attributes { get { return this.aliasedMethod.Attributes; } }
+        public override MethodAttributes Attributes { get { return aliasedMethod.Attributes; } }
 
-        public override Type ReturnType { get { return this.aliasedMethod.ReturnType; } }
+        public override Type ReturnType { get { return aliasedMethod.ReturnType; } }
 
         /// <summary>
         /// Gets the class that declares this member.
         /// </summary>
-        public override Type DeclaringType { get { return this.aliasedMethod.DeclaringType; } }
+        public override Type DeclaringType { get { return aliasedMethod.DeclaringType; } }
 
         /// <summary>
         /// Gets the name of the current member.
         /// </summary>
-        public override string Name { get { return this.mangledName; } }
+        public override string Name { get { return mangledName; } }
 
         /// <summary>
         /// Gets the class object that was used to obtain this instance of MemberInfo.
         /// </summary>
-        public override Type ReflectedType { get { return this.aliasedMethod.ReflectedType; } }
+        public override Type ReflectedType { get { return aliasedMethod.ReflectedType; } }
 
         /// <summary>
         /// When overridden in a derived class, returns the MethodInfo object for the method on the direct or indirect base class in which the method represented by this instance was first declared.
@@ -112,7 +112,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override MethodInfo GetBaseDefinition()
         {
-            return this.aliasedMethod.GetBaseDefinition();
+            return aliasedMethod.GetBaseDefinition();
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return this.aliasedMethod.GetCustomAttributes(inherit);
+            return aliasedMethod.GetCustomAttributes(inherit);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            return this.aliasedMethod.GetCustomAttributes(attributeType, inherit);
+            return aliasedMethod.GetCustomAttributes(attributeType, inherit);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override MethodImplAttributes GetMethodImplementationFlags()
         {
-            return this.aliasedMethod.GetMethodImplementationFlags();
+            return aliasedMethod.GetMethodImplementationFlags();
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override ParameterInfo[] GetParameters()
         {
-            return this.aliasedMethod.GetParameters();
+            return aliasedMethod.GetParameters();
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
         {
-            return this.aliasedMethod.Invoke(obj, invokeAttr, binder, parameters, culture);
+            return aliasedMethod.Invoke(obj, invokeAttr, binder, parameters, culture);
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// </returns>
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return this.aliasedMethod.IsDefined(attributeType, inherit);
+            return aliasedMethod.IsDefined(attributeType, inherit);
         }
     }
 }

@@ -50,18 +50,18 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         public T Deserialize(IDataReader reader)
         {
-            T result = this.GetUninitializedObject();
+            T result = GetUninitializedObject();
 
             // We allow the above method to return null (for reference types) because of special cases like arrays,
             //  where the size of the array cannot be known yet, and thus we cannot create an object instance at this time.
             //
             // Therefore, those who override GetUninitializedObject and return null must call RegisterReferenceID manually.
-            if (IsValueType == false && object.ReferenceEquals(result, null) == false)
+            if (IsValueType == false && ReferenceEquals(result, null) == false)
             {
-                this.RegisterReferenceID(result, reader);
+                RegisterReferenceID(result, reader);
             }
 
-            this.Read(ref result, reader);
+            Read(ref result, reader);
             return result;
         }
 
@@ -72,7 +72,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         public void Serialize(T value, IDataWriter writer)
         {
-            this.Write(ref value, writer);
+            Write(ref value, writer);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (value is T)
             {
-                this.Serialize((T)value, writer);
+                Serialize((T)value, writer);
             }
         }
 
@@ -97,7 +97,7 @@ namespace ExtEvents.OdinSerializer
         /// </returns>
         object IFormatter.Deserialize(IDataReader reader)
         {
-            return this.Deserialize(reader);
+            return Deserialize(reader);
         }
 
         /// <summary>
@@ -111,10 +111,8 @@ namespace ExtEvents.OdinSerializer
             {
                 return default(T);
             }
-            else
-            {
-                return (T)FormatterServices.GetUninitializedObject(typeof(T));
-            }
+
+            return (T)FormatterServices.GetUninitializedObject(typeof(T));
         }
 
         /// <summary>

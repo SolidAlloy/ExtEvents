@@ -17,11 +17,11 @@
 //-----------------------------------------------------------------------
 namespace ExtEvents.OdinSerializer
 {
-    using Utilities;
     using System;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using UnityEngine;
+    using Utilities;
 
     /// <summary>
     /// Contains a set of default implementations of the <see cref="ISerializationPolicy"/> interface.
@@ -50,15 +50,15 @@ namespace ExtEvents.OdinSerializer
             switch (name)
             {
                 case "OdinSerializerPolicies.Everything":
-                    policy = SerializationPolicies.Everything;
+                    policy = Everything;
                     break;
 
                 case "OdinSerializerPolicies.Unity":
-                    policy = SerializationPolicies.Unity;
+                    policy = Unity;
                     break;
 
                 case "OdinSerializerPolicies.Strict":
-                    policy = SerializationPolicies.Strict;
+                    policy = Strict;
                     break;
 
                 default:
@@ -82,7 +82,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         if (everythingPolicy == null)
                         {
-                            everythingPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Everything", true, (member) =>
+                            everythingPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Everything", true, member =>
                             {
                                 if (!(member is FieldInfo))
                                 {
@@ -124,7 +124,7 @@ namespace ExtEvents.OdinSerializer
                             // In Unity 2017.1's .NET 4.6 profile, Tuples implement System.ITuple. In Unity 2017.2 and up, tuples implement System.ITupleInternal instead for some reason.
                             Type tupleInterface = typeof(string).Assembly.GetType("System.ITuple") ?? typeof(string).Assembly.GetType("System.ITupleInternal");
 
-                            unityPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Unity", true, (member) =>
+                            unityPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Unity", true, member =>
                             {
                                 // As of Odin 3.0, we now allow non-auto properties and virtual properties.
                                 // However, properties still need a getter and a setter.
@@ -173,7 +173,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         if (strictPolicy == null)
                         {
-                            strictPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Strict", true, (member) =>
+                            strictPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Strict", true, member =>
                             {
                                 // Non-auto properties are never supported.
                                 if (member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false)

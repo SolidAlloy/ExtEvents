@@ -18,6 +18,7 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.ComponentModel;
 
     /// <summary>
     /// <para>
@@ -26,9 +27,9 @@ namespace ExtEvents.OdinSerializer
     /// </para>
     /// <para>Note that Odin can still serialize an excluded member - it is merely ignored in the inspector itself.</para>
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     [Obsolete("Use [HideInInspector] instead - it now also excludes the member completely from becoming a property in the property tree.", false)]
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class ExcludeDataFromInspectorAttribute : Attribute
     {
     }

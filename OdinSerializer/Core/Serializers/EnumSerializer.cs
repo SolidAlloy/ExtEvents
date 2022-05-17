@@ -58,7 +58,7 @@ namespace ExtEvents.OdinSerializer
                 ulong value;
                 if (reader.ReadUInt64(out value) == false)
                 {
-                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry.ToString());
+                    reader.Context.Config.DebugContext.LogWarning("Failed to read entry '" + name + "' of type " + entry);
                 }
 
 #if CSHARP_7_3_OR_NEWER
@@ -67,12 +67,10 @@ namespace ExtEvents.OdinSerializer
                 return (T)Enum.ToObject(typeof(T), value);
 #endif
             }
-            else
-            {
-                reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.Integer.ToString() + ", but got entry '" + name + "' of type " + entry.ToString());
-                reader.SkipEntry();
-                return default(T);
-            }
+
+            reader.Context.Config.DebugContext.LogWarning("Expected entry of type " + EntryType.Integer + ", but got entry '" + name + "' of type " + entry);
+            reader.SkipEntry();
+            return default(T);
         }
 
         /// <summary>

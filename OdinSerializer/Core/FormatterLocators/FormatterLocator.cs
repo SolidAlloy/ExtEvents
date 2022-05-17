@@ -28,8 +28,8 @@ namespace ExtEvents.OdinSerializer
     /// Utility class for locating and caching formatters for all non-primitive types.
     /// </summary>
 #if UNITY_EDITOR
-
-    [UnityEditor.InitializeOnLoad]
+    using UnityEditor;
+    [InitializeOnLoad]
 #endif
 
     public static class FormatterLocator
@@ -84,7 +84,8 @@ namespace ExtEvents.OdinSerializer
                         // Filter out various core .NET libraries and Unity engine assemblies
                         continue;
                     }
-                    else if (ass.GetName().Name == FormatterEmitter.PRE_EMITTED_ASSEMBLY_NAME || ass.SafeIsDefined(typeof(EmittedAssemblyAttribute), true))
+
+                    if (ass.GetName().Name == FormatterEmitter.PRE_EMITTED_ASSEMBLY_NAME || ass.SafeIsDefined(typeof(EmittedAssemblyAttribute), true))
                     {
                         // Only include pre-emitted formatters if we are on an AOT platform.
                         // Pre-emitted formatters will not work in newer .NET runtimes due to
@@ -114,7 +115,7 @@ namespace ExtEvents.OdinSerializer
                             continue;
                         }
 
-                        FormatterInfos.Add(new FormatterInfo()
+                        FormatterInfos.Add(new FormatterInfo
                         {
                             FormatterType = attr.FormatterType,
                             TargetType = attr.FormatterType.GetArgumentsOfInheritedOpenGenericInterface(typeof(IFormatter<>))[0],
@@ -137,7 +138,7 @@ namespace ExtEvents.OdinSerializer
 
                         try
                         {
-                            FormatterLocators.Add(new FormatterLocatorInfo()
+                            FormatterLocators.Add(new FormatterLocatorInfo
                             {
                                 LocatorInstance = (IFormatterLocator)Activator.CreateInstance(attr.FormatterLocatorType),
                                 Priority = attr.Priority
@@ -197,19 +198,6 @@ namespace ExtEvents.OdinSerializer
 
                 return compare;
             });
-        }
-
-        /// <summary>
-        /// This event is invoked before everything else when a formatter is being resolved for a given type. If any invoked delegate returns a valid formatter, that formatter is used and the resolve process stops there.
-        /// <para />
-        /// This can be used to hook into and extend the serialization system's formatter resolution logic.
-        /// </summary>
-        [Obsolete("Use the new IFormatterLocator interface instead, and register your custom locator with the RegisterFormatterLocator assembly attribute.", true)]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public static event Func<Type, IFormatter> FormatterResolve
-        {
-            add { throw new NotSupportedException(); }
-            remove { throw new NotSupportedException(); }
         }
 
         /// <summary>

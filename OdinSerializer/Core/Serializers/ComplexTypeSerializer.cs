@@ -78,9 +78,10 @@ namespace ExtEvents.OdinSerializer
                     reader.ReadNull();
                     return default(T);
                 }
-                else if (entry != EntryType.StartOfNode)
+
+                if (entry != EntryType.StartOfNode)
                 {
-                    context.Config.DebugContext.LogWarning("Unexpected entry '" + name + "' of type " + entry.ToString() + ", when " + EntryType.StartOfNode + " was expected. A value has likely been lost.");
+                    context.Config.DebugContext.LogWarning("Unexpected entry '" + name + "' of type " + entry + ", when " + EntryType.StartOfNode + " was expected. A value has likely been lost.");
                     reader.SkipEntry();
                     return default(T);
                 }
@@ -167,316 +168,314 @@ namespace ExtEvents.OdinSerializer
                     }
                 }
             }
-            else
+
+            switch (entry)
             {
-                switch (entry)
+                case EntryType.Null:
                 {
-                    case EntryType.Null:
+                    reader.ReadNull();
+                    return default(T);
+                }
+
+                case EntryType.ExternalReferenceByIndex:
+                {
+                    int index;
+                    reader.ReadExternalReference(out index);
+
+                    object value = context.GetExternalObject(index);
+
+                    try
+                    {
+                        return (T)value;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
+                        return default(T);
+                    }
+                }
+
+                case EntryType.ExternalReferenceByGuid:
+                {
+                    Guid guid;
+                    reader.ReadExternalReference(out guid);
+
+                    object value = context.GetExternalObject(guid);
+
+                    try
+                    {
+                        return (T)value;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
+                        return default(T);
+                    }
+                }
+
+                case EntryType.ExternalReferenceByString:
+                {
+                    string id;
+                    reader.ReadExternalReference(out id);
+
+                    object value = context.GetExternalObject(id);
+
+                    try
+                    {
+                        return (T)value;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
+                        return default(T);
+                    }
+                }
+
+                case EntryType.InternalReference:
+                {
+                    int id;
+                    reader.ReadInternalReference(out id);
+
+                    object value = context.GetInternalReference(id);
+
+                    try
+                    {
+                        return (T)value;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        context.Config.DebugContext.LogWarning("Can't cast internal reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
+                        return default(T);
+                    }
+                }
+
+                case EntryType.StartOfNode:
+                {
+                    try
+                    {
+                        Type expectedType = TypeOf_T;
+                        Type serializedType;
+                        int id;
+
+                        if (reader.EnterNode(out serializedType))
                         {
-                            reader.ReadNull();
-                            return default(T);
-                        }
+                            id = reader.CurrentNodeId;
 
-                    case EntryType.ExternalReferenceByIndex:
-                        {
-                            int index;
-                            reader.ReadExternalReference(out index);
+                            T result;
 
-                            object value = context.GetExternalObject(index);
-
-                            try
+                            if (serializedType != null && expectedType != serializedType) // We have type metadata different from the expected type
                             {
-                                return (T)value;
-                            }
-                            catch (InvalidCastException)
-                            {
-                                context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
-                                return default(T);
-                            }
-                        }
+                                bool success = false;
+                                var isPrimitive = FormatterUtilities.IsPrimitiveType(serializedType);
 
-                    case EntryType.ExternalReferenceByGuid:
-                        {
-                            Guid guid;
-                            reader.ReadExternalReference(out guid);
+                                bool assignableCast;
 
-                            object value = context.GetExternalObject(guid);
-
-                            try
-                            {
-                                return (T)value;
-                            }
-                            catch (InvalidCastException)
-                            {
-                                context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
-                                return default(T);
-                            }
-                        }
-
-                    case EntryType.ExternalReferenceByString:
-                        {
-                            string id;
-                            reader.ReadExternalReference(out id);
-
-                            object value = context.GetExternalObject(id);
-
-                            try
-                            {
-                                return (T)value;
-                            }
-                            catch (InvalidCastException)
-                            {
-                                context.Config.DebugContext.LogWarning("Can't cast external reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
-                                return default(T);
-                            }
-                        }
-
-                    case EntryType.InternalReference:
-                        {
-                            int id;
-                            reader.ReadInternalReference(out id);
-
-                            object value = context.GetInternalReference(id);
-
-                            try
-                            {
-                                return (T)value;
-                            }
-                            catch (InvalidCastException)
-                            {
-                                context.Config.DebugContext.LogWarning("Can't cast internal reference type " + value.GetType().Name + " into expected type " + TypeOf_T.Name + ". Value lost for node '" + name + "'.");
-                                return default(T);
-                            }
-                        }
-
-                    case EntryType.StartOfNode:
-                        {
-                            try
-                            {
-                                Type expectedType = TypeOf_T;
-                                Type serializedType;
-                                int id;
-
-                                if (reader.EnterNode(out serializedType))
+                                if (ComplexTypeMayBeBoxedValueType && isPrimitive)
                                 {
-                                    id = reader.CurrentNodeId;
-
-                                    T result;
-
-                                    if (serializedType != null && expectedType != serializedType) // We have type metadata different from the expected type
+                                    // It's a boxed primitive type, so simply read that straight and register success
+                                    var serializer = Get(serializedType);
+                                    result = (T)serializer.ReadValueWeak(reader);
+                                    success = true;
+                                }
+                                else if ((assignableCast = expectedType.IsAssignableFrom(serializedType)) || serializedType.HasCastDefined(expectedType, false))
+                                {
+                                    try
                                     {
-                                        bool success = false;
-                                        var isPrimitive = FormatterUtilities.IsPrimitiveType(serializedType);
+                                        object value;
 
-                                        bool assignableCast;
-
-                                        if (ComplexTypeMayBeBoxedValueType && isPrimitive)
+                                        if (isPrimitive)
                                         {
-                                            // It's a boxed primitive type, so simply read that straight and register success
-                                            var serializer = Serializer.Get(serializedType);
-                                            result = (T)serializer.ReadValueWeak(reader);
-                                            success = true;
-                                        }
-                                        else if ((assignableCast = expectedType.IsAssignableFrom(serializedType)) || serializedType.HasCastDefined(expectedType, false))
-                                        {
-                                            try
-                                            {
-                                                object value;
-
-                                                if (isPrimitive)
-                                                {
-                                                    var serializer = Serializer.Get(serializedType);
-                                                    value = serializer.ReadValueWeak(reader);
-                                                }
-                                                else
-                                                {
-                                                    var alternateFormatter = FormatterLocator.GetFormatter(serializedType, context.Config.SerializationPolicy);
-                                                    value = alternateFormatter.Deserialize(reader);
-                                                }
-
-                                                if (assignableCast)
-                                                {
-                                                    result = (T)value;
-                                                }
-                                                else
-                                                {
-                                                    var castMethod = serializedType.GetCastMethodDelegate(expectedType);
-
-                                                    if (castMethod != null)
-                                                    {
-                                                        result = (T)castMethod(value);
-                                                    }
-                                                    else
-                                                    {
-                                                        // Let's just give it a go anyways
-                                                        result = (T)value;
-                                                    }
-                                                }
-
-                                                success = true;
-                                            }
-                                            catch (SerializationAbortException ex)
-                                            {
-                                                exitNode = false;
-                                                throw ex;
-                                            }
-                                            catch (InvalidCastException)
-                                            {
-                                                success = false;
-                                                result = default(T);
-                                            }
-                                        }
-                                        else if (!ComplexTypeIsAbstract && (AllowDeserializeInvalidDataForT || reader.Context.Config.AllowDeserializeInvalidData))
-                                        {
-                                            // We will try to deserialize an instance of T with the invalid data.
-                                            context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Attempting to deserialize with invalid data. Value may be lost or corrupted for node '" + name + "'.");
-                                            result = GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
-                                            success = true;
+                                            var serializer = Get(serializedType);
+                                            value = serializer.ReadValueWeak(reader);
                                         }
                                         else
                                         {
-                                            // We couldn't cast or use the type, but we still have to deserialize it and register
-                                            // the reference so the reference isn't lost if it is referred to further down
-                                            // the data stream.
-
                                             var alternateFormatter = FormatterLocator.GetFormatter(serializedType, context.Config.SerializationPolicy);
-                                            object value = alternateFormatter.Deserialize(reader);
-
-                                            if (id >= 0)
-                                            {
-                                                context.RegisterInternalReference(id, value);
-                                            }
-
-                                            result = default(T);
+                                            value = alternateFormatter.Deserialize(reader);
                                         }
 
-                                        if (!success)
+                                        if (assignableCast)
                                         {
-                                            // We can't use this
-                                            context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Value lost for node '" + name + "'.");
-                                            result = default(T);
+                                            result = (T)value;
                                         }
+                                        else
+                                        {
+                                            var castMethod = serializedType.GetCastMethodDelegate(expectedType);
+
+                                            if (castMethod != null)
+                                            {
+                                                result = (T)castMethod(value);
+                                            }
+                                            else
+                                            {
+                                                // Let's just give it a go anyways
+                                                result = (T)value;
+                                            }
+                                        }
+
+                                        success = true;
                                     }
-                                    else if (ComplexTypeIsAbstract)
+                                    catch (SerializationAbortException ex)
                                     {
+                                        exitNode = false;
+                                        throw ex;
+                                    }
+                                    catch (InvalidCastException)
+                                    {
+                                        success = false;
                                         result = default(T);
                                     }
-                                    else
-                                    {
-                                        result = GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
-                                    }
-
-                                    if (id >= 0)
-                                    {
-                                        context.RegisterInternalReference(id, result);
-                                    }
-
-                                    return result;
+                                }
+                                else if (!ComplexTypeIsAbstract && (AllowDeserializeInvalidDataForT || reader.Context.Config.AllowDeserializeInvalidData))
+                                {
+                                    // We will try to deserialize an instance of T with the invalid data.
+                                    context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Attempting to deserialize with invalid data. Value may be lost or corrupted for node '" + name + "'.");
+                                    result = GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
+                                    success = true;
                                 }
                                 else
                                 {
-                                    context.Config.DebugContext.LogError("Failed to enter node '" + name + "'.");
-                                    return default(T);
+                                    // We couldn't cast or use the type, but we still have to deserialize it and register
+                                    // the reference so the reference isn't lost if it is referred to further down
+                                    // the data stream.
+
+                                    var alternateFormatter = FormatterLocator.GetFormatter(serializedType, context.Config.SerializationPolicy);
+                                    object value = alternateFormatter.Deserialize(reader);
+
+                                    if (id >= 0)
+                                    {
+                                        context.RegisterInternalReference(id, value);
+                                    }
+
+                                    result = default(T);
                                 }
-                            }
-                            catch (SerializationAbortException ex)
-                            {
-                                exitNode = false;
-                                throw ex;
-                            }
-                            catch (Exception ex)
-                            {
-                                context.Config.DebugContext.LogException(ex);
-                                return default(T);
-                            }
-                            finally
-                            {
-                                if (exitNode)
+
+                                if (!success)
                                 {
-                                    reader.ExitNode();
+                                    // We can't use this
+                                    context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Value lost for node '" + name + "'.");
+                                    result = default(T);
                                 }
                             }
-                        }
-
-                    //
-                    // The below cases are for when we expect an object, but have
-                    // serialized a straight primitive type. In such cases, we can
-                    // often box the primitive type as an object.
-                    //
-                    // Sadly, the exact primitive type might be lost in case of
-                    // integer and floating points numbers, as we don't know what
-                    // type to expect.
-                    //
-                    // To be safe, we read and box the most precise type available.
-                    //
-
-                    case EntryType.Boolean:
-                        {
-                            if (!ComplexTypeMayBeBoxedValueType)
+                            else if (ComplexTypeIsAbstract)
                             {
-                                goto default;
+                                result = default(T);
+                            }
+                            else
+                            {
+                                result = GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
                             }
 
-                            bool value;
-                            reader.ReadBoolean(out value);
-                            return (T)(object)value;
-                        }
-
-                    case EntryType.FloatingPoint:
-                        {
-                            if (!ComplexTypeMayBeBoxedValueType)
+                            if (id >= 0)
                             {
-                                goto default;
+                                context.RegisterInternalReference(id, result);
                             }
 
-                            double value;
-                            reader.ReadDouble(out value);
-                            return (T)(object)value;
+                            return result;
                         }
-
-                    case EntryType.Integer:
+                        else
                         {
-                            if (!ComplexTypeMayBeBoxedValueType)
-                            {
-                                goto default;
-                            }
-
-                            long value;
-                            reader.ReadInt64(out value);
-                            return (T)(object)value;
+                            context.Config.DebugContext.LogError("Failed to enter node '" + name + "'.");
+                            return default(T);
                         }
-
-                    case EntryType.String:
-                        {
-                            if (!ComplexTypeMayBeBoxedValueType)
-                            {
-                                goto default;
-                            }
-
-                            string value;
-                            reader.ReadString(out value);
-                            return (T)(object)value;
-                        }
-
-                    case EntryType.Guid:
-                        {
-                            if (!ComplexTypeMayBeBoxedValueType)
-                            {
-                                goto default;
-                            }
-
-                            Guid value;
-                            reader.ReadGuid(out value);
-                            return (T)(object)value;
-                        }
-
-                    default:
-
-                        // Lost value somehow
-                        context.Config.DebugContext.LogWarning("Unexpected entry of type " + entry.ToString() + ", when a reference or node start was expected. A value has been lost.");
-                        reader.SkipEntry();
+                    }
+                    catch (SerializationAbortException ex)
+                    {
+                        exitNode = false;
+                        throw ex;
+                    }
+                    catch (Exception ex)
+                    {
+                        context.Config.DebugContext.LogException(ex);
                         return default(T);
+                    }
+                    finally
+                    {
+                        if (exitNode)
+                        {
+                            reader.ExitNode();
+                        }
+                    }
                 }
+
+                //
+                // The below cases are for when we expect an object, but have
+                // serialized a straight primitive type. In such cases, we can
+                // often box the primitive type as an object.
+                //
+                // Sadly, the exact primitive type might be lost in case of
+                // integer and floating points numbers, as we don't know what
+                // type to expect.
+                //
+                // To be safe, we read and box the most precise type available.
+                //
+
+                case EntryType.Boolean:
+                {
+                    if (!ComplexTypeMayBeBoxedValueType)
+                    {
+                        goto default;
+                    }
+
+                    bool value;
+                    reader.ReadBoolean(out value);
+                    return (T)(object)value;
+                }
+
+                case EntryType.FloatingPoint:
+                {
+                    if (!ComplexTypeMayBeBoxedValueType)
+                    {
+                        goto default;
+                    }
+
+                    double value;
+                    reader.ReadDouble(out value);
+                    return (T)(object)value;
+                }
+
+                case EntryType.Integer:
+                {
+                    if (!ComplexTypeMayBeBoxedValueType)
+                    {
+                        goto default;
+                    }
+
+                    long value;
+                    reader.ReadInt64(out value);
+                    return (T)(object)value;
+                }
+
+                case EntryType.String:
+                {
+                    if (!ComplexTypeMayBeBoxedValueType)
+                    {
+                        goto default;
+                    }
+
+                    string value;
+                    reader.ReadString(out value);
+                    return (T)(object)value;
+                }
+
+                case EntryType.Guid:
+                {
+                    if (!ComplexTypeMayBeBoxedValueType)
+                    {
+                        goto default;
+                    }
+
+                    Guid value;
+                    reader.ReadGuid(out value);
+                    return (T)(object)value;
+                }
+
+                default:
+
+                    // Lost value somehow
+                    context.Config.DebugContext.LogWarning("Unexpected entry of type " + entry + ", when a reference or node start was expected. A value has been lost.");
+                    reader.SkipEntry();
+                    return default(T);
             }
         }
 
@@ -486,7 +485,7 @@ namespace ExtEvents.OdinSerializer
             //  than it is to look something up in a dictionary. By far most of the time, we will be using
             //  one of these three policies.
 
-            if (object.ReferenceEquals(serializationPolicy, UnityPolicy))
+            if (ReferenceEquals(serializationPolicy, UnityPolicy))
             {
                 if (UnityPolicyFormatter == null)
                 {
@@ -495,7 +494,8 @@ namespace ExtEvents.OdinSerializer
 
                 return UnityPolicyFormatter;
             }
-            else if (object.ReferenceEquals(serializationPolicy, EverythingPolicy))
+
+            if (ReferenceEquals(serializationPolicy, EverythingPolicy))
             {
                 if (EverythingPolicyFormatter == null)
                 {
@@ -504,7 +504,8 @@ namespace ExtEvents.OdinSerializer
 
                 return EverythingPolicyFormatter;
             }
-            else if (object.ReferenceEquals(serializationPolicy, StrictPolicy))
+
+            if (ReferenceEquals(serializationPolicy, StrictPolicy))
             {
                 if (StrictPolicyFormatter == null)
                 {
@@ -578,7 +579,7 @@ namespace ExtEvents.OdinSerializer
 
                 bool endNode = true;
 
-                if (object.ReferenceEquals(value, null))
+                if (ReferenceEquals(value, null))
                 {
                     writer.WriteNull(name);
                 }
@@ -605,7 +606,7 @@ namespace ExtEvents.OdinSerializer
                         {
                             writer.BeginReferenceNode(name, type, id);
 
-                            var serializer = Serializer.Get(type);
+                            var serializer = Get(type);
                             serializer.WriteValueWeak(value, writer);
                         }
                         catch (SerializationAbortException ex)
@@ -625,7 +626,7 @@ namespace ExtEvents.OdinSerializer
                     {
                         IFormatter formatter;
                         
-                        if (object.ReferenceEquals(type, TypeOf_T))
+                        if (ReferenceEquals(type, TypeOf_T))
                         {
                             formatter = GetBaseFormatter(policy);
                         }
