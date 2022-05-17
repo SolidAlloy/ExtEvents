@@ -130,7 +130,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Tries to enter a node. This will succeed if the next entry is an <see cref="EntryType.StartOfNode" />.
         /// <para />
-        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitNode(DeserializationContext)" /><para />
+        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitNode" /><para />
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode" />, <see cref="IDataReader.CurrentNodeName" />, <see cref="IDataReader.CurrentNodeId" /> and <see cref="IDataReader.CurrentNodeDepth" /> properties to the correct values for the current node.
         /// </summary>
         /// <param name="type">The type of the node. This value will be null if there was no metadata, or if the reader's serialization binder failed to resolve the type name.</param>
@@ -229,7 +229,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if the method exited a node, <c>false</c> if it reached the end of the stream.
         /// </returns>
-        public override bool ExitNode()
+        public override void ExitNode()
         {
             PeekEntry();
 
@@ -249,24 +249,21 @@ namespace ExtEvents.OdinSerializer
             if (peekedEntryType == EntryType.EndOfNode)
             {
                 peekedEntryType = null;
-                PopNode(CurrentNodeName);
-                return true;
+                PopNode();
             }
-
-            return false;
         }
 
         /// <summary>
         /// Tries to enters an array node. This will succeed if the next entry is an <see cref="EntryType.StartOfArray" />.
         /// <para />
-        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitArray(DeserializationContext)" /><para />
+        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitArray" /><para />
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode" />, <see cref="IDataReader.CurrentNodeName" />, <see cref="IDataReader.CurrentNodeId" /> and <see cref="IDataReader.CurrentNodeDepth" /> properties to the correct values for the current array node.
         /// </summary>
         /// <param name="length">The length of the array that was entered.</param>
         /// <returns>
         ///   <c>true</c> if an array was entered, otherwise <c>false</c>
         /// </returns>
-        public override bool EnterArray(out long length)
+        public override void EnterArray(out long length)
         {
             PeekEntry();
 
@@ -278,7 +275,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
                     length = 0; // No array content for you!
-                    return true;
+                    return;
                 }
 
                 int intLength;
@@ -287,7 +284,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Failed to parse array length: " + peekedEntryContent);
                     length = 0; // No array content for you!
-                    return true;
+                    return;
                 }
 
                 length = intLength;
@@ -298,16 +295,15 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Failed to find regular array content entry after array length entry!");
                     length = 0; // No array content for you!
-                    return true;
+                    return;
                 }
 
                 peekedEntryType = null;
-                return true;
+                return;
             }
 
             SkipEntry();
             length = 0;
-            return false;
         }
 
         /// <summary>
@@ -320,7 +316,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if the method exited an array, <c>false</c> if it reached the end of the stream.
         /// </returns>
-        public override bool ExitArray()
+        public override void ExitArray()
         {
             PeekEntry();
 
@@ -341,10 +337,7 @@ namespace ExtEvents.OdinSerializer
             {
                 peekedEntryType = null;
                 PopArray();
-                return true;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -358,7 +351,7 @@ namespace ExtEvents.OdinSerializer
         ///   <c>true</c> if reading a primitive array succeeded, otherwise <c>false</c>
         /// </returns>
         /// <exception cref="System.ArgumentException">Type  + typeof(T).Name +  is not a valid primitive array type.</exception>
-        public override bool ReadPrimitiveArray<T>(out T[] array)
+        public override void ReadPrimitiveArray<T>(out T[] array)
         {
             if (FormatterUtilities.IsPrimitiveArrayType(typeof(T)) == false)
             {
@@ -375,7 +368,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Array entry wasn't preceded by an array length entry!");
                     array = null; // No array content for you!
-                    return false;
+                    return;
                 }
 
                 int intLength;
@@ -384,7 +377,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Failed to parse array length: " + peekedEntryContent);
                     array = null; // No array content for you!
-                    return false;
+                    return;
                 }
 
                 ReadToNextEntry();
@@ -393,7 +386,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Context.Config.DebugContext.LogError("Failed to find primitive array content entry after array length entry!");
                     array = null; // No array content for you!
-                    return false;
+                    return;
                 }
 
                 peekedEntryType = null;
@@ -407,12 +400,11 @@ namespace ExtEvents.OdinSerializer
                 }
 
                 ExitArray();
-                return true;
+                return;
             }
 
             SkipEntry();
             array = null;
-            return false;
         }
 
         /// <summary>
@@ -455,7 +447,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadInternalReference(out int id)
+        public override void ReadInternalReference(out int id)
         {
             PeekEntry();
 
@@ -463,7 +455,8 @@ namespace ExtEvents.OdinSerializer
             {
                 try
                 {
-                    return ReadAnyIntReference(out id);
+                    ReadAnyIntReference(out id);
+                    return;
                 }
                 finally
                 {
@@ -473,7 +466,6 @@ namespace ExtEvents.OdinSerializer
 
             SkipEntry();
             id = -1;
-            return false;
         }
 
         /// <summary>
@@ -485,7 +477,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out int index)
+        public override void ReadExternalReference(out int index)
         {
             PeekEntry();
 
@@ -493,7 +485,8 @@ namespace ExtEvents.OdinSerializer
             {
                 try
                 {
-                    return ReadAnyIntReference(out index);
+                    ReadAnyIntReference(out index);
+                    return;
                 }
                 finally
                 {
@@ -503,7 +496,6 @@ namespace ExtEvents.OdinSerializer
 
             SkipEntry();
             index = -1;
-            return false;
         }
 
         /// <summary>
@@ -515,7 +507,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out Guid guid)
+        public override void ReadExternalReference(out Guid guid)
         {
             PeekEntry();
 
@@ -531,17 +523,17 @@ namespace ExtEvents.OdinSerializer
                 try
                 {
                     guid = new Guid(guidStr);
-                    return true;
+                    return;
                 }
                 catch (FormatException)
                 {
                     guid = Guid.Empty;
-                    return false;
+                    return;
                 }
                 catch (OverflowException)
                 {
                     guid = Guid.Empty;
-                    return false;
+                    return;
                 }
                 finally
                 {
@@ -551,7 +543,6 @@ namespace ExtEvents.OdinSerializer
 
             SkipEntry();
             guid = Guid.Empty;
-            return false;
         }
 
         /// <summary>
@@ -563,7 +554,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out string id)
+        public override void ReadExternalReference(out string id)
         {
             PeekEntry();
 
@@ -581,12 +572,11 @@ namespace ExtEvents.OdinSerializer
                 }
 
                 MarkEntryConsumed();
-                return true;
+                return;
             }
 
             SkipEntry();
             id = null;
-            return false;
         }
 
         /// <summary>

@@ -599,7 +599,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     Type type = value.GetType(); // Get type of actual stored object
 
-                    if (ComplexTypeMayBeBoxedValueType && FormatterUtilities.IsPrimitiveType(type)) 
+                    if (ComplexTypeMayBeBoxedValueType && FormatterUtilities.IsPrimitiveType(type))
                     // It's a boxed primitive type
                     {
                         try
@@ -625,7 +625,7 @@ namespace ExtEvents.OdinSerializer
                     else
                     {
                         IFormatter formatter;
-                        
+
                         if (ReferenceEquals(type, TypeOf_T))
                         {
                             formatter = GetBaseFormatter(policy);

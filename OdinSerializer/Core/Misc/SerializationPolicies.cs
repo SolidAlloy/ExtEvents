@@ -36,38 +36,13 @@ namespace ExtEvents.OdinSerializer
     /// </summary>
     public static class SerializationPolicies
     {
+        private static readonly Type _serializeReferenceAttributeType = typeof(SerializeReference);
+
         private static readonly object LOCK = new object();
 
         private static volatile ISerializationPolicy everythingPolicy;
         private static volatile ISerializationPolicy unityPolicy;
         private static volatile ISerializationPolicy strictPolicy;
-
-        /// <summary>
-        /// Tries to get a serialization policy by its id, in case a serialization graph has the policy used for serialization stored by name.
-        /// </summary>
-        public static bool TryGetByID(string name, out ISerializationPolicy policy)
-        {
-            switch (name)
-            {
-                case "OdinSerializerPolicies.Everything":
-                    policy = Everything;
-                    break;
-
-                case "OdinSerializerPolicies.Unity":
-                    policy = Unity;
-                    break;
-
-                case "OdinSerializerPolicies.Strict":
-                    policy = Strict;
-                    break;
-
-                default:
-                    policy = null;
-                    break;
-            }
-
-            return policy != null;
-        }
 
         /// <summary>
         /// All fields not marked with <see cref="NonSerializedAttribute"/> are serialized. If a field is marked with both <see cref="NonSerializedAttribute"/> and <see cref="OdinSerializeAttribute"/>, then the field will be serialized.
@@ -146,7 +121,7 @@ namespace ExtEvents.OdinSerializer
                                     return true;
                                 }
 
-                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (UnitySerializationUtility.SerializeReferenceAttributeType != null && member.IsDefined(UnitySerializationUtility.SerializeReferenceAttributeType, false));
+                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
                             });
                         }
                     }
@@ -191,7 +166,7 @@ namespace ExtEvents.OdinSerializer
                                     return true;
                                 }
 
-                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (UnitySerializationUtility.SerializeReferenceAttributeType != null && member.IsDefined(UnitySerializationUtility.SerializeReferenceAttributeType, false));
+                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
                             });
                         }
                     }

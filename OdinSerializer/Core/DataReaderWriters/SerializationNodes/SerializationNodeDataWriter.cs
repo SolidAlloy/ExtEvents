@@ -166,7 +166,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override void EndNode(string name)
         {
-            PopNode(name);
+            PopNode();
 
             Nodes.Add(new SerializationNode
             {

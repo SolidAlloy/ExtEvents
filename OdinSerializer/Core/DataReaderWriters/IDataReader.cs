@@ -19,8 +19,6 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
-    using System.ComponentModel;
-    using System.IO;
 
     /// <summary>
     /// Provides a set of methods for reading data stored in a format written by a corresponding <see cref="IDataWriter"/> class.
@@ -32,24 +30,6 @@ namespace ExtEvents.OdinSerializer
     /// <seealso cref="System.IDisposable" />
     public interface IDataReader : IDisposable
     {
-        /// <summary>
-        /// Gets or sets the reader's serialization binder.
-        /// </summary>
-        /// <value>
-        /// The reader's serialization binder.
-        /// </value>
-        TwoWaySerializationBinder Binder { get; set; }
-
-        /// <summary>
-        /// Gets or sets the base stream of the reader.
-        /// </summary>
-        /// <value>
-        /// The base stream of the reader.
-        /// </value>
-        [Obsolete("Data readers and writers don't necessarily have streams any longer, so this API has been made obsolete. Using this property may result in NotSupportedExceptions being thrown.", false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Stream Stream { get; set; }
-
         /// <summary>
         /// Gets a value indicating whether the reader is in an array node.
         /// </summary>
@@ -98,7 +78,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Tries to enter a node. This will succeed if the next entry is an <see cref="EntryType.StartOfNode"/>.
         /// <para />
-        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitNode(DeserializationContext)"/>
+        /// This call MUST (eventually) be followed by a corresponding call to <see cref="ExitNode"/>
         /// <para />
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode"/>, <see cref="IDataReader.CurrentNodeName"/>, <see cref="IDataReader.CurrentNodeId"/> and <see cref="IDataReader.CurrentNodeDepth"/> properties to the correct values for the current node.
         /// </summary>
@@ -114,18 +94,18 @@ namespace ExtEvents.OdinSerializer
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode"/>, <see cref="IDataReader.CurrentNodeName"/>, <see cref="IDataReader.CurrentNodeId"/> and <see cref="IDataReader.CurrentNodeDepth"/> to the correct values for the node that was prior to the current node.
         /// </summary>
         /// <returns><c>true</c> if the method exited a node, <c>false</c> if it reached the end of the stream.</returns>
-        bool ExitNode();
+        void ExitNode();
 
         /// <summary>
         /// Tries to enters an array node. This will succeed if the next entry is an <see cref="EntryType.StartOfArray"/>.
         /// <para />
-        /// This call MUST (eventually) be followed by a corresponding call to <see cref="IDataReader.ExitArray(DeserializationContext)"/>
+        /// This call MUST (eventually) be followed by a corresponding call to <see cref="ExitArray"/>
         /// <para />
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode"/>, <see cref="IDataReader.CurrentNodeName"/>, <see cref="IDataReader.CurrentNodeId"/> and <see cref="IDataReader.CurrentNodeDepth"/> properties to the correct values for the current array node.
         /// </summary>
         /// <param name="length">The length of the array that was entered.</param>
         /// <returns><c>true</c> if an array was entered, otherwise <c>false</c></returns>
-        bool EnterArray(out long length);
+        void EnterArray(out long length);
 
         /// <summary>
         /// Exits the closest array. This method will keep skipping entries using <see cref="IDataReader.SkipEntry(DeserializationContext)"/> until an <see cref="EntryType.EndOfArray"/> is reached, or the end of the stream is reached.
@@ -135,7 +115,7 @@ namespace ExtEvents.OdinSerializer
         /// This call will change the values of the <see cref="IDataReader.IsInArrayNode"/>, <see cref="IDataReader.CurrentNodeName"/>, <see cref="IDataReader.CurrentNodeId"/> and <see cref="IDataReader.CurrentNodeDepth"/> to the correct values for the node that was prior to the exited array node.
         /// </summary>
         /// <returns><c>true</c> if the method exited an array, <c>false</c> if it reached the end of the stream.</returns>
-        bool ExitArray();
+        void ExitArray();
 
         /// <summary>
         /// Reads a primitive array value. This call will succeed if the next entry is an <see cref="EntryType.PrimitiveArray"/>.
@@ -145,7 +125,7 @@ namespace ExtEvents.OdinSerializer
         /// <typeparam name="T">The element type of the primitive array. Valid element types can be determined using <see cref="FormatterUtilities.IsPrimitiveArrayType(Type)"/>.</typeparam>
         /// <param name="array">The resulting primitive array.</param>
         /// <returns><c>true</c> if reading a primitive array succeeded, otherwise <c>false</c></returns>
-        bool ReadPrimitiveArray<T>(out T[] array) where T : struct;
+        void ReadPrimitiveArray<T>(out T[] array) where T : struct;
 
         /// <summary>
         /// Peeks ahead and returns the type of the next entry in the stream.
@@ -161,7 +141,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         /// <param name="id">The internal reference id.</param>
         /// <returns><c>true</c> if reading the value succeeded, otherwise <c>false</c></returns>
-        bool ReadInternalReference(out int id);
+        void ReadInternalReference(out int id);
 
         /// <summary>
         /// Reads an external reference index. This call will succeed if the next entry is an <see cref="EntryType.ExternalReferenceByIndex"/>.
@@ -170,7 +150,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         /// <param name="index">The external reference index.</param>
         /// <returns><c>true</c> if reading the value succeeded, otherwise <c>false</c></returns>
-        bool ReadExternalReference(out int index);
+        void ReadExternalReference(out int index);
 
         /// <summary>
         /// Reads an external reference guid. This call will succeed if the next entry is an <see cref="EntryType.ExternalReferenceByGuid"/>.
@@ -179,7 +159,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         /// <param name="guid">The external reference guid.</param>
         /// <returns><c>true</c> if reading the value succeeded, otherwise <c>false</c></returns>
-        bool ReadExternalReference(out Guid guid);
+        void ReadExternalReference(out Guid guid);
 
         /// <summary>
         /// Reads an external reference string. This call will succeed if the next entry is an <see cref="EntryType.ExternalReferenceByString"/>.
@@ -188,7 +168,7 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         /// <param name="id">The external reference string.</param>
         /// <returns><c>true</c> if reading the value succeeded, otherwise <c>false</c></returns>
-        bool ReadExternalReference(out string id);
+        void ReadExternalReference(out string id);
 
         /// <summary>
         /// Reads a <see cref="char"/> value. This call will succeed if the next entry is an <see cref="EntryType.String"/>.
@@ -361,11 +341,5 @@ namespace ExtEvents.OdinSerializer
         /// Skips the next entry value, unless it is an <see cref="EntryType.EndOfNode"/> or an <see cref="EntryType.EndOfArray"/>. If the next entry value is an <see cref="EntryType.StartOfNode"/> or an <see cref="EntryType.StartOfArray"/>, all of its contents will be processed, deserialized and registered in the deserialization context, so that internal reference values are not lost to entries further down the stream.
         /// </summary>
         void SkipEntry();
-
-        /// <summary>
-        /// Tells the reader that a new serialization session is about to begin, and that it should clear all cached values left over from any prior serialization sessions.
-        /// This method is only relevant when the same reader is used to deserialize several different, unrelated values.
-        /// </summary>
-        void PrepareNewSerializationSession();
     }
 }

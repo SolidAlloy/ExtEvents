@@ -369,7 +369,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if an array was entered, otherwise <c>false</c>
         /// </returns>
-        public override bool EnterArray(out long length)
+        public override void EnterArray(out long length)
         {
             if (!peekedEntryType.HasValue)
             {
@@ -388,18 +388,17 @@ namespace ExtEvents.OdinSerializer
                     {
                         length = 0;
                         Context.Config.DebugContext.LogError("Invalid array length: " + length + ".");
-                        return false;
+                        return;
                     }
 
-                    return true;
+                    return;
                 }
 
-                return false;
+                return;
             }
 
             SkipEntry();
             length = 0;
-            return false;
         }
 
         /// <summary>
@@ -459,7 +458,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if the method exited an array, <c>false</c> if it reached the end of the stream.
         /// </returns>
-        public override bool ExitArray()
+        public override void ExitArray()
         {
             if (!peekedEntryType.HasValue)
             {
@@ -482,10 +481,8 @@ namespace ExtEvents.OdinSerializer
             {
                 MarkEntryContentConsumed();
                 PopArray();
-                return true;
+                return;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -498,7 +495,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if the method exited a node, <c>false</c> if it reached the end of the stream.
         /// </returns>
-        public override bool ExitNode()
+        public override void ExitNode()
         {
             if (!peekedEntryType.HasValue)
             {
@@ -520,11 +517,9 @@ namespace ExtEvents.OdinSerializer
             if (peekedBinaryEntryType == BinaryEntryType.EndOfNode)
             {
                 MarkEntryContentConsumed();
-                PopNode(CurrentNodeName);
-                return true;
+                PopNode();
+                return;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -538,7 +533,7 @@ namespace ExtEvents.OdinSerializer
         ///   <c>true</c> if reading a primitive array succeeded, otherwise <c>false</c>
         /// </returns>
         /// <exception cref="System.ArgumentException">Type  + typeof(T).Name +  is not a valid primitive array type.</exception>
-        public override bool ReadPrimitiveArray<T>(out T[] array)
+        public override void ReadPrimitiveArray<T>(out T[] array)
         {
             if (FormatterUtilities.IsPrimitiveArrayType(typeof(T)) == false)
             {
@@ -561,7 +556,7 @@ namespace ExtEvents.OdinSerializer
                 if (!UNSAFE_Read_4_Int32(out elementCount) || !UNSAFE_Read_4_Int32(out bytesPerElement))
                 {
                     array = null;
-                    return false;
+                    return;
                 }
 
                 int byteCount = elementCount * bytesPerElement;
@@ -570,7 +565,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     bufferIndex = bufferEnd; // We're done!
                     array = null;
-                    return false;
+                    return;
                 }
 
                 // Read the actual array content
@@ -585,7 +580,7 @@ namespace ExtEvents.OdinSerializer
 
                     bufferIndex += byteCount;
 
-                    return true;
+                    return;
                 }
 
                 array = new T[elementCount];
@@ -619,12 +614,11 @@ namespace ExtEvents.OdinSerializer
                 }
 
                 bufferIndex += byteCount;
-                return true;
+                return;
             }
 
             SkipEntry();
             array = null;
-            return false;
         }
 
         /// <summary>
@@ -1549,7 +1543,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out Guid guid)
+        public override void ReadExternalReference(out Guid guid)
         {
             if (!peekedEntryType.HasValue)
             {
@@ -1560,12 +1554,12 @@ namespace ExtEvents.OdinSerializer
             if (peekedBinaryEntryType == BinaryEntryType.NamedExternalReferenceByGuid || peekedBinaryEntryType == BinaryEntryType.UnnamedExternalReferenceByGuid)
             {
                 MarkEntryContentConsumed();
-                return UNSAFE_Read_16_Guid(out guid);
+                UNSAFE_Read_16_Guid(out guid);
+                return;
             }
 
             SkipEntry();
             guid = default(Guid);
-            return false;
         }
 
         /// <summary>
@@ -1605,7 +1599,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out int index)
+        public override void ReadExternalReference(out int index)
         {
             if (!peekedEntryType.HasValue)
             {
@@ -1616,12 +1610,12 @@ namespace ExtEvents.OdinSerializer
             if (peekedBinaryEntryType == BinaryEntryType.NamedExternalReferenceByIndex || peekedBinaryEntryType == BinaryEntryType.UnnamedExternalReferenceByIndex)
             {
                 MarkEntryContentConsumed();
-                return UNSAFE_Read_4_Int32(out index);
+                UNSAFE_Read_4_Int32(out index);
+                return;
             }
 
             SkipEntry();
             index = -1;
-            return false;
         }
 
         /// <summary>
@@ -1633,7 +1627,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadExternalReference(out string id)
+        public override void ReadExternalReference(out string id)
         {
             if (!peekedEntryType.HasValue)
             {
@@ -1645,12 +1639,11 @@ namespace ExtEvents.OdinSerializer
             {
                 id = ReadStringValue();
                 MarkEntryContentConsumed();
-                return id != null;
+                return;
             }
 
             SkipEntry();
             id = null;
-            return false;
         }
 
         /// <summary>
@@ -1688,7 +1681,7 @@ namespace ExtEvents.OdinSerializer
         /// <returns>
         ///   <c>true</c> if reading the value succeeded, otherwise <c>false</c>
         /// </returns>
-        public override bool ReadInternalReference(out int id)
+        public override void ReadInternalReference(out int id)
         {
             if (!peekedEntryType.HasValue)
             {
@@ -1699,12 +1692,12 @@ namespace ExtEvents.OdinSerializer
             if (peekedBinaryEntryType == BinaryEntryType.NamedInternalReference || peekedBinaryEntryType == BinaryEntryType.UnnamedInternalReference)
             {
                 MarkEntryContentConsumed();
-                return UNSAFE_Read_4_Int32(out id);
+                UNSAFE_Read_4_Int32(out id);
+                return;
             }
 
             SkipEntry();
             id = -1;
-            return false;
         }
 
         /// <summary>
@@ -1908,7 +1901,7 @@ namespace ExtEvents.OdinSerializer
                 bufferIndex = bufferEnd;
             }
         }
-        
+
         private void SkipPeekedEntryContent()
         {
             if (peekedEntryType != null)
@@ -2367,7 +2360,7 @@ namespace ExtEvents.OdinSerializer
             value = 0;
             return false;
         }
-        
+
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private bool UNSAFE_Read_8_Int64(out long value)
         {
@@ -2388,7 +2381,7 @@ namespace ExtEvents.OdinSerializer
                             long result = 0;
                             int* toPtr = (int*)&result;
                             int* fromPtr = (int*)(basePtr + bufferIndex);
-                            
+
                             *toPtr++ = *fromPtr++;
                             *toPtr = *fromPtr;
 
@@ -2676,7 +2669,7 @@ namespace ExtEvents.OdinSerializer
             return false;
         }
 
-        
+
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private bool HasBufferData(int amount)
         {

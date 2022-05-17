@@ -92,11 +92,13 @@ namespace ExtEvents.OdinSerializer.Utilities.Editor
             BuildTarget.StandaloneWindows,
             BuildTarget.StandaloneWindows64,
 
+#pragma warning disable CS0618
             BuildTarget.StandaloneLinux,
             BuildTarget.StandaloneLinux64,
             BuildTarget.StandaloneLinuxUniversal,
 
             BuildTarget.Android,
+#pragma warning restore CS0618
         };
 
         public static void ApplyImportSettings(string assemblyFilePath, AssemblyImportSettings importSettings)

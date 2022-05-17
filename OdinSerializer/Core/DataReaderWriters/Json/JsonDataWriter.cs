@@ -161,7 +161,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The name of the node to end. This has to be the name of the current node.</param>
         public override void EndNode(string name)
         {
-            PopNode(name);
+            PopNode();
             StartNewLine(true);
 
             EnsureBufferSpace(1);

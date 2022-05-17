@@ -21,23 +21,18 @@ namespace ExtEvents.OdinSerializer.Utilities
     using System;
     using System.Threading;
 
-    public interface ICache : IDisposable
-    {
-        object Value { get; }
-    }
-
     /// <summary>
     /// Provides an easy way of claiming and freeing cached values of any non-abstract reference type with a public parameterless constructor.
     /// <para />
     /// Cached types which implement the <see cref="ICacheNotificationReceiver"/> interface will receive notifications when they are claimed and freed.
     /// <para />
-    /// Only one thread should be holding a given cache instance at a time if <see cref="ICacheNotificationReceiver"/> is implemented, since the invocation of 
+    /// Only one thread should be holding a given cache instance at a time if <see cref="ICacheNotificationReceiver"/> is implemented, since the invocation of
     /// <see cref="ICacheNotificationReceiver.OnFreed()"/> is not thread safe, IE, weird stuff might happen if multiple different threads are trying to free
     /// the same cache instance at the same time. This will practically never happen unless you're doing really strange stuff, but the case is documented here.
     /// </summary>
     /// <typeparam name="T">The type which is cached.</typeparam>
     /// <seealso cref="System.IDisposable" />
-    public sealed class Cache<T> : ICache where T : class, new()
+    public sealed class Cache<T> : IDisposable where T : class, new()
     {
         private static readonly bool IsNotificationReceiver = typeof(ICacheNotificationReceiver).IsAssignableFrom(typeof(T));
         private static object[] FreeValues = new object[4];
@@ -54,18 +49,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The maximum size of the cache.
         /// </value>
-        public static int MaxCacheSize
-        {
-            get
-            {
-                return maxCacheSize;
-            }
-
-            set
-            {
-                maxCacheSize = Math.Max(1, value);
-            }
-        }
+        public static int MaxCacheSize => maxCacheSize;
 
         private Cache()
         {
@@ -76,17 +60,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// The cached value.
         /// </summary>
-        public T Value;
-
-        /// <summary>
-        /// Gets a value indicating whether this cached value is free.
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if this cached value is free; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsFree { get { return isFree; } }
-
-        object ICache.Value { get { return Value; } }
+        public readonly T Value;
 
         /// <summary>
         /// Claims a cached value of type <see cref="T"/>.
@@ -126,8 +100,8 @@ namespace ExtEvents.OdinSerializer.Utilities
             }
 
             // Release the lock
-            THREAD_LOCK_TOKEN = 0; 
-            
+            THREAD_LOCK_TOKEN = 0;
+
             if (result == null)
             {
                 result = new Cache<T>();
@@ -229,18 +203,10 @@ namespace ExtEvents.OdinSerializer.Utilities
         {
             if (cache == null)
             {
-                return default(T);
+                return default;
             }
 
             return cache.Value;
-        }
-
-        /// <summary>
-        /// Releases this cached value.
-        /// </summary>
-        public void Release()
-        {
-            Release(this);
         }
 
         /// <summary>

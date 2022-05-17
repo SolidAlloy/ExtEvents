@@ -19,7 +19,6 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
-    using System.ComponentModel;
 
     /// <summary>
     /// Implements functionality that is shared by both data readers and data writers.
@@ -32,50 +31,12 @@ namespace ExtEvents.OdinSerializer
         private int nodesLength;
 
         /// <summary>
-        /// Gets or sets the context's or writer's serialization binder.
-        /// </summary>
-        /// <value>
-        /// The reader's or writer's serialization binder.
-        /// </value>
-        [Obsolete("Use the Binder member on the writer's SerializationContext/DeserializationContext instead.", error: false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public TwoWaySerializationBinder Binder
-        {
-            get
-            {
-                if (this is IDataWriter)
-                {
-                    return (this as IDataWriter).Context.Binder;
-                }
-
-                if (this is IDataReader)
-                {
-                    return (this as IDataReader).Context.Binder;
-                }
-
-                return TwoWaySerializationBinder.Default;
-            }
-
-            set
-            {
-                if (this is IDataWriter)
-                {
-                    (this as IDataWriter).Context.Binder = value;
-                }
-                else if (this is IDataReader)
-                {
-                    (this as IDataReader).Context.Binder = value;
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets a value indicating whether the reader or writer is in an array node.
         /// </summary>
         /// <value>
         /// <c>true</c> if the reader or writer is in an array node; otherwise, <c>false</c>.
         /// </value>
-        public bool IsInArrayNode { get { return nodesLength == 0 ? false : nodes[nodesLength - 1].IsArray; } }
+        public bool IsInArrayNode => nodesLength == 0 ? false : nodes[nodesLength - 1].IsArray;
 
         /// <summary>
         /// Gets the current node depth. In other words, the current count of the node stack.
@@ -83,7 +44,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node depth.
         /// </value>
-        protected int NodeDepth { get { return nodesLength; } }
+        protected int NodeDepth => nodesLength;
 
         /// <summary>
         /// Gets the current node, or <see cref="NodeInfo.Empty"/> if there is no current node.
@@ -91,7 +52,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The current node.
         /// </value>
-        protected NodeInfo CurrentNode { get { return nodesLength == 0 ? NodeInfo.Empty : nodes[nodesLength - 1]; } }
+        protected NodeInfo CurrentNode => nodesLength == 0 ? NodeInfo.Empty : nodes[nodesLength - 1];
 
         /// <summary>
         /// Pushes a node onto the node stack.
@@ -144,7 +105,7 @@ namespace ExtEvents.OdinSerializer
                 var current = nodes[nodesLength - 1];
                 nodes[nodesLength] = new NodeInfo(current.Name, current.Id, current.Type, true);
             }
-            
+
             nodesLength++;
         }
 
@@ -165,13 +126,12 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Pops the current node off of the node stack.
         /// </summary>
-        /// <param name="name">The name of the node to pop.</param>
         /// <exception cref="System.InvalidOperationException">
         /// There are no nodes to pop.
         /// or
         /// Tried to pop node with given name, but the current node's name was different.
         /// </exception>
-        protected void PopNode(string name)
+        protected void PopNode()
         {
             if (nodesLength == 0)
             {

@@ -18,17 +18,17 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-    using UnityEngine;
-    using Utilities;
-
     /// <summary>
     /// Utility class for locating and caching formatters for all non-primitive types.
     /// </summary>
 #if UNITY_EDITOR
+    using System;
+    using System.Collections.Generic;
+    using System.Reflection;
     using UnityEditor;
+    using UnityEngine;
+    using Utilities;
+
     [InitializeOnLoad]
 #endif
 

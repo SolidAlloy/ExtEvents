@@ -41,15 +41,6 @@ namespace ExtEvents.OdinSerializer
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UnityReferenceResolver"/> class with a list of Unity objects.
-        /// </summary>
-        /// <param name="referencedUnityObjects">The referenced Unity objects.</param>
-        public UnityReferenceResolver(List<Object> referencedUnityObjects)
-        {
-            SetReferencedUnityObjects(referencedUnityObjects);
-        }
-
-        /// <summary>
         /// Gets the currently referenced Unity objects.
         /// </summary>
         /// <returns>A list of the currently referenced Unity objects.</returns>

@@ -19,8 +19,6 @@
 namespace ExtEvents.OdinSerializer
 {
     using System;
-    using System.ComponentModel;
-    using System.IO;
 
     /// <summary>
     /// Provides a set of methods for reading data stored in a format that can be read by a corresponding <see cref="IDataReader"/> class.
@@ -33,43 +31,12 @@ namespace ExtEvents.OdinSerializer
     public interface IDataWriter : IDisposable
     {
         /// <summary>
-        /// Gets or sets the reader's serialization binder.
-        /// </summary>
-        /// <value>
-        /// The reader's serialization binder.
-        /// </value>
-        TwoWaySerializationBinder Binder { get; set; }
-
-        /// <summary>
-        /// Gets or sets the base stream of the writer.
-        /// </summary>
-        /// <value>
-        /// The base stream of the writer.
-        /// </value>
-        [Obsolete("Data readers and writers don't necessarily have streams any longer, so this API has been made obsolete. Using this property may result in NotSupportedExceptions being thrown.", false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Stream Stream { get; set; }
-
-        /// <summary>
-        /// Gets a value indicating whether the writer is in an array node.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if the writer is in an array node; otherwise, <c>false</c>.
-        /// </value>
-        bool IsInArrayNode { get; }
-
-        /// <summary>
         /// Gets the serialization context.
         /// </summary>
         /// <value>
         /// The serialization context.
         /// </value>
         SerializationContext Context { get; set; }
-
-        /// <summary>
-        /// Gets a dump of the data currently written by the writer. The format of this dump varies, but should be useful for debugging purposes.
-        /// </summary>
-        string GetDataDump();
 
         /// <summary>
         /// Flushes everything that has been written so far to the writer's base stream.
@@ -257,11 +224,5 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The name of the value. If this is null, no name will be written.</param>
         /// <param name="value">The value to write.</param>
         void WriteBoolean(string name, bool value);
-
-        /// <summary>
-        /// Tells the writer that a new serialization session is about to begin, and that it should clear all cached values left over from any prior serialization sessions.
-        /// This method is only relevant when the same writer is used to serialize several different, unrelated values.
-        /// </summary>
-        void PrepareNewSerializationSession();
     }
 }
