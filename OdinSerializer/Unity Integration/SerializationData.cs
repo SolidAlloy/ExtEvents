@@ -22,7 +22,7 @@ namespace ExtEvents.OdinSerializer
     using Object = UnityEngine.Object;
 
     [Serializable]
-    public struct SimpleSerializationData
+    public struct SerializationData
     {
         public DataFormat DataFormat;
         public List<Object> ReferencedUnityObjects;

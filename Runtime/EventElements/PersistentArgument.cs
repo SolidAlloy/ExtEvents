@@ -29,7 +29,7 @@
         /// <summary> The type of the argument. </summary>
         [PublicAPI] public Type Type => _type;
 
-        [SerializeField] private SimpleSerializationData _serializationData;
+        [SerializeField] private SerializationData _serializationData;
         [SerializeField] internal bool _canBeDynamic;
 
         // old code support

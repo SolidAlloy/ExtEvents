@@ -74,7 +74,7 @@
         }
 #endif
 
-        public static void SerializeValue(object value, Type valueType, ref SimpleSerializationData data)
+        public static void SerializeValue(object value, Type valueType, ref SerializationData data)
         {
 #if UNITY_EDITOR
             // Do nothing whatsoever and return immediately, lest we break Unity's "smart" modification recording
@@ -98,13 +98,13 @@
 #endif
         }
 
-        private static void SerializeValueToBinary(object value, Type valueType, ref SimpleSerializationData data)
+        private static void SerializeValueToBinary(object value, Type valueType, ref SerializationData data)
         {
             data.Bytes = value == null ? null : SerializationUtility.SerializeValue(value, valueType, DataFormat.Binary, out data.ReferencedUnityObjects);
             data.DataFormat = DataFormat.Binary;
         }
 
-        private static void SerializeValueToNodes(object value, Type valueType, ref SimpleSerializationData data)
+        private static void SerializeValueToNodes(object value, Type valueType, ref SerializationData data)
         {
             using var newContext = Cache<SerializationContext>.Claim();
             using var writer = new SerializationNodeDataWriter(newContext);
@@ -143,7 +143,7 @@
 
         #region Deserialization
 
-        public static object DeserializeValue(Type valueType, SimpleSerializationData data)
+        public static object DeserializeValue(Type valueType, SerializationData data)
         {
             if (data.BytesAreFilled && !data.SerializationNodesAreFilled)
             {
@@ -190,7 +190,7 @@
             return context;
         }
 
-        private static object DeserializeValueFromNodes(Type valueType, SimpleSerializationData data, DeserializationContext context)
+        private static object DeserializeValueFromNodes(Type valueType, SerializationData data, DeserializationContext context)
         {
             using var reader = new SerializationNodeDataReader(context);
             using var resolver = Cache<UnityReferenceResolver>.Claim();
