@@ -1,4 +1,4 @@
-﻿namespace ExtEvents
+namespace ExtEvents
 {
     using System;
     using JetBrains.Annotations;
@@ -155,7 +155,9 @@
             if (DeserializeOldArgumentHolder())
                 return;
 
-            _argumentHolder ??= CreateArgumentHolder(_type);
+            if (_argumentHolder == null || _argumentHolder.ValueType != _type.Type)
+                _argumentHolder = CreateArgumentHolder(_type);
+
             _argumentHolder.Value = CustomSerialization.DeserializeValue(_type, _serializationData);
 #endif
         }

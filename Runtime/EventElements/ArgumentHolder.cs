@@ -17,6 +17,8 @@
 
         [Preserve]
         public abstract object Value { get; set; }
+
+        public abstract Type ValueType { get; }
     }
 
     [Serializable]
@@ -33,6 +35,8 @@
             get => _value;
             set => _value = value == null ? default : (T) value;
         }
+
+        public override Type ValueType => typeof(T);
 
         public ArgumentHolder() { }
 
