@@ -373,8 +373,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedEntryType == EntryType.StartOfArray)
@@ -415,8 +414,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedBinaryEntryType == BinaryEntryType.NamedStartOfReferenceNode || peekedBinaryEntryType == BinaryEntryType.UnnamedStartOfReferenceNode)
@@ -462,8 +460,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             while (peekedBinaryEntryType != BinaryEntryType.EndOfArray && peekedBinaryEntryType != BinaryEntryType.EndOfStream)
@@ -481,7 +478,6 @@ namespace ExtEvents.OdinSerializer
             {
                 MarkEntryContentConsumed();
                 PopArray();
-                return;
             }
         }
 
@@ -499,8 +495,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             while (peekedBinaryEntryType != BinaryEntryType.EndOfNode && peekedBinaryEntryType != BinaryEntryType.EndOfStream)
@@ -518,7 +513,6 @@ namespace ExtEvents.OdinSerializer
             {
                 MarkEntryContentConsumed();
                 PopNode();
-                return;
             }
         }
 
@@ -542,8 +536,7 @@ namespace ExtEvents.OdinSerializer
 
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedEntryType == EntryType.PrimitiveArray)
@@ -634,8 +627,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedEntryType == EntryType.Boolean)
@@ -882,8 +874,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedEntryType == EntryType.Integer)
@@ -1037,8 +1028,7 @@ namespace ExtEvents.OdinSerializer
         {
             if (!peekedEntryType.HasValue)
             {
-                string name;
-                PeekEntry(out name);
+                PeekEntry(out string _);
             }
 
             if (peekedEntryType == EntryType.Integer)

@@ -218,7 +218,7 @@ namespace ExtEvents.OdinSerializer
                 {
                     try
                     {
-                        writer.WriteString("type", writer.Context.Binder.BindToName(entry.ObjectType, writer.Context.Config.DebugContext));
+                        writer.WriteString("type", writer.Context.Binder.BindToName(entry.ObjectType));
                         var readerWriter = Serializer.Get(entry.ObjectType);
                         readerWriter.WriteValueWeak(entry.Name, entry.Value, writer);
                     }

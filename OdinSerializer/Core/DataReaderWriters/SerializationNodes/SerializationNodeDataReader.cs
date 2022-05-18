@@ -60,7 +60,7 @@ namespace ExtEvents.OdinSerializer
         };
         }
 
-        private bool IndexIsValid { get { return nodes != null && currentIndex >= 0 && currentIndex < nodes.Count; } }
+        private bool IndexIsValid => nodes != null && currentIndex >= 0 && currentIndex < nodes.Count;
 
         /// <summary>
         /// Not yet documented.
@@ -93,8 +93,8 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override Stream Stream
         {
-            get { throw new NotSupportedException("This data reader has no stream."); }
-            set { throw new NotSupportedException("This data reader has no stream."); }
+            get => throw new NotSupportedException("This data reader has no stream.");
+            set => throw new NotSupportedException("This data reader has no stream.");
         }
 
         /// <summary>

@@ -88,7 +88,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         ///   <c>true</c> if this buffer is free; otherwise, <c>false</c>.
         /// </value>
-        public bool IsFree { get { return isFree; } }
+        public bool IsFree => isFree;
 
         /// <summary>
         /// Claims a buffer with the specified minimum capacity. Note: buffers always have a capacity equal to or larger than 256.

@@ -45,6 +45,7 @@ namespace ExtEvents.OdinSerializer
             // This exists solely to prevent IL2CPP code stripping from removing the generic type's instance constructor
             // which it otherwise seems prone to do, regardless of what might be defined in any link.xml file.
 
+            // ReSharper disable once ObjectCreationAsStatement
             new DerivedDictionaryFormatter<Dictionary<int, string>, int, string>();
         }
 
@@ -84,7 +85,6 @@ namespace ExtEvents.OdinSerializer
                 {
                     long length;
                     reader.EnterArray(out length);
-                    Type type;
 
                     if (!ReferenceEquals(comparer, null) && ComparerConstructor != null)
                     {
@@ -112,7 +112,7 @@ namespace ExtEvents.OdinSerializer
 
                         try
                         {
-                            reader.EnterNode(out type);
+                            reader.EnterNode(out Type _);
                             TKey key = KeyReaderWriter.ReadValue(reader);
                             TValue val = ValueReaderWriter.ReadValue(reader);
 

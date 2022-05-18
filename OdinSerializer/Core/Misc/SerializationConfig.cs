@@ -179,8 +179,8 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public LoggingPolicy LoggingPolicy
         {
-            get { return loggingPolicy; }
-            set { loggingPolicy = value; }
+            get => loggingPolicy;
+            set => loggingPolicy = value;
         }
 
         /// <summary>
@@ -188,8 +188,8 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public ErrorHandlingPolicy ErrorHandlingPolicy
         {
-            get { return errorHandlingPolicy; }
-            set { errorHandlingPolicy = value; }
+            get => errorHandlingPolicy;
+            set => errorHandlingPolicy = value;
         }
 
         /// <summary>

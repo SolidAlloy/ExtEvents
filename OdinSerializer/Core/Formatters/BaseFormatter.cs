@@ -117,7 +117,7 @@ namespace ExtEvents.OdinSerializer
             {
 #if CAN_EMIT
                 var action = EmitUtilities.CreateInstanceRefMethodCaller<T>(info);
-                return (ref T value, StreamingContext context) => action(ref value);
+                return (ref T value, StreamingContext _) => action(ref value);
 #else
                 return (ref T value, StreamingContext context) =>
                 {
@@ -153,7 +153,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The type that the formatter can serialize.
         /// </value>
-        public Type SerializedType { get { return typeof(T); } }
+        public Type SerializedType => typeof(T);
 
         /// <summary>
         /// Serializes a value using a specified <see cref="IDataWriter" />.

@@ -34,7 +34,7 @@ namespace ExtEvents.OdinSerializer
         /// <para />
         /// This format has rather sluggish performance and allocates frightening amounts of string garbage.
         /// </summary>
-        JSON = 1,
+        // JSON = 1,
 
         /// <summary>
         /// A format that does not serialize to a byte stream, but to a list of data nodes in memory

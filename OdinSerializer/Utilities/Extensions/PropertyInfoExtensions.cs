@@ -63,18 +63,6 @@ namespace ExtEvents.OdinSerializer.Utilities
         }
 
         /// <summary>
-        /// Determines whether the specified property is an alias.
-        /// </summary>
-        /// <param name="propertyInfo">The property to check.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified property is an alias; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool IsAliasProperty(this PropertyInfo propertyInfo)
-        {
-            return propertyInfo is MemberAliasPropertyInfo;
-        }
-
-        /// <summary>
         /// Returns the original, backing property of an alias property if the property is an alias.
         /// </summary>
         /// <param name="propertyInfo">The property to check.</param>

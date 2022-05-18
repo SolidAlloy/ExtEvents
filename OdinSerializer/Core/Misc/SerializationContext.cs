@@ -47,24 +47,6 @@ namespace ExtEvents.OdinSerializer
         /// Initializes a new instance of the <see cref="SerializationContext"/> class.
         /// </summary>
         /// <param name="context">The streaming context to use.</param>
-        public SerializationContext(StreamingContext context)
-            : this(context, new FormatterConverter())
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializationContext"/> class.
-        /// </summary>
-        /// <param name="formatterConverter">The formatter converter to use.</param>
-        public SerializationContext(FormatterConverter formatterConverter)
-            : this(new StreamingContext(), formatterConverter)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializationContext"/> class.
-        /// </summary>
-        /// <param name="context">The streaming context to use.</param>
         /// <param name="formatterConverter">The formatter converter to use.</param>
         /// <exception cref="System.ArgumentNullException">The formatterConverter parameter is null.</exception>
         public SerializationContext(StreamingContext context, FormatterConverter formatterConverter)
@@ -98,10 +80,7 @@ namespace ExtEvents.OdinSerializer
                 return binder;
             }
 
-            set
-            {
-                binder = value;
-            }
+            set => binder = value;
         }
 
         /// <summary>
@@ -110,7 +89,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The streaming context.
         /// </value>
-        public StreamingContext StreamingContext { get { return streamingContext; } }
+        public StreamingContext StreamingContext => streamingContext;
 
         /// <summary>
         /// Gets the formatter converter.
@@ -118,7 +97,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The formatter converter.
         /// </value>
-        public IFormatterConverter FormatterConverter { get { return formatterConverter; } }
+        public IFormatterConverter FormatterConverter => formatterConverter;
 
         /// <summary>
         /// Gets or sets the index reference resolver.
@@ -161,22 +140,6 @@ namespace ExtEvents.OdinSerializer
 
                 return config;
             }
-
-            set
-            {
-                config = value;
-            }
-        }
-
-        /// <summary>
-        /// Tries to get the id of an internally referenced object.
-        /// </summary>
-        /// <param name="reference">The reference to get the id of.</param>
-        /// <param name="id">The id that was found, or -1 if no id was found.</param>
-        /// <returns><c>true</c> if a reference was found, otherwise <c>false</c>.</returns>
-        public bool TryGetInternalReferenceId(object reference, out int id)
-        {
-            return internalReferenceIdMap.TryGetValue(reference, out id);
         }
 
         /// <summary>
@@ -278,14 +241,6 @@ namespace ExtEvents.OdinSerializer
 
             id = null;
             return false;
-        }
-
-        /// <summary>
-        /// Resets the context's internal reference map.
-        /// </summary>
-        public void ResetInternalReferences()
-        {
-            internalReferenceIdMap.Clear();
         }
 
         /// <summary>

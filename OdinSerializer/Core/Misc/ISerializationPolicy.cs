@@ -26,14 +26,6 @@ namespace ExtEvents.OdinSerializer
     public interface ISerializationPolicy
     {
         /// <summary>
-        /// Gets the identifier of the policy. This can be stored in the serialization metadata, so the policy used to serialize can be recovered upon deserialization without knowing the policy ahead of time. This ID should preferably be unique.
-        /// </summary>
-        /// <value>
-        /// The identifier of the policy.
-        /// </value>
-        string ID { get; }
-
-        /// <summary>
         /// Gets a value indicating whether to allow non serializable types. (Types which are not decorated with <see cref="System.SerializableAttribute"/>.)
         /// </summary>
         /// <value>

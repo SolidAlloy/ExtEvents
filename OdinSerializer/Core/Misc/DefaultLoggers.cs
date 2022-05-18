@@ -13,13 +13,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// The default logger - usually this is <see cref="UnityLogger"/>.
         /// </summary>
-        public static ILogger DefaultLogger
-        {
-            get
-            {
-                return UnityLogger;
-            }
-        }
+        public static ILogger DefaultLogger => UnityLogger;
 
         /// <summary>
         /// Logs messages using Unity's <see cref="UnityEngine.Debug"/> class.

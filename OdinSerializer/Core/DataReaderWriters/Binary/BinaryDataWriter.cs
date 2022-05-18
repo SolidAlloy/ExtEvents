@@ -31,47 +31,11 @@ namespace ExtEvents.OdinSerializer
     /// <seealso cref="BaseDataWriter" />
     public unsafe class BinaryDataWriter : BaseDataWriter
     {
-        private static readonly Dictionary<Type, Delegate> PrimitiveGetBytesMethods = new Dictionary<Type, Delegate>(FastTypeComparer.Instance)
-        {
-            { typeof(char),     (Action<byte[], int, char>)     ((byte[] b, int i, char v) => { ProperBitConverter.GetBytes(b, i, (ushort)v); }) },
-            { typeof(byte),     (Action<byte[], int, byte>)     ((b, i, v) => { b[i] = v; }) },
-            { typeof(sbyte),    (Action<byte[], int, sbyte>)    ((b, i, v) => { b[i] = (byte)v; }) },
-            { typeof(bool),     (Action<byte[], int, bool>)     ((b, i, v) => { b[i] = v ? (byte)1 : (byte)0; }) },
-            { typeof(short),    (Action<byte[], int, short>)    ProperBitConverter.GetBytes },
-            { typeof(int),      (Action<byte[], int, int>)      ProperBitConverter.GetBytes },
-            { typeof(long),     (Action<byte[], int, long>)     ProperBitConverter.GetBytes },
-            { typeof(ushort),   (Action<byte[], int, ushort>)   ProperBitConverter.GetBytes },
-            { typeof(uint),     (Action<byte[], int, uint>)     ProperBitConverter.GetBytes },
-            { typeof(ulong),    (Action<byte[], int, ulong>)    ProperBitConverter.GetBytes },
-            { typeof(decimal),  (Action<byte[], int, decimal>)  ProperBitConverter.GetBytes },
-            { typeof(float),    (Action<byte[], int, float>)    ProperBitConverter.GetBytes },
-            { typeof(double),   (Action<byte[], int, double>)   ProperBitConverter.GetBytes },
-            { typeof(Guid),     (Action<byte[], int, Guid>)     ProperBitConverter.GetBytes }
-        };
-
-        private static readonly Dictionary<Type, int> PrimitiveSizes = new Dictionary<Type, int>(FastTypeComparer.Instance)
-        {
-            { typeof(char),    2  },
-            { typeof(byte),    1  },
-            { typeof(sbyte),   1  },
-            { typeof(bool),    1  },
-            { typeof(short),   2  },
-            { typeof(int),     4  },
-            { typeof(long),    8  },
-            { typeof(ushort),  2  },
-            { typeof(uint),    4  },
-            { typeof(ulong),   8  },
-            { typeof(decimal), 16 },
-            { typeof(float),   4  },
-            { typeof(double),  8  },
-            { typeof(Guid),    16 }
-        };
-
         // For byte caching while writing values up to sizeof(decimal) using the old ProperBitConverter method
         // (still occasionally used) and to provide a permanent buffer to read into.
         private readonly byte[] small_buffer = new byte[16];
         private readonly byte[] buffer = new byte[1024 * 100]; // 100 Kb buffer should be enough for most things, and enough to prevent flushing to stream too often
-        private int bufferIndex = 0;
+        private int bufferIndex;
 
         // A dictionary over all seen types, so short type ids can be written after a type's full name has already been written to the stream once
         private readonly Dictionary<Type, int> types = new Dictionary<Type, int>(16, FastTypeComparer.Instance);
@@ -97,10 +61,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="length">The length of the array to come.</param>
         public override void BeginArrayNode(long length)
         {
-            this.EnsureBufferSpace(9);
-            this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.StartOfArray;
-            this.UNSAFE_WriteToBuffer_8_Int64(length);
-            this.PushArray();
+            EnsureBufferSpace(9);
+            buffer[bufferIndex++] = (byte)BinaryEntryType.StartOfArray;
+            UNSAFE_WriteToBuffer_8_Int64(length);
+            PushArray();
         }
 
         /// <summary>
@@ -115,20 +79,20 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedStartOfReferenceNode;
-                this.WriteStringFast(name);
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedStartOfReferenceNode;
+                WriteStringFast(name);
             }
             else
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedStartOfReferenceNode;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedStartOfReferenceNode;
             }
 
-            this.WriteType(type);
-            this.EnsureBufferSpace(4);
-            this.UNSAFE_WriteToBuffer_4_Int32(id);
-            this.PushNode(name, id, type);
+            WriteType(type);
+            EnsureBufferSpace(4);
+            UNSAFE_WriteToBuffer_4_Int32(id);
+            PushNode(name, id, type);
         }
 
         /// <summary>
@@ -142,18 +106,18 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedStartOfStructNode;
-                this.WriteStringFast(name);
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedStartOfStructNode;
+                WriteStringFast(name);
             }
             else
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedStartOfStructNode;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedStartOfStructNode;
             }
 
-            this.WriteType(type);
-            this.PushNode(name, -1, type);
+            WriteType(type);
+            PushNode(name, -1, type);
         }
 
         /// <summary>
@@ -162,7 +126,7 @@ namespace ExtEvents.OdinSerializer
         public override void Dispose()
         {
             //this.Stream.Dispose();
-            this.FlushToStream();
+            FlushToStream();
         }
 
         /// <summary>
@@ -170,10 +134,10 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override void EndArrayNode()
         {
-            this.PopArray();
+            PopArray();
 
-            this.EnsureBufferSpace(1);
-            this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.EndOfArray;
+            EnsureBufferSpace(1);
+            buffer[bufferIndex++] = (byte)BinaryEntryType.EndOfArray;
         }
 
         /// <summary>
@@ -182,10 +146,10 @@ namespace ExtEvents.OdinSerializer
         /// <param name="name">The name of the node to end. This has to be the name of the current node.</param>
         public override void EndNode(string name)
         {
-            this.PopNode();
+            PopNode();
 
-            this.EnsureBufferSpace(1);
-            this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.EndOfNode;
+            EnsureBufferSpace(1);
+            buffer[bufferIndex++] = (byte)BinaryEntryType.EndOfNode;
         }
 
         private static readonly Dictionary<Type, Action<BinaryDataWriter, object>> PrimitiveArrayWriters = new Dictionary<Type, Action<BinaryDataWriter, object>>(FastTypeComparer.Instance)
@@ -228,7 +192,7 @@ namespace ExtEvents.OdinSerializer
         private static void WritePrimitiveArray_sbyte(BinaryDataWriter writer, object o)
         {
             sbyte[] array = o as sbyte[];
-            int bytesPerElement = sizeof(sbyte);
+            const int bytesPerElement = sizeof(sbyte);
             int byteCount = array.Length * bytesPerElement;
 
             writer.EnsureBufferSpace(9);
@@ -270,7 +234,7 @@ namespace ExtEvents.OdinSerializer
         private static void WritePrimitiveArray_bool(BinaryDataWriter writer, object o)
         {
             bool[] array = o as bool[];
-            int bytesPerElement = sizeof(bool);
+            const int bytesPerElement = sizeof(bool);
             int byteCount = array.Length * bytesPerElement;
 
             writer.EnsureBufferSpace(9);
@@ -1062,19 +1026,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedBoolean;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedBoolean;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = value ? (byte)1 : (byte)0;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = value ? (byte)1 : (byte)0;
             }
             else
             {
-                this.EnsureBufferSpace(2);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedBoolean;
-                this.buffer[this.bufferIndex++] = value ? (byte)1 : (byte)0;
+                EnsureBufferSpace(2);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedBoolean;
+                buffer[bufferIndex++] = value ? (byte)1 : (byte)0;
             }
 
         }
@@ -1088,19 +1052,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedByte;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedByte;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = value;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = value;
             }
             else
             {
-                this.EnsureBufferSpace(2);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedByte;
-                this.buffer[this.bufferIndex++] = value;
+                EnsureBufferSpace(2);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedByte;
+                buffer[bufferIndex++] = value;
             }
         }
 
@@ -1113,19 +1077,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedChar;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedChar;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(2);
-                this.UNSAFE_WriteToBuffer_2_Char(value);
+                EnsureBufferSpace(2);
+                UNSAFE_WriteToBuffer_2_Char(value);
             }
             else
             {
-                this.EnsureBufferSpace(3);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedChar;
-                this.UNSAFE_WriteToBuffer_2_Char(value);
+                EnsureBufferSpace(3);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedChar;
+                UNSAFE_WriteToBuffer_2_Char(value);
             }
 
         }
@@ -1139,19 +1103,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedDecimal;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedDecimal;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(16);
-                this.UNSAFE_WriteToBuffer_16_Decimal(value);
+                EnsureBufferSpace(16);
+                UNSAFE_WriteToBuffer_16_Decimal(value);
             }
             else
             {
-                this.EnsureBufferSpace(17);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedDecimal;
-                this.UNSAFE_WriteToBuffer_16_Decimal(value);
+                EnsureBufferSpace(17);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedDecimal;
+                UNSAFE_WriteToBuffer_16_Decimal(value);
             }
         }
 
@@ -1164,19 +1128,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedDouble;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedDouble;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(8);
-                this.UNSAFE_WriteToBuffer_8_Float64(value);
+                EnsureBufferSpace(8);
+                UNSAFE_WriteToBuffer_8_Float64(value);
             }
             else
             {
-                this.EnsureBufferSpace(9);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedDouble;
-                this.UNSAFE_WriteToBuffer_8_Float64(value);
+                EnsureBufferSpace(9);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedDouble;
+                UNSAFE_WriteToBuffer_8_Float64(value);
             }
 
         }
@@ -1190,19 +1154,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedGuid;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedGuid;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(16);
-                this.UNSAFE_WriteToBuffer_16_Guid(value);
+                EnsureBufferSpace(16);
+                UNSAFE_WriteToBuffer_16_Guid(value);
             }
             else
             {
-                this.EnsureBufferSpace(17);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedGuid;
-                this.UNSAFE_WriteToBuffer_16_Guid(value);
+                EnsureBufferSpace(17);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedGuid;
+                UNSAFE_WriteToBuffer_16_Guid(value);
             }
 
         }
@@ -1216,19 +1180,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByGuid;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByGuid;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(16);
-                this.UNSAFE_WriteToBuffer_16_Guid(guid);
+                EnsureBufferSpace(16);
+                UNSAFE_WriteToBuffer_16_Guid(guid);
             }
             else
             {
-                this.EnsureBufferSpace(17);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByGuid;
-                this.UNSAFE_WriteToBuffer_16_Guid(guid);
+                EnsureBufferSpace(17);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByGuid;
+                UNSAFE_WriteToBuffer_16_Guid(guid);
             }
         }
 
@@ -1241,19 +1205,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByIndex;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByIndex;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(4);
-                this.UNSAFE_WriteToBuffer_4_Int32(index);
+                EnsureBufferSpace(4);
+                UNSAFE_WriteToBuffer_4_Int32(index);
             }
             else
             {
-                this.EnsureBufferSpace(5);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByIndex;
-                this.UNSAFE_WriteToBuffer_4_Int32(index);
+                EnsureBufferSpace(5);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByIndex;
+                UNSAFE_WriteToBuffer_4_Int32(index);
             }
         }
 
@@ -1271,17 +1235,17 @@ namespace ExtEvents.OdinSerializer
 
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByString;
-                this.WriteStringFast(name);
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedExternalReferenceByString;
+                WriteStringFast(name);
             }
             else
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByString;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedExternalReferenceByString;
             }
 
-            this.WriteStringFast(id);
+            WriteStringFast(id);
         }
 
         /// <summary>
@@ -1293,19 +1257,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedInt;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedInt;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(4);
-                this.UNSAFE_WriteToBuffer_4_Int32(value);
+                EnsureBufferSpace(4);
+                UNSAFE_WriteToBuffer_4_Int32(value);
             }
             else
             {
-                this.EnsureBufferSpace(5);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedInt;
-                this.UNSAFE_WriteToBuffer_4_Int32(value);
+                EnsureBufferSpace(5);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedInt;
+                UNSAFE_WriteToBuffer_4_Int32(value);
             }
         }
 
@@ -1318,19 +1282,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedLong;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedLong;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(8);
-                this.UNSAFE_WriteToBuffer_8_Int64(value);
+                EnsureBufferSpace(8);
+                UNSAFE_WriteToBuffer_8_Int64(value);
             }
             else
             {
-                this.EnsureBufferSpace(9);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedLong;
-                this.UNSAFE_WriteToBuffer_8_Int64(value);
+                EnsureBufferSpace(9);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedLong;
+                UNSAFE_WriteToBuffer_8_Int64(value);
             }
         }
 
@@ -1342,14 +1306,14 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedNull;
-                this.WriteStringFast(name);
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedNull;
+                WriteStringFast(name);
             }
             else
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedNull;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedNull;
             }
         }
 
@@ -1362,19 +1326,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedInternalReference;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedInternalReference;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(4);
-                this.UNSAFE_WriteToBuffer_4_Int32(id);
+                EnsureBufferSpace(4);
+                UNSAFE_WriteToBuffer_4_Int32(id);
             }
             else
             {
-                this.EnsureBufferSpace(5);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedInternalReference;
-                this.UNSAFE_WriteToBuffer_4_Int32(id);
+                EnsureBufferSpace(5);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedInternalReference;
+                UNSAFE_WriteToBuffer_4_Int32(id);
             }
         }
 
@@ -1387,26 +1351,26 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedSByte;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedSByte;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(1);
+                EnsureBufferSpace(1);
 
                 unchecked
                 {
-                    this.buffer[this.bufferIndex++] = (byte)value;
+                    buffer[bufferIndex++] = (byte)value;
                 }
             }
             else
             {
-                this.EnsureBufferSpace(2);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedSByte;
+                EnsureBufferSpace(2);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedSByte;
 
                 unchecked
                 {
-                    this.buffer[this.bufferIndex++] = (byte)value;
+                    buffer[bufferIndex++] = (byte)value;
                 }
             }
         }
@@ -1420,19 +1384,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedShort;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedShort;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(2);
-                this.UNSAFE_WriteToBuffer_2_Int16(value);
+                EnsureBufferSpace(2);
+                UNSAFE_WriteToBuffer_2_Int16(value);
             }
             else
             {
-                this.EnsureBufferSpace(3);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedShort;
-                this.UNSAFE_WriteToBuffer_2_Int16(value);
+                EnsureBufferSpace(3);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedShort;
+                UNSAFE_WriteToBuffer_2_Int16(value);
             }
         }
 
@@ -1445,19 +1409,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedFloat;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedFloat;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(4);
-                this.UNSAFE_WriteToBuffer_4_Float32(value);
+                EnsureBufferSpace(4);
+                UNSAFE_WriteToBuffer_4_Float32(value);
             }
             else
             {
-                this.EnsureBufferSpace(5);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedFloat;
-                this.UNSAFE_WriteToBuffer_4_Float32(value);
+                EnsureBufferSpace(5);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedFloat;
+                UNSAFE_WriteToBuffer_4_Float32(value);
             }
         }
 
@@ -1470,18 +1434,18 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedString;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedString;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
             }
             else
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedString;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedString;
             }
 
-            this.WriteStringFast(value);
+            WriteStringFast(value);
         }
 
         /// <summary>
@@ -1493,19 +1457,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedUInt;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedUInt;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(4);
-                this.UNSAFE_WriteToBuffer_4_UInt32(value);
+                EnsureBufferSpace(4);
+                UNSAFE_WriteToBuffer_4_UInt32(value);
             }
             else
             {
-                this.EnsureBufferSpace(5);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedUInt;
-                this.UNSAFE_WriteToBuffer_4_UInt32(value);
+                EnsureBufferSpace(5);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedUInt;
+                UNSAFE_WriteToBuffer_4_UInt32(value);
             }
         }
 
@@ -1518,19 +1482,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedULong;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedULong;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(8);
-                this.UNSAFE_WriteToBuffer_8_UInt64(value);
+                EnsureBufferSpace(8);
+                UNSAFE_WriteToBuffer_8_UInt64(value);
             }
             else
             {
-                this.EnsureBufferSpace(9);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedULong;
-                this.UNSAFE_WriteToBuffer_8_UInt64(value);
+                EnsureBufferSpace(9);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedULong;
+                UNSAFE_WriteToBuffer_8_UInt64(value);
             }
         }
 
@@ -1543,19 +1507,19 @@ namespace ExtEvents.OdinSerializer
         {
             if (name != null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.NamedUShort;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.NamedUShort;
 
-                this.WriteStringFast(name);
+                WriteStringFast(name);
 
-                this.EnsureBufferSpace(2);
-                this.UNSAFE_WriteToBuffer_2_UInt16(value);
+                EnsureBufferSpace(2);
+                UNSAFE_WriteToBuffer_2_UInt16(value);
             }
             else
             {
-                this.EnsureBufferSpace(3);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedUShort;
-                this.UNSAFE_WriteToBuffer_2_UInt16(value);
+                EnsureBufferSpace(3);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedUShort;
+                UNSAFE_WriteToBuffer_2_UInt16(value);
             }
         }
 
@@ -1566,32 +1530,32 @@ namespace ExtEvents.OdinSerializer
         public override void PrepareNewSerializationSession()
         {
             base.PrepareNewSerializationSession();
-            this.types.Clear();
-            this.bufferIndex = 0;
+            types.Clear();
+            bufferIndex = 0;
         }
 
         public override string GetDataDump()
         {
-            if (!this.Stream.CanRead)
+            if (!Stream.CanRead)
             {
                 return "Binary data stream for writing cannot be read; cannot dump data.";
             }
 
-            if (!this.Stream.CanSeek)
+            if (!Stream.CanSeek)
             {
                 return "Binary data stream cannot seek; cannot dump data.";
             }
 
-            this.FlushToStream();
+            FlushToStream();
 
-            var oldPosition = this.Stream.Position;
+            var oldPosition = Stream.Position;
 
             var bytes = new byte[oldPosition];
 
-            this.Stream.Position = 0;
-            this.Stream.Read(bytes, 0, (int)oldPosition);
+            Stream.Position = 0;
+            Stream.Read(bytes, 0, (int)oldPosition);
 
-            this.Stream.Position = oldPosition;
+            Stream.Position = oldPosition;
 
             return "Binary hex dump: " + ProperBitConverter.BytesToHexString(bytes);
         }
@@ -1601,28 +1565,28 @@ namespace ExtEvents.OdinSerializer
         {
             if (type == null)
             {
-                this.EnsureBufferSpace(1);
-                this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.UnnamedNull;
+                EnsureBufferSpace(1);
+                buffer[bufferIndex++] = (byte)BinaryEntryType.UnnamedNull;
             }
             else
             {
                 int id;
 
-                if (this.types.TryGetValue(type, out id))
+                if (types.TryGetValue(type, out id))
                 {
-                    this.EnsureBufferSpace(5);
-                    this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.TypeID;
-                    this.UNSAFE_WriteToBuffer_4_Int32(id);
+                    EnsureBufferSpace(5);
+                    buffer[bufferIndex++] = (byte)BinaryEntryType.TypeID;
+                    UNSAFE_WriteToBuffer_4_Int32(id);
                 }
                 else
                 {
-                    id = this.types.Count;
-                    this.types.Add(type, id);
+                    id = types.Count;
+                    types.Add(type, id);
 
-                    this.EnsureBufferSpace(5);
-                    this.buffer[this.bufferIndex++] = (byte)BinaryEntryType.TypeName;
-                    this.UNSAFE_WriteToBuffer_4_Int32(id);
-                    this.WriteStringFast(this.Context.Binder.BindToName(type, this.Context.Config.DebugContext));
+                    EnsureBufferSpace(5);
+                    buffer[bufferIndex++] = (byte)BinaryEntryType.TypeName;
+                    UNSAFE_WriteToBuffer_4_Int32(id);
+                    WriteStringFast(Context.Binder.BindToName(type));
                 }
             }
         }
@@ -1638,7 +1602,7 @@ namespace ExtEvents.OdinSerializer
             bool needs16BitsPerChar = true;
             int byteCount;
 
-            if (this.CompressStringsTo8BitWhenPossible)
+            if (CompressStringsTo8BitWhenPossible)
             {
                 needs16BitsPerChar = false;
 
@@ -1657,17 +1621,17 @@ namespace ExtEvents.OdinSerializer
             {
                 byteCount = value.Length * 2;
 
-                if (this.TryEnsureBufferSpace(byteCount + 5))
+                if (TryEnsureBufferSpace(byteCount + 5))
                 {
-                    this.buffer[this.bufferIndex++] = 1; // Write 16 bit flag
-                    this.UNSAFE_WriteToBuffer_4_Int32(value.Length);
+                    buffer[bufferIndex++] = 1; // Write 16 bit flag
+                    UNSAFE_WriteToBuffer_4_Int32(value.Length);
 
                     if (BitConverter.IsLittleEndian)
                     {
-                        fixed (byte* baseToPtr = this.buffer)
+                        fixed (byte* baseToPtr = buffer)
                         fixed (char* baseFromPtr = value)
                         {
-                            Struct256Bit* toPtr = (Struct256Bit*)(baseToPtr + this.bufferIndex);
+                            Struct256Bit* toPtr = (Struct256Bit*)(baseToPtr + bufferIndex);
                             Struct256Bit* fromPtr = (Struct256Bit*)baseFromPtr;
 
                             byte* toEnd = (byte*)toPtr + byteCount;
@@ -1688,10 +1652,10 @@ namespace ExtEvents.OdinSerializer
                     }
                     else
                     {
-                        fixed (byte* baseToPtr = this.buffer)
+                        fixed (byte* baseToPtr = buffer)
                         fixed (char* baseFromPtr = value)
                         {
-                            byte* toPtr = baseToPtr + this.bufferIndex;
+                            byte* toPtr = baseToPtr + bufferIndex;
                             byte* fromPtr = (byte*)baseFromPtr;
 
                             for (int i = 0; i < byteCount; i += 2)
@@ -1705,22 +1669,22 @@ namespace ExtEvents.OdinSerializer
                         }
                     }
 
-                    this.bufferIndex += byteCount;
+                    bufferIndex += byteCount;
                 }
                 else
                 {
                     // Our internal buffer doesn't have space for this string - use the stream directly
-                    this.FlushToStream(); // Ensure stream is up to date with buffer before we write directly to it
-                    this.Stream.WriteByte(1); // Write 16 bit flag
+                    FlushToStream(); // Ensure stream is up to date with buffer before we write directly to it
+                    Stream.WriteByte(1); // Write 16 bit flag
 
-                    ProperBitConverter.GetBytes(this.small_buffer, 0, value.Length);
-                    this.Stream.Write(this.small_buffer, 0, 4);
+                    ProperBitConverter.GetBytes(small_buffer, 0, value.Length);
+                    Stream.Write(small_buffer, 0, 4);
 
                     using (var tempBuffer = Buffer<byte>.Claim(byteCount))
                     {
                         var array = tempBuffer.Array;
                         UnsafeUtilities.StringToBytes(array, value, true);
-                        this.Stream.Write(array, 0, byteCount);
+                        Stream.Write(array, 0, byteCount);
                     }
                 }
             }
@@ -1728,24 +1692,24 @@ namespace ExtEvents.OdinSerializer
             {
                 byteCount = value.Length;
 
-                if (this.TryEnsureBufferSpace(byteCount + 5))
+                if (TryEnsureBufferSpace(byteCount + 5))
                 {
-                    this.buffer[this.bufferIndex++] = 0; // Write 8 bit flag
-                    this.UNSAFE_WriteToBuffer_4_Int32(value.Length);
+                    buffer[bufferIndex++] = 0; // Write 8 bit flag
+                    UNSAFE_WriteToBuffer_4_Int32(value.Length);
 
                     for (int i = 0; i < byteCount; i++)
                     {
-                        this.buffer[this.bufferIndex++] = (byte)value[i];
+                        buffer[bufferIndex++] = (byte)value[i];
                     }
                 }
                 else
                 {
                     // Our internal buffer doesn't have space for this string - use the stream directly
-                    this.FlushToStream(); // Ensure stream is up to date with buffer before we write directly to it
-                    this.Stream.WriteByte(0); // Write 8 bit flag
+                    FlushToStream(); // Ensure stream is up to date with buffer before we write directly to it
+                    Stream.WriteByte(0); // Write 8 bit flag
 
-                    ProperBitConverter.GetBytes(this.small_buffer, 0, value.Length);
-                    this.Stream.Write(this.small_buffer, 0, 4);
+                    ProperBitConverter.GetBytes(small_buffer, 0, value.Length);
+                    Stream.Write(small_buffer, 0, 4);
 
                     using (var tempBuffer = Buffer<byte>.Claim(value.Length))
                     {
@@ -1756,7 +1720,7 @@ namespace ExtEvents.OdinSerializer
                             array[i] = (byte)value[i];
                         }
 
-                        this.Stream.Write(array, 0, value.Length);
+                        Stream.Write(array, 0, value.Length);
                     }
                 }
             }
@@ -1764,10 +1728,10 @@ namespace ExtEvents.OdinSerializer
 
         public override void FlushToStream()
         {
-            if (this.bufferIndex > 0)
+            if (bufferIndex > 0)
             {
-                this.Stream.Write(this.buffer, 0, this.bufferIndex);
-                this.bufferIndex = 0;
+                Stream.Write(buffer, 0, bufferIndex);
+                bufferIndex = 0;
             }
 
             base.FlushToStream();
@@ -1776,15 +1740,15 @@ namespace ExtEvents.OdinSerializer
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_2_Char(char value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    *(char*)(basePtr + this.bufferIndex) = value;
+                    *(char*)(basePtr + bufferIndex) = value;
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 1;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1792,21 +1756,21 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 2;
+            bufferIndex += 2;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_2_Int16(short value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    *(short*)(basePtr + this.bufferIndex) = value;
+                    *(short*)(basePtr + bufferIndex) = value;
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 1;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1814,21 +1778,21 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 2;
+            bufferIndex += 2;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_2_UInt16(ushort value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    *(ushort*)(basePtr + this.bufferIndex) = value;
+                    *(ushort*)(basePtr + bufferIndex) = value;
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 1;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1836,21 +1800,21 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 2;
+            bufferIndex += 2;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_4_Int32(int value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    *(int*)(basePtr + this.bufferIndex) = value;
+                    *(int*)(basePtr + bufferIndex) = value;
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 3;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1860,21 +1824,21 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 4;
+            bufferIndex += 4;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_4_UInt32(uint value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    *(uint*)(basePtr + this.bufferIndex) = value;
+                    *(uint*)(basePtr + bufferIndex) = value;
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 3;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1884,20 +1848,20 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 4;
+            bufferIndex += 4;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_4_Float32(float value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(float*)(basePtr + this.bufferIndex) = value;
+                        *(float*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
@@ -1905,7 +1869,7 @@ namespace ExtEvents.OdinSerializer
                         // Apparently doing this bit through an int pointer alias can also crash sometimes.
                         // Hence, we just do a byte-by-byte write to be safe.
                         byte* from = (byte*)&value;
-                        byte* to = basePtr + this.bufferIndex;
+                        byte* to = basePtr + bufferIndex;
 
                         *to++ = *from++;
                         *to++ = *from++;
@@ -1915,7 +1879,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 3;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1925,26 +1889,26 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 4;
+            bufferIndex += 4;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_8_Int64(long value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(long*)(basePtr + this.bufferIndex) = value;
+                        *(long*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
                         // We do a slower but safer int-by-int write instead
                         int* fromPtr = (int*)&value;
-                        int* toPtr = (int*)(basePtr + this.bufferIndex);
+                        int* toPtr = (int*)(basePtr + bufferIndex);
 
                         *toPtr++ = *fromPtr++;
                         *toPtr = *fromPtr;
@@ -1952,7 +1916,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 7;
 
                     *ptrTo++ = *ptrFrom--;
@@ -1966,26 +1930,26 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 8;
+            bufferIndex += 8;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_8_UInt64(ulong value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(ulong*)(basePtr + this.bufferIndex) = value;
+                        *(ulong*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
                         // We do a slower but safer int-by-int write instead
                         int* fromPtr = (int*)&value;
-                        int* toPtr = (int*)(basePtr + this.bufferIndex);
+                        int* toPtr = (int*)(basePtr + bufferIndex);
 
                         *toPtr++ = *fromPtr++;
                         *toPtr = *fromPtr;
@@ -1993,7 +1957,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 7;
 
                     *ptrTo++ = *ptrFrom--;
@@ -2007,26 +1971,26 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 8;
+            bufferIndex += 8;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_8_Float64(double value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(double*)(basePtr + this.bufferIndex) = value;
+                        *(double*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
                         // We do a slower but safer int-by-int write instead
                         int* fromPtr = (int*)&value;
-                        int* toPtr = (int*)(basePtr + this.bufferIndex);
+                        int* toPtr = (int*)(basePtr + bufferIndex);
 
                         *toPtr++ = *fromPtr++;
                         *toPtr = *fromPtr;
@@ -2034,7 +1998,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 7;
 
                     *ptrTo++ = *ptrFrom--;
@@ -2048,26 +2012,26 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 8;
+            bufferIndex += 8;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void UNSAFE_WriteToBuffer_16_Decimal(decimal value)
         {
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(decimal*)(basePtr + this.bufferIndex) = value;
+                        *(decimal*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
                         // We do a slower but safer int-by-int write instead
                         int* fromPtr = (int*)&value;
-                        int* toPtr = (int*)(basePtr + this.bufferIndex);
+                        int* toPtr = (int*)(basePtr + bufferIndex);
 
                         *toPtr++ = *fromPtr++;
                         *toPtr++ = *fromPtr++;
@@ -2077,7 +2041,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value + 15;
 
                     *ptrTo++ = *ptrFrom--;
@@ -2099,7 +2063,7 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 16;
+            bufferIndex += 16;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
@@ -2111,20 +2075,20 @@ namespace ExtEvents.OdinSerializer
 
             // TODO: Test if this actually works on big-endian architecture. Where the hell do we find that?
 
-            fixed (byte* basePtr = this.buffer)
+            fixed (byte* basePtr = buffer)
             {
                 if (BitConverter.IsLittleEndian)
                 {
                     if (ArchitectureInfo.Architecture_Supports_All_Unaligned_ReadWrites)
                     {
                         // We can write directly to the buffer, safe in the knowledge that any potential unaligned writes will work
-                        *(Guid*)(basePtr + this.bufferIndex) = value;
+                        *(Guid*)(basePtr + bufferIndex) = value;
                     }
                     else
                     {
                         // We do a slower but safer int-by-int write instead
                         int* fromPtr = (int*)&value;
-                        int* toPtr = (int*)(basePtr + this.bufferIndex);
+                        int* toPtr = (int*)(basePtr + bufferIndex);
 
                         *toPtr++ = *fromPtr++;
                         *toPtr++ = *fromPtr++;
@@ -2134,7 +2098,7 @@ namespace ExtEvents.OdinSerializer
                 }
                 else
                 {
-                    byte* ptrTo = basePtr + this.bufferIndex;
+                    byte* ptrTo = basePtr + bufferIndex;
                     byte* ptrFrom = (byte*)&value;
 
                     *ptrTo++ = *ptrFrom++;
@@ -2159,38 +2123,38 @@ namespace ExtEvents.OdinSerializer
                 }
             }
 
-            this.bufferIndex += 16;
+            bufferIndex += 16;
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private void EnsureBufferSpace(int space)
         {
-            var length = this.buffer.Length;
+            var length = buffer.Length;
 
             if (space > length)
             {
                 throw new Exception("Insufficient buffer capacity");
             }
 
-            if (this.bufferIndex + space > length)
+            if (bufferIndex + space > length)
             {
-                this.FlushToStream();
+                FlushToStream();
             }
         }
 
         [MethodImpl((MethodImplOptions)0x100)]  // Set aggressive inlining flag, for the runtimes that understand that
         private bool TryEnsureBufferSpace(int space)
         {
-            var length = this.buffer.Length;
+            var length = buffer.Length;
 
             if (space > length)
             {
                 return false;
             }
 
-            if (this.bufferIndex + space > length)
+            if (bufferIndex + space > length)
             {
-                this.FlushToStream();
+                FlushToStream();
             }
 
             return true;

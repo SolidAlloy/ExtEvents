@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
+    using OdinSerializer;
     using OdinSerializer.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
@@ -68,6 +69,9 @@
                     VersionCompatibility = AssemblyVersionCompatibility.SameDomain
                 },
                 AssemblyBuilderAccess.RunAndSave, folderPath);
+
+            // ReSharper disable once AssignNullToNotNullAttribute
+            assemblyBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(EmittedAssemblyAttribute).GetConstructor(Type.EmptyTypes), Array.Empty<object>()));
 
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
 

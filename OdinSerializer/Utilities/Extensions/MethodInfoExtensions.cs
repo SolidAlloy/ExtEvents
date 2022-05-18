@@ -96,18 +96,6 @@ namespace ExtEvents.OdinSerializer.Utilities
         }
 
         /// <summary>
-        /// Determines whether the specified method is an alias.
-        /// </summary>
-        /// <param name="methodInfo">The method to check.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified method is an alias; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool IsAliasMethod(this MethodInfo methodInfo)
-        {
-            return methodInfo is MemberAliasMethodInfo;
-        }
-
-        /// <summary>
         /// Returns the original, backing method of an alias method if the method is an alias.
         /// </summary>
         /// <param name="methodInfo">The method to check.</param>

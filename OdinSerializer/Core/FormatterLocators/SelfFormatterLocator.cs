@@ -23,7 +23,6 @@ using ExtEvents.OdinSerializer;
 namespace ExtEvents.OdinSerializer
 {
     using System;
-    using Utilities;
 
     internal class SelfFormatterLocator : IFormatterLocator
     {
@@ -33,8 +32,7 @@ namespace ExtEvents.OdinSerializer
 
             if (!typeof(ISelfFormatter).IsAssignableFrom(type)) return false;
 
-            if ((step == FormatterLocationStep.BeforeRegisteredFormatters && type.IsDefined<AlwaysFormatsSelfAttribute>())
-                || step == FormatterLocationStep.AfterRegisteredFormatters)
+            if (step == FormatterLocationStep.AfterRegisteredFormatters)
             {
                 formatter = (IFormatter)Activator.CreateInstance(typeof(SelfFormatterFormatter<>).MakeGenericType(type));
                 return true;

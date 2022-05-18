@@ -18,8 +18,6 @@
 
 namespace ExtEvents.OdinSerializer
 {
-    using System;
-
     /// <summary>
     /// Serializes and deserializes a given type.
     /// <para />
@@ -27,14 +25,6 @@ namespace ExtEvents.OdinSerializer
     /// </summary>
     public interface IFormatter
     {
-        /// <summary>
-        /// Gets the type that the formatter can serialize.
-        /// </summary>
-        /// <value>
-        /// The type that the formatter can serialize.
-        /// </value>
-        Type SerializedType { get; }
-
         /// <summary>
         /// Serializes a value using a specified <see cref="IDataWriter" />.
         /// </summary>

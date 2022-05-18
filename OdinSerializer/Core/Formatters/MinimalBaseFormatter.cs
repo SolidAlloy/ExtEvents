@@ -39,7 +39,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The type that the formatter can serialize.
         /// </value>
-        public Type SerializedType { get { return typeof(T); } }
+        public Type SerializedType => typeof(T);
 
         /// <summary>
         /// Deserializes a value of type <see cref="!:T" /> using a specified <see cref="T:OdinSerializer.IDataReader" />.

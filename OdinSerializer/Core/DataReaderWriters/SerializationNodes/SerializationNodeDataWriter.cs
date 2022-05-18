@@ -86,9 +86,9 @@ namespace ExtEvents.OdinSerializer
         /// </summary>
         public override Stream Stream
         {
-            get { throw new NotSupportedException("This data writer has no stream."); }
+            get => throw new NotSupportedException("This data writer has no stream.");
 
-            set { throw new NotSupportedException("This data writer has no stream."); }
+            set => throw new NotSupportedException("This data writer has no stream.");
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace ExtEvents.OdinSerializer
             {
                 Name = name,
                 Entry = EntryType.StartOfNode,
-                Data = type != null ? (id.ToString(CultureInfo.InvariantCulture) + SerializationNodeDataReaderWriterConfig.NodeIdSeparator + Context.Binder.BindToName(type, Context.Config.DebugContext)) : id.ToString(CultureInfo.InvariantCulture)
+                Data = type != null ? (id.ToString(CultureInfo.InvariantCulture) + SerializationNodeDataReaderWriterConfig.NodeIdSeparator + Context.Binder.BindToName(type)) : id.ToString(CultureInfo.InvariantCulture)
             });
 
             PushNode(name, id, type);
@@ -132,7 +132,7 @@ namespace ExtEvents.OdinSerializer
             {
                 Name = name,
                 Entry = EntryType.StartOfNode,
-                Data = type != null ? Context.Binder.BindToName(type, Context.Config.DebugContext) : ""
+                Data = type != null ? Context.Binder.BindToName(type) : ""
             });
 
             PushNode(name, -1, type);
@@ -174,14 +174,6 @@ namespace ExtEvents.OdinSerializer
                 Entry = EntryType.EndOfNode,
                 Data = string.Empty
             });
-        }
-
-        /// <summary>
-        /// Not yet documented.
-        /// </summary>
-        public override void PrepareNewSerializationSession()
-        {
-            base.PrepareNewSerializationSession();
         }
 
         /// <summary>

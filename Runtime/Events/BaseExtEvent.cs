@@ -7,9 +7,6 @@
     using JetBrains.Annotations;
     using SolidUtilities;
     using UnityEngine;
-    using UnityEngine.Events;
-    using UnityEngine.Scripting;
-    using Object = UnityEngine.Object;
 
     /// <summary>
     /// An event whose listeners can be configured through editor UI.

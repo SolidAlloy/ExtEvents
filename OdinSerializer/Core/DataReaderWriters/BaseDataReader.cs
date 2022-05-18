@@ -118,10 +118,7 @@ namespace ExtEvents.OdinSerializer
 
                 return context;
             }
-            set
-            {
-                context = value;
-            }
+            set => context = value;
         }
 
         /// <summary>

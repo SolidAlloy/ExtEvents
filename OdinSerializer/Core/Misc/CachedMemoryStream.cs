@@ -63,18 +63,6 @@ namespace ExtEvents.OdinSerializer
             memoryStream.Position = 0;
         }
 
-        public static Cache<CachedMemoryStream> Claim(int minCapacity)
-        {
-            var cache = Cache<CachedMemoryStream>.Claim();
-
-            if (cache.Value.MemoryStream.Capacity < minCapacity)
-            {
-                cache.Value.MemoryStream.Capacity = minCapacity;
-            }
-
-            return cache;
-        }
-
         public static Cache<CachedMemoryStream> Claim(byte[] bytes = null)
         {
             var cache = Cache<CachedMemoryStream>.Claim();

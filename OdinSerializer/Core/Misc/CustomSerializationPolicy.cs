@@ -61,7 +61,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The identifier of the policy.
         /// </value>
-        public string ID { get { return id; } }
+        public string ID => id;
 
         /// <summary>
         /// Gets a value indicating whether to allow non serializable types. (Types which are not decorated with <see cref="System.SerializableAttribute" />.)
@@ -69,7 +69,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// <c>true</c> if serializable types are allowed; otherwise, <c>false</c>.
         /// </value>
-        public bool AllowNonSerializableTypes { get { return allowNonSerializableTypes; } }
+        public bool AllowNonSerializableTypes => allowNonSerializableTypes;
 
         /// <summary>
         /// Gets a value indicating whether a given <see cref="MemberInfo" /> should be serialized or not.

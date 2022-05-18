@@ -46,7 +46,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The type that the formatter can serialize.
         /// </value>
-        public Type SerializedType { get { return typeof(Coroutine); } }
+        public Type SerializedType => typeof(Coroutine);
 
         /// <summary>
         /// Returns null.

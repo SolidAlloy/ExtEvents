@@ -70,39 +70,39 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The aliased method.
         /// </value>
-        public MethodInfo AliasedMethod { get { return aliasedMethod; } }
+        public MethodInfo AliasedMethod => aliasedMethod;
 
         /// <summary>
         /// Gets the custom attributes for the return type.
         /// </summary>
-        public override ICustomAttributeProvider ReturnTypeCustomAttributes { get { return aliasedMethod.ReturnTypeCustomAttributes; } }
+        public override ICustomAttributeProvider ReturnTypeCustomAttributes => aliasedMethod.ReturnTypeCustomAttributes;
 
         /// <summary>
         /// Gets a handle to the internal metadata representation of a method.
         /// </summary>
-        public override RuntimeMethodHandle MethodHandle { get { return aliasedMethod.MethodHandle; } }
+        public override RuntimeMethodHandle MethodHandle => aliasedMethod.MethodHandle;
 
         /// <summary>
         /// Gets the attributes associated with this method.
         /// </summary>
-        public override MethodAttributes Attributes { get { return aliasedMethod.Attributes; } }
+        public override MethodAttributes Attributes => aliasedMethod.Attributes;
 
-        public override Type ReturnType { get { return aliasedMethod.ReturnType; } }
+        public override Type ReturnType => aliasedMethod.ReturnType;
 
         /// <summary>
         /// Gets the class that declares this member.
         /// </summary>
-        public override Type DeclaringType { get { return aliasedMethod.DeclaringType; } }
+        public override Type DeclaringType => aliasedMethod.DeclaringType;
 
         /// <summary>
         /// Gets the name of the current member.
         /// </summary>
-        public override string Name { get { return mangledName; } }
+        public override string Name => mangledName;
 
         /// <summary>
         /// Gets the class object that was used to obtain this instance of MemberInfo.
         /// </summary>
-        public override Type ReflectedType { get { return aliasedMethod.ReflectedType; } }
+        public override Type ReflectedType => aliasedMethod.ReflectedType;
 
         /// <summary>
         /// When overridden in a derived class, returns the MethodInfo object for the method on the direct or indirect base class in which the method represented by this instance was first declared.

@@ -56,7 +56,7 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         protected override void Write(ref Type value, IDataWriter writer)
         {
-            writer.WriteString(null, writer.Context.Binder.BindToName(value, writer.Context.Config.DebugContext));
+            writer.WriteString(null, writer.Context.Binder.BindToName(value));
         }
 
         /// <summary>

@@ -64,32 +64,32 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// The backing PropertyInfo that is being aliased.
         /// </summary>
-        public PropertyInfo AliasedProperty { get { return aliasedProperty; } }
+        public PropertyInfo AliasedProperty => aliasedProperty;
 
         /// <summary>
         /// Gets the module in which the type that declares the member represented by the current <see cref="T:System.Reflection.MemberInfo" /> is defined.
         /// </summary>
-        public override Module Module { get { return aliasedProperty.Module; } }
+        public override Module Module => aliasedProperty.Module;
 
         /// <summary>
         /// Gets a value that identifies a metadata element.
         /// </summary>
-        public override int MetadataToken { get { return aliasedProperty.MetadataToken; } }
+        public override int MetadataToken => aliasedProperty.MetadataToken;
 
         /// <summary>
         /// Gets the name of the current member.
         /// </summary>
-        public override string Name { get { return mangledName; } }
+        public override string Name => mangledName;
 
         /// <summary>
         /// Gets the class that declares this member.
         /// </summary>
-        public override Type DeclaringType { get { return aliasedProperty.DeclaringType; } }
+        public override Type DeclaringType => aliasedProperty.DeclaringType;
 
         /// <summary>
         /// Gets the class object that was used to obtain this instance of MemberInfo.
         /// </summary>
-        public override Type ReflectedType { get { return aliasedProperty.ReflectedType; } }
+        public override Type ReflectedType => aliasedProperty.ReflectedType;
 
         /// <summary>
         /// Gets the type of the property.
@@ -97,7 +97,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The type of the property.
         /// </value>
-        public override Type PropertyType { get { return aliasedProperty.PropertyType; } }
+        public override Type PropertyType => aliasedProperty.PropertyType;
 
         /// <summary>
         /// Gets the attributes.
@@ -105,7 +105,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         /// The attributes.
         /// </value>
-        public override PropertyAttributes Attributes { get { return aliasedProperty.Attributes; } }
+        public override PropertyAttributes Attributes => aliasedProperty.Attributes;
 
         /// <summary>
         /// Gets a value indicating whether this instance can read.
@@ -113,7 +113,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         ///   <c>true</c> if this instance can read; otherwise, <c>false</c>.
         /// </value>
-        public override bool CanRead { get { return aliasedProperty.CanRead; } }
+        public override bool CanRead => aliasedProperty.CanRead;
 
         /// <summary>
         /// Gets a value indicating whether this instance can write.
@@ -121,7 +121,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <value>
         ///   <c>true</c> if this instance can write; otherwise, <c>false</c>.
         /// </value>
-        public override bool CanWrite { get { return aliasedProperty.CanWrite; } }
+        public override bool CanWrite => aliasedProperty.CanWrite;
 
         /// <summary>
         /// When overridden in a derived class, returns an array of all custom attributes applied to this member.

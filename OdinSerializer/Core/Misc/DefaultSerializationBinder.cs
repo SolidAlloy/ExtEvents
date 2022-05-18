@@ -94,7 +94,7 @@ namespace ExtEvents.OdinSerializer
 
         static DefaultSerializationBinder()
         {
-            AppDomain.CurrentDomain.AssemblyLoad += (sender, args) =>
+            AppDomain.CurrentDomain.AssemblyLoad += (_, args) =>
             {
                 lock (ASSEMBLY_REGISTER_QUEUE_LOCK)
                 {
@@ -228,12 +228,11 @@ namespace ExtEvents.OdinSerializer
         /// Bind a type to a name.
         /// </summary>
         /// <param name="type">The type to bind.</param>
-        /// <param name="debugContext">The debug context to log to.</param>
         /// <returns>
         /// The name that the type has been bound to.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">The type argument is null.</exception>
-        public override string BindToName(Type type, DebugContext debugContext = null)
+        public override string BindToName(Type type)
         {
             if (type == null)
             {
@@ -291,7 +290,7 @@ namespace ExtEvents.OdinSerializer
         /// <summary>
         /// Determines whether the specified type name is mapped.
         /// </summary>
-        public override bool ContainsType(string typeName)
+        public virtual bool ContainsType(string typeName)
         {
             lock (NAMETOTYPE_LOCK)
             {

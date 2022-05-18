@@ -244,7 +244,6 @@ namespace ExtEvents.OdinSerializer
             BuildHelperType(
                 moduleBuilder,
                 formatterHelperName,
-                formattedType,
                 serializableMembers,
                 out serializerReadMethods,
                 out serializerWriteMethods,
@@ -321,7 +320,6 @@ namespace ExtEvents.OdinSerializer
             BuildHelperType(
                 moduleBuilder,
                 helperTypeName,
-                formattedType,
                 serializableMembers,
                 out serializerReadMethods,
                 out serializerWriteMethods,
@@ -356,10 +354,8 @@ namespace ExtEvents.OdinSerializer
             return (IFormatter)Activator.CreateInstance(formatterType, del1, del2);
         }
 
-        private static Type BuildHelperType(
-            ModuleBuilder moduleBuilder,
+        private static void BuildHelperType(ModuleBuilder moduleBuilder,
             string helperTypeName,
-            Type formattedType,
             Dictionary<string, MemberInfo> serializableMembers,
             out Dictionary<Type, MethodInfo> serializerReadMethods,
             out Dictionary<Type, MethodInfo> serializerWriteMethods,
@@ -454,7 +450,7 @@ namespace ExtEvents.OdinSerializer
             }
 
             // Now we need to actually create the serializer container type so we can generate the dynamic methods below without getting TypeLoadExceptions up the wazoo
-            return helperTypeBuilder.CreateType();
+            helperTypeBuilder.CreateType();
         }
 
         private static void EmitReadMethodContents(
@@ -475,7 +471,7 @@ namespace ExtEvents.OdinSerializer
             Label defaultLabel = gen.DefineLabel();
             Label switchLabel = gen.DefineLabel();
             Label endLabel = gen.DefineLabel();
-            Label[] switchLabels = memberNames.Select(n => gen.DefineLabel()).ToArray();
+            Label[] switchLabels = memberNames.Select(_ => gen.DefineLabel()).ToArray();
 
             gen.Emit(OpCodes.Ldarg_1);                                              // Load entryName string
             gen.Emit(OpCodes.Ldnull);                                               // Load null

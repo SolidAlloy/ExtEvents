@@ -35,8 +35,6 @@ namespace ExtEvents.OdinSerializer
         private static readonly bool ComplexTypeIsValueType = typeof(T).IsValueType;
         private static readonly Type TypeOf_T = typeof(T);
 
-        private static readonly bool AllowDeserializeInvalidDataForT = typeof(T).IsDefined(typeof(AllowDeserializeInvalidDataAttribute), true);
-
         private static readonly Dictionary<ISerializationPolicy, IFormatter<T>> FormattersByPolicy = new Dictionary<ISerializationPolicy, IFormatter<T>>(ReferenceEqualityComparer<ISerializationPolicy>.Default);
         private static readonly object FormattersByPolicy_LOCK = new object();
 
@@ -117,7 +115,7 @@ namespace ExtEvents.OdinSerializer
                                         return (T)value;
                                     }
                                 }
-                                else if (AllowDeserializeInvalidDataForT || reader.Context.Config.AllowDeserializeInvalidData)
+                                else if (reader.Context.Config.AllowDeserializeInvalidData)
                                 {
                                     context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Attempting to deserialize with possibly invalid data. Value may be lost or corrupted for node '" + name + "'.");
                                     return GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
@@ -128,7 +126,7 @@ namespace ExtEvents.OdinSerializer
                                     return default(T);
                                 }
                             }
-                            else if (AllowDeserializeInvalidDataForT || reader.Context.Config.AllowDeserializeInvalidData)
+                            else if (reader.Context.Config.AllowDeserializeInvalidData)
                             {
                                 context.Config.DebugContext.LogWarning("Expected complex struct value " + expectedType.Name + " but the serialized type could not be resolved. Attempting to deserialize with possibly invalid data. Value may be lost or corrupted for node '" + name + "'.");
                                 return GetBaseFormatter(context.Config.SerializationPolicy).Deserialize(reader);
@@ -326,7 +324,7 @@ namespace ExtEvents.OdinSerializer
                                         result = default(T);
                                     }
                                 }
-                                else if (!ComplexTypeIsAbstract && (AllowDeserializeInvalidDataForT || reader.Context.Config.AllowDeserializeInvalidData))
+                                else if (!ComplexTypeIsAbstract && (reader.Context.Config.AllowDeserializeInvalidData))
                                 {
                                     // We will try to deserialize an instance of T with the invalid data.
                                     context.Config.DebugContext.LogWarning("Can't cast serialized type " + serializedType.Name + " into expected type " + expectedType.Name + ". Attempting to deserialize with invalid data. Value may be lost or corrupted for node '" + name + "'.");

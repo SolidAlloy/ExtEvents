@@ -123,18 +123,6 @@ namespace ExtEvents.OdinSerializer
                 writer = binaryWriter;
                 cache = binaryCache;
             }
-            else if (format == DataFormat.JSON)
-            {
-                var jsonCache = Cache<JsonDataWriter>.Claim();
-                var jsonWriter = jsonCache.Value;
-
-                jsonWriter.Stream = stream;
-                jsonWriter.Context = context;
-                jsonWriter.PrepareNewSerializationSession();
-
-                writer = jsonWriter;
-                cache = jsonCache;
-            }
             else if (format == DataFormat.Nodes)
             {
                 throw new InvalidOperationException("Cannot automatically create a writer for the format '" + DataFormat.Nodes + "', because it does not use a stream.");
@@ -162,18 +150,6 @@ namespace ExtEvents.OdinSerializer
 
                 reader = binaryReader;
                 cache = binaryCache;
-            }
-            else if (format == DataFormat.JSON)
-            {
-                var jsonCache = Cache<JsonDataReader>.Claim();
-                var jsonReader = jsonCache.Value;
-
-                jsonReader.Stream = stream;
-                jsonReader.Context = context;
-                jsonReader.PrepareNewSerializationSession();
-
-                reader = jsonReader;
-                cache = jsonCache;
             }
             else if (format == DataFormat.Nodes)
             {

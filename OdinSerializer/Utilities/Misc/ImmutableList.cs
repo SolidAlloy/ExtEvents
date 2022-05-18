@@ -34,10 +34,6 @@ namespace ExtEvents.OdinSerializer.Utilities
     /// </summary>
     public interface IImmutableList<T> : IImmutableList, IList<T>
     {
-        /// <summary>
-        /// Index accessor.
-        /// </summary>
-        new T this[int index] { get; }
     }
 
     /// <summary>
@@ -65,59 +61,47 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Number of items in the list.
         /// </summary>
-        public int Count { get { return innerList.Count; } }
+        public int Count => innerList.Count;
 
         /// <summary>
         ///	Immutable list cannot be changed directly, so it's size is always fixed.
         /// </summary>
-        public bool IsFixedSize { get { return true; } }
+        public bool IsFixedSize => true;
 
         /// <summary>
         /// Immutable list are always readonly.
         /// </summary>
-        public bool IsReadOnly { get { return true; } }
+        public bool IsReadOnly => true;
 
         /// <summary>
         /// Returns <c>true</c> if the inner list is synchronized.
         /// </summary>
-        public bool IsSynchronized { get { return innerList.IsSynchronized; } }
+        public bool IsSynchronized => innerList.IsSynchronized;
 
         /// <summary>
         /// Gets the sync root object.
         /// </summary>
-        public object SyncRoot { get { return innerList.SyncRoot; } }
+        public object SyncRoot => innerList.SyncRoot;
 
         object IList.this[int index]
         {
-            get
-            {
-                return innerList[index];
-            }
+            get => innerList[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         object IList<object>.this[int index]
         {
-            get
-            {
-                return innerList[index];
-            }
+            get => innerList[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         /// <summary>
         /// Index accessor.
         /// </summary>
 		/// <param name="index">Index.</param>
-        public object this[int index] { get { return innerList[index]; } }
+        public object this[int index] => innerList[index];
 
         /// <summary>
         /// Returns <c>true</c> if the item is contained in the list.
@@ -274,54 +258,36 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public int Count { get { return innerList.Count; } }
+        public int Count => innerList.Count;
 
-        bool ICollection.IsSynchronized { get { return false; } }
-        object ICollection.SyncRoot { get { return null; } }
-        bool IList.IsFixedSize { get { return true; } }
-        bool IList.IsReadOnly { get { return true; } }
+        bool ICollection.IsSynchronized => false;
+        object ICollection.SyncRoot => null;
+        bool IList.IsFixedSize => true;
+        bool IList.IsReadOnly => true;
 
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public bool IsReadOnly { get { return true; } }
+        public bool IsReadOnly => true;
 
         object IList.this[int index]
         {
-            get
-            {
-                return this[index];
-            }
+            get => this[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         T IList<T>.this[int index]
         {
-            get
-            {
-                return innerList[index];
-            }
+            get => innerList[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         /// <summary>
         /// Not yet documented.
         /// </summary>
-        public T this[int index]
-        {
-            get
-            {
-                return innerList[index];
-            }
-        }
+        public T this[int index] => innerList[index];
 
         /// <summary>
         /// Not yet documented.
@@ -450,55 +416,37 @@ namespace ExtEvents.OdinSerializer.Utilities
         /// <summary>
         /// Number of items in the list.
         /// </summary>
-        public int Count { get { return innerList.Count; } }
+        public int Count => innerList.Count;
 
-        bool ICollection.IsSynchronized { get { return false; } }
-        object ICollection.SyncRoot { get { return null; } }
-        bool IList.IsFixedSize { get { return true; } }
-        bool IList.IsReadOnly { get { return true; } }
+        bool ICollection.IsSynchronized => false;
+        object ICollection.SyncRoot => null;
+        bool IList.IsFixedSize => true;
+        bool IList.IsReadOnly => true;
 
         /// <summary>
         /// Immutable list are always readonly.
         /// </summary>
-        public bool IsReadOnly { get { return true; } }
+        public bool IsReadOnly => true;
 
         object IList.this[int index]
         {
-            get
-            {
-                return this[index];
-            }
+            get => this[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         TElement IList<TElement>.this[int index]
         {
-            get
-            {
-                return innerList[index];
-            }
+            get => innerList[index];
 
-            set
-            {
-                throw new NotSupportedException("Immutable Lists cannot be edited.");
-            }
+            set => throw new NotSupportedException("Immutable Lists cannot be edited.");
         }
 
         /// <summary>
         /// Index accessor.
         /// </summary>
 		/// <param name="index">Index.</param>
-        public TElement this[int index]
-        {
-            get
-            {
-                return innerList[index];
-            }
-        }
+        public TElement this[int index] => innerList[index];
 
         /// <summary>
         /// Returns <c>true</c> if the item is contained in the list.

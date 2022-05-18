@@ -196,7 +196,7 @@ namespace ExtEvents.OdinSerializer
             {
                 if (ex.GetBaseException() is ExecutionEngineException)
                 {
-                    LogAOTError(type, ex.GetBaseException() as ExecutionEngineException);
+                    LogAOTError(type);
                     return null;
                 }
 
@@ -206,20 +206,20 @@ namespace ExtEvents.OdinSerializer
             {
                 if (ex.GetBaseException() is ExecutionEngineException)
                 {
-                    LogAOTError(type, ex.GetBaseException() as ExecutionEngineException);
+                    LogAOTError(type);
                     return null;
                 }
 
                 throw ex;
             }
-            catch (ExecutionEngineException ex)
+            catch (ExecutionEngineException)
             {
-                LogAOTError(type, ex);
+                LogAOTError(type);
                 return null;
             }
         }
 
-        private static void LogAOTError(Type type, ExecutionEngineException ex)
+        private static void LogAOTError(Type type)
         {
             Debug.LogError("No AOT serializer was pre-generated for the type '" + type.GetNiceFullName() + "'. " +
                            "Please use Odin's AOT generation feature to generate an AOT dll before building, and ensure that '" +

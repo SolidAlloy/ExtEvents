@@ -3,7 +3,6 @@
     using System;
     using System.Runtime.CompilerServices;
     using JetBrains.Annotations;
-    using Unity.Collections.LowLevel.Unsafe;
 
     [Serializable]
     public class ExtEvent<T> : BaseExtEvent

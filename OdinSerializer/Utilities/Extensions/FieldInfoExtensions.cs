@@ -27,18 +27,6 @@ namespace ExtEvents.OdinSerializer.Utilities
     public static class FieldInfoExtensions
     {
         /// <summary>
-        /// Determines whether the specified field is an alias.
-        /// </summary>
-        /// <param name="fieldInfo">The field to check.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified field is an alias; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool IsAliasField(this FieldInfo fieldInfo)
-        {
-            return fieldInfo is MemberAliasFieldInfo;
-        }
-
-        /// <summary>
         /// Returns the original, backing field of an alias field if the field is an alias.
         /// </summary>
         /// <param name="fieldInfo">The field to check.</param>

@@ -24,6 +24,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 {
     using System;
     using System.Reflection;
+    using UnityEditor;
     using Object = UnityEngine.Object;
 #if CAN_EMIT
 
@@ -87,7 +88,7 @@ namespace ExtEvents.OdinSerializer.Utilities
         }
 
 #if UNITY_EDITOR
-        private static Assembly EditorAssembly = typeof(UnityEditor.Editor).Assembly;
+        private static Assembly EditorAssembly = typeof(Editor).Assembly;
 #endif
         private static Assembly EngineAssembly = typeof(Object).Assembly;
 
@@ -242,7 +243,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 #else
             if (EmitIsIllegalForMember(fieldInfo))
             {
-                return (FieldType value) =>
+                return value =>
                 {
                     fieldInfo.SetValue(null, value);
                 };
@@ -250,7 +251,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
             string methodName = fieldInfo.ReflectedType.FullName + ".set_" + fieldInfo.Name;
 
-            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[] { typeof(FieldType) }, true);
+            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new[] { typeof(FieldType) }, true);
             ILGenerator gen = setterMethod.GetILGenerator();
 
             gen.Emit(OpCodes.Ldarg_0);
@@ -258,64 +259,6 @@ namespace ExtEvents.OdinSerializer.Utilities
             gen.Emit(OpCodes.Ret);
 
             return (Action<FieldType>)setterMethod.CreateDelegate(typeof(Action<FieldType>));
-#endif
-        }
-
-        /// <summary>
-        /// Creates a delegate which sets the value of a field. If emitting is not supported on the current platform, the delegate will use reflection to set the value.
-        /// </summary>
-        /// <param name="fieldInfo">The <see cref="FieldInfo"/> instance describing the field to create a setter for.</param>
-        /// <returns>A delegate which sets the value of the given field.</returns>
-        /// <exception cref="System.ArgumentNullException">The fieldInfo parameter is null.</exception>
-        public static Action<object> CreateWeakStaticFieldSetter(FieldInfo fieldInfo)
-        {
-            if (fieldInfo == null)
-            {
-                throw new ArgumentNullException("fieldInfo");
-            }
-
-            if (!fieldInfo.IsStatic)
-            {
-                throw new ArgumentException("Field must be static.");
-            }
-
-            fieldInfo = fieldInfo.DeAliasField();
-
-#if !CAN_EMIT
-            // Platform does not support emitting dynamic code
-            return delegate (object value)
-            {
-                fieldInfo.SetValue(null, value);
-            };
-#else
-            if (EmitIsIllegalForMember(fieldInfo))
-            {
-                return (object value) =>
-                {
-                    fieldInfo.SetValue(null, value);
-                };
-            }
-
-            string methodName = fieldInfo.ReflectedType.FullName + ".set_" + fieldInfo.Name;
-
-            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[] { typeof(object) }, true);
-            ILGenerator gen = setterMethod.GetILGenerator();
-
-            gen.Emit(OpCodes.Ldarg_0);
-
-            if (fieldInfo.FieldType.IsValueType)
-            {
-                gen.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
-            }
-            else
-            {
-                gen.Emit(OpCodes.Castclass, fieldInfo.FieldType);
-            }
-
-            gen.Emit(OpCodes.Stsfld, fieldInfo);
-            gen.Emit(OpCodes.Ret);
-
-            return (Action<object>)setterMethod.CreateDelegate(typeof(Action<object>));
 #endif
         }
 
@@ -358,7 +301,7 @@ namespace ExtEvents.OdinSerializer.Utilities
 
             string methodName = fieldInfo.ReflectedType.FullName + ".get_" + fieldInfo.Name;
 
-            DynamicMethod getterMethod = new DynamicMethod(methodName, typeof(FieldType), new Type[1] { typeof(InstanceType).MakeByRefType() }, true);
+            DynamicMethod getterMethod = new DynamicMethod(methodName, typeof(FieldType), new Type[] { typeof(InstanceType).MakeByRefType() }, true);
             ILGenerator gen = getterMethod.GetILGenerator();
 
             if (typeof(InstanceType).IsValueType)

@@ -47,24 +47,6 @@ namespace ExtEvents.OdinSerializer
         /// Initializes a new instance of the <see cref="DeserializationContext"/> class.
         /// </summary>
         /// <param name="context">The streaming context to use.</param>
-        public DeserializationContext(StreamingContext context)
-            : this(context, new FormatterConverter())
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DeserializationContext"/> class.
-        /// </summary>
-        /// <param name="formatterConverter">The formatter converter to use.</param>
-        public DeserializationContext(FormatterConverter formatterConverter)
-            : this(new StreamingContext(), formatterConverter)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DeserializationContext"/> class.
-        /// </summary>
-        /// <param name="context">The streaming context to use.</param>
         /// <param name="formatterConverter">The formatter converter to use.</param>
         /// <exception cref="System.ArgumentNullException">The formatterConverter parameter is null.</exception>
         public DeserializationContext(StreamingContext context, FormatterConverter formatterConverter)
@@ -98,10 +80,7 @@ namespace ExtEvents.OdinSerializer
                 return binder;
             }
 
-            set
-            {
-                binder = value;
-            }
+            set => binder = value;
         }
 
         /// <summary>
@@ -134,7 +113,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The streaming context.
         /// </value>
-        public StreamingContext StreamingContext { get { return streamingContext; } }
+        public StreamingContext StreamingContext => streamingContext;
 
         /// <summary>
         /// Gets the formatter converter.
@@ -142,7 +121,7 @@ namespace ExtEvents.OdinSerializer
         /// <value>
         /// The formatter converter.
         /// </value>
-        public IFormatterConverter FormatterConverter { get { return formatterConverter; } }
+        public IFormatterConverter FormatterConverter => formatterConverter;
 
         /// <summary>
         /// Gets or sets the serialization configuration.
@@ -162,10 +141,7 @@ namespace ExtEvents.OdinSerializer
                 return config;
             }
 
-            set
-            {
-                config = value;
-            }
+            set => config = value;
         }
 
         /// <summary>

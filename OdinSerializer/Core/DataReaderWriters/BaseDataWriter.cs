@@ -60,10 +60,7 @@ namespace ExtEvents.OdinSerializer
         /// <exception cref="System.ArgumentException">Cannot write to stream</exception>
         public virtual Stream Stream
         {
-            get
-            {
-                return stream;
-            }
+            get => stream;
             set
             {
                 if (value == null)
@@ -97,10 +94,7 @@ namespace ExtEvents.OdinSerializer
 
                 return context;
             }
-            set
-            {
-                context = value;
-            }
+            set => context = value;
         }
 
         /// <summary>

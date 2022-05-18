@@ -20,10 +20,8 @@ namespace ExtEvents.OdinSerializer
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.Serialization;
     using UnityEditor;
     using UnityEngine;
     using UnityEngine.Serialization;
@@ -62,19 +60,13 @@ namespace ExtEvents.OdinSerializer
             typeof(Guid)
         };
 
-        private static readonly FieldInfo UnityObjectRuntimeErrorStringField;
-
-        private const string UnityObjectRuntimeErrorString =
-@"The variable nullValue of {0} has not been assigned.
-You probably need to assign the nullValue variable of the {0} script in the inspector.";
-
         static FormatterUtilities()
         {
             // The required field is missing in Unity builds
 #if UNITY_EDITOR
-            UnityObjectRuntimeErrorStringField = typeof(Object).GetField("m_UnityRuntimeErrorString", Flags.InstanceAnyVisibility);
+            FieldInfo unityObjectRuntimeErrorStringField = typeof(Object).GetField("m_UnityRuntimeErrorString", Flags.InstanceAnyVisibility);
 
-            if (UnityObjectRuntimeErrorStringField == null)
+            if (unityObjectRuntimeErrorStringField == null)
             {
                 Debug.LogWarning("A change in Unity has hindered the Serialization system's ability to create proper fake Unity null values; the UnityEngine.Object.m_UnityRuntimeErrorString field has been renamed or removed.");
             }
@@ -135,47 +127,6 @@ You probably need to assign the nullValue variable of the {0} script in the insp
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Creates a fake Unity null value of a given type, for the given <see cref="UnityEngine.Object"/>-derived owning type.
-        /// <para />
-        /// Unity uses these kinds of values to indicate missing object references.
-        /// </summary>
-        /// <param name="nullType">Type of the null value.</param>
-        /// <param name="owningType">Type of the owning value. This is the value which changes the <see cref="MissingReferenceException"/> which you get.</param>
-        /// <returns>A fake Unity null value of a given type.</returns>
-        /// <exception cref="System.ArgumentNullException">The nullType or owningType parameter is null.</exception>
-        /// <exception cref="System.ArgumentException">
-        /// The type given in the nullType parameter is not a Unity object.
-        /// or
-        /// The type given in the owningType parameter is not a Unity object.
-        /// </exception>
-        public static Object CreateUnityNull(Type nullType, Type owningType)
-        {
-            if (nullType == null || owningType == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            if (nullType.ImplementsOrInherits(typeof(Object)) == false)
-            {
-                throw new ArgumentException("Type " + nullType.Name + " is not a Unity object.");
-            }
-
-            if (owningType.ImplementsOrInherits(typeof(Object)) == false)
-            {
-                throw new ArgumentException("Type " + owningType.Name + " is not a Unity object.");
-            }
-
-            Object nullValue = (Object)FormatterServices.GetUninitializedObject(nullType);
-
-            if (UnityObjectRuntimeErrorStringField != null)
-            {
-                UnityObjectRuntimeErrorStringField.SetValue(nullValue, string.Format(CultureInfo.InvariantCulture, UnityObjectRuntimeErrorString, owningType.Name));
-            }
-
-            return nullValue;
         }
 
         /// <summary>

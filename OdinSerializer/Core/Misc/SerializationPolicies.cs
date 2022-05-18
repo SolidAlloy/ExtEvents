@@ -51,27 +51,25 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (everythingPolicy == null)
+                if (everythingPolicy != null) return everythingPolicy;
+                lock (LOCK)
                 {
-                    lock (LOCK)
+                    if (everythingPolicy == null)
                     {
-                        if (everythingPolicy == null)
+                        everythingPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Everything", true, member =>
                         {
-                            everythingPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Everything", true, member =>
+                            if (!(member is FieldInfo))
                             {
-                                if (!(member is FieldInfo))
-                                {
-                                    return false;
-                                }
+                                return false;
+                            }
 
-                                if (member.IsDefined<OdinSerializeAttribute>(true))
-                                {
-                                    return true;
-                                }
+                            if (member.IsDefined<OdinSerializeAttribute>(true))
+                            {
+                                return true;
+                            }
 
-                                return !member.IsDefined<NonSerializedAttribute>(true);
-                            });
-                        }
+                            return !member.IsDefined<NonSerializedAttribute>(true);
+                        });
                     }
                 }
 
@@ -90,41 +88,36 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (unityPolicy == null)
+                if (unityPolicy != null) return unityPolicy;
+                lock (LOCK)
                 {
-                    lock (LOCK)
+                    if (unityPolicy != null) return unityPolicy;
+                    // In Unity 2017.1's .NET 4.6 profile, Tuples implement System.ITuple. In Unity 2017.2 and up, tuples implement System.ITupleInternal instead for some reason.
+                    Type tupleInterface = typeof(string).Assembly.GetType("System.ITuple") ?? typeof(string).Assembly.GetType("System.ITupleInternal");
+
+                    unityPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Unity", true, member =>
                     {
-                        if (unityPolicy == null)
+                        // As of Odin 3.0, we now allow non-auto properties and virtual properties.
+                        // However, properties still need a getter and a setter.
+                        if (member is PropertyInfo propInfo)
                         {
-                            // In Unity 2017.1's .NET 4.6 profile, Tuples implement System.ITuple. In Unity 2017.2 and up, tuples implement System.ITupleInternal instead for some reason.
-                            Type tupleInterface = typeof(string).Assembly.GetType("System.ITuple") ?? typeof(string).Assembly.GetType("System.ITupleInternal");
-
-                            unityPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Unity", true, member =>
-                            {
-                                // As of Odin 3.0, we now allow non-auto properties and virtual properties.
-                                // However, properties still need a getter and a setter.
-                                if (member is PropertyInfo)
-                                {
-                                    var propInfo = member as PropertyInfo;
-                                    if (propInfo.GetGetMethod(true) == null || propInfo.GetSetMethod(true) == null) return false;
-                                }
-
-                                // If OdinSerializeAttribute is defined, NonSerializedAttribute is ignored.
-                                // This enables users to ignore Unity's infinite serialization depth warnings.
-                                if (member.IsDefined<NonSerializedAttribute>(true) && !member.IsDefined<OdinSerializeAttribute>())
-                                {
-                                    return false;
-                                }
-
-                                if (member is FieldInfo && ((member as FieldInfo).IsPublic || (member.DeclaringType.IsNestedPrivate && member.DeclaringType.IsDefined<CompilerGeneratedAttribute>()) || (tupleInterface != null && tupleInterface.IsAssignableFrom(member.DeclaringType))))
-                                {
-                                    return true;
-                                }
-
-                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
-                            });
+                            if (propInfo.GetGetMethod(true) == null || propInfo.GetSetMethod(true) == null) return false;
                         }
-                    }
+
+                        // If OdinSerializeAttribute is defined, NonSerializedAttribute is ignored.
+                        // This enables users to ignore Unity's infinite serialization depth warnings.
+                        if (member.IsDefined<NonSerializedAttribute>(true) && !member.IsDefined<OdinSerializeAttribute>())
+                        {
+                            return false;
+                        }
+
+                        if (member is FieldInfo && ((member as FieldInfo).IsPublic || (member.DeclaringType.IsNestedPrivate && member.DeclaringType.IsDefined<CompilerGeneratedAttribute>()) || (tupleInterface != null && tupleInterface.IsAssignableFrom(member.DeclaringType))))
+                        {
+                            return true;
+                        }
+
+                        return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
+                    });
                 }
 
                 return unityPolicy;
@@ -142,33 +135,31 @@ namespace ExtEvents.OdinSerializer
         {
             get
             {
-                if (strictPolicy == null)
+                if (strictPolicy != null) return strictPolicy;
+                lock (LOCK)
                 {
-                    lock (LOCK)
+                    if (strictPolicy == null)
                     {
-                        if (strictPolicy == null)
+                        strictPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Strict", true, member =>
                         {
-                            strictPolicy = new CustomSerializationPolicy("OdinSerializerPolicies.Strict", true, member =>
+                            // Non-auto properties are never supported.
+                            if (member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false)
                             {
-                                // Non-auto properties are never supported.
-                                if (member is PropertyInfo && ((PropertyInfo)member).IsAutoProperty() == false)
-                                {
-                                    return false;
-                                }
+                                return false;
+                            }
 
-                                if (member.IsDefined<NonSerializedAttribute>())
-                                {
-                                    return false;
-                                }
+                            if (member.IsDefined<NonSerializedAttribute>())
+                            {
+                                return false;
+                            }
 
-                                if (member is FieldInfo && member.DeclaringType.IsNestedPrivate && member.DeclaringType.IsDefined<CompilerGeneratedAttribute>())
-                                {
-                                    return true;
-                                }
+                            if (member is FieldInfo && member.DeclaringType.IsNestedPrivate && member.DeclaringType.IsDefined<CompilerGeneratedAttribute>())
+                            {
+                                return true;
+                            }
 
-                                return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
-                            });
-                        }
+                            return member.IsDefined<SerializeField>(false) || member.IsDefined<OdinSerializeAttribute>(false) || (_serializeReferenceAttributeType != null && member.IsDefined(_serializeReferenceAttributeType, false));
+                        });
                     }
                 }
 
