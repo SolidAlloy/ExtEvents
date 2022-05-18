@@ -194,21 +194,33 @@ namespace ExtEvents.OdinSerializer
                 assemblyName.ProcessorArchitecture = ProcessorArchitecture.MSIL;
                 assemblyName.VersionCompatibility = AssemblyVersionCompatibility.SameDomain;
 
-                runtimeEmittedAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+                runtimeEmittedAssembly =
+#if NET_STANDARD
+                    AssemblyBuilder
+#else
+                    AppDomain.CurrentDomain
+#endif
+                        .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             }
 
             if (runtimeEmittedModule == null)
             {
+#if !NET_STANDARD
                 bool emitSymbolInfo;
 
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
                 emitSymbolInfo = true;
-#else
+    #else
                 // Builds cannot emit symbol info
                 emitSymbolInfo = false;
+    #endif
 #endif
 
-                runtimeEmittedModule = runtimeEmittedAssembly.DefineDynamicModule(RUNTIME_EMITTED_ASSEMBLY_NAME, emitSymbolInfo);
+                runtimeEmittedModule = runtimeEmittedAssembly.DefineDynamicModule(RUNTIME_EMITTED_ASSEMBLY_NAME
+#if !NET_STANDARD
+                    , emitSymbolInfo
+#endif
+                    );
             }
         }
 
