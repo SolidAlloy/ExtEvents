@@ -1,3 +1,16 @@
+# [1.4.0](https://github.com/SolidAlloy/ExtEvents/compare/1.3.1...1.4.0) (2022-05-19)
+
+
+### Bug Fixes
+
+* Fixed "+" icons randomly disappearing from inspector ([57aa96f](https://github.com/SolidAlloy/ExtEvents/commit/57aa96ff73095203f36fe414fac4ca30f1b85fed))
+* Fixed Unity.Object references lost in serialized arguments ([98e23d1](https://github.com/SolidAlloy/ExtEvents/commit/98e23d1d3a18b21e290fab557b715585d75acfb4))
+
+
+### Features
+
+* Switched from JsonUtility to OdinSerializer for serialized persistent arguments ([5761652](https://github.com/SolidAlloy/ExtEvents/commit/57616529be8bc86a874732732769a01c1877c5c0))
+
 ## [1.3.1](https://github.com/SolidAlloy/ExtEvents/compare/1.3.0...1.3.1) (2022-05-13)
 
 
