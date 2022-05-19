@@ -16,7 +16,7 @@
 
     public static class AOTAssemblyGenerator
     {
-        private const string FolderPath = PackageSettings.PluginsPath + "/" + "AOT Generation";
+        private const string FolderPath = PackageSettings.PluginsPath + "/AOT Generation";
         private const string AssemblyName = "z_ExtEvents_AOTGeneration";
 
         public static void GenerateCreateMethods()

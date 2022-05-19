@@ -1,5 +1,6 @@
 ﻿namespace ExtEvents.Editor
 {
+    using System.IO;
     using UnityEditor;
     using UnityEditor.Build;
     using UnityEditor.Build.Reporting;
@@ -11,6 +12,8 @@
 
         public void OnPreprocessBuild(BuildReport report)
         {
+            CreateLinkXml();
+
             if (PlayerSettings.GetScriptingBackend(EditorUserBuildSettings.selectedBuildTargetGroup) !=
                 ScriptingImplementation.IL2CPP)
             {
@@ -41,6 +44,23 @@
 #else
             AOTAssemblyGenerator.GenerateCreateMethods();
 #endif
+        }
+
+        private void CreateLinkXml()
+        {
+            if (!Directory.Exists(PackageSettings.PluginsPath))
+            {
+                Directory.CreateDirectory(PackageSettings.PluginsPath);
+            }
+
+            string linkXmlPath = $"{PackageSettings.PluginsPath}/link.xml";
+
+            if (File.Exists(linkXmlPath))
+                return;
+
+            // preserve the OdinSerializer assembly because it has a lot of code that is invoked through reflection and we are lazy to write [Preserve] all over the place.
+            File.WriteAllText(linkXmlPath, "<linker>\n    <assembly fullname=\"ExtEvents.OdinSerializer\" preserve=\"all\"/>\n</linker>");
+            AssetDatabase.ImportAsset(linkXmlPath);
         }
     }
 }
