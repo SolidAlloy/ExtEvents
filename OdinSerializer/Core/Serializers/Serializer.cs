@@ -20,7 +20,6 @@ namespace ExtEvents.OdinSerializer
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Reflection;
     using Utilities;
     using Debug = UnityEngine.Debug;
@@ -60,44 +59,6 @@ namespace ExtEvents.OdinSerializer
         private static readonly object LOCK = new object();
 
         private static readonly Dictionary<Type, Serializer> ReaderWriterCache = new Dictionary<Type, Serializer>(FastTypeComparer.Instance);
-
-#if UNITY_EDITOR
-
-        /// <summary>
-        /// Editor-only event that fires whenever a serializer serializes a type.
-        /// </summary>
-        public static event Action<Type> OnSerializedType;
-
-#endif
-
-        /// <summary>
-        /// Fires the <see cref="OnSerializedType"/> event.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        protected static void FireOnSerializedType(Type type)
-        {
-#if UNITY_EDITOR
-            if (OnSerializedType != null)
-            {
-                OnSerializedType(type);
-            }
-#endif
-        }
-
-        /// <summary>
-        /// Gets a <see cref="Serializer"/> for the given value. If the value is null, it will be treated as a value of type <see cref="object"/>.
-        /// </summary>
-        /// <param name="value">The value to get a <see cref="Serializer"/> for.</param>
-        /// <returns>A <see cref="Serializer"/> for the given value.</returns>
-        public static Serializer GetForValue(object value)
-        {
-            if (ReferenceEquals(value, null))
-            {
-                return Get(typeof(object));
-            }
-
-            return Get(value.GetType());
-        }
 
         /// <summary>
         /// Gets a <see cref="Serializer"/> for type T.
@@ -293,14 +254,5 @@ namespace ExtEvents.OdinSerializer
         /// <param name="value">The value to write.</param>
         /// <param name="writer">The writer to use.</param>
         public abstract void WriteValue(string name, T value, IDataWriter writer);
-
-        /// <summary>
-        /// Fires the <see cref="OnSerializedType"/> event with the T generic argument of the serializer.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        protected static void FireOnSerializedType()
-        {
-            FireOnSerializedType(typeof(T));
-        }
     }
 }

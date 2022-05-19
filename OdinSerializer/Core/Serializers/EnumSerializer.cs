@@ -83,8 +83,6 @@ namespace ExtEvents.OdinSerializer
         {
             ulong ul;
 
-            FireOnSerializedType();
-
 #if CSHARP_7_3_OR_NEWER
             byte* toPtr = (byte*)&ul;
             byte* fromPtr = (byte*)&value;

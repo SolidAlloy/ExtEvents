@@ -59,7 +59,6 @@ namespace ExtEvents.OdinSerializer
         /// <param name="writer">The writer to use.</param>
         public override void WriteValue(string name, byte value, IDataWriter writer)
         {
-            FireOnSerializedType();
             writer.WriteByte(name, value);
         }
     }

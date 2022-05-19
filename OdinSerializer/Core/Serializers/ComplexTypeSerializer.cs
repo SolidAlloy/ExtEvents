@@ -544,8 +544,6 @@ namespace ExtEvents.OdinSerializer
                 return;
             }
 
-            FireOnSerializedType();
-
             if (ComplexTypeIsValueType)
             {
                 bool endNode = true;
