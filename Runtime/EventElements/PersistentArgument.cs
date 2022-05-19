@@ -1,16 +1,17 @@
-﻿namespace ExtEvents
+namespace ExtEvents
 {
     using System;
     using JetBrains.Annotations;
+    using OdinSerializer;
     using TypeReferences;
-    using Unity.Collections.LowLevel.Unsafe;
     using UnityEngine;
+    using UnityEngine.Assertions;
 
     /// <summary>
     /// An argument that can be dynamic or serialized, and is configured through editor UI as a part of <see cref="ExtEvent"/>.
     /// </summary>
     [Serializable]
-    public class PersistentArgument
+    public class PersistentArgument : ISerializationCallbackReceiver
     {
         [SerializeField] internal int _index;
 
@@ -28,13 +29,13 @@
         /// <summary> The type of the argument. </summary>
         [PublicAPI] public Type Type => _type;
 
-        [SerializeField] internal string _serializedArg;
+        [SerializeField] private SerializationData _serializationData;
         [SerializeField] internal bool _canBeDynamic;
 
-        private ArgumentHolder _argumentHolder;
+        // old code support
+        [SerializeField] private string _serializedArg;
 
-        // NonSerialized is required here, otherwise Unity will try to serialize the field even though we didn't put SerializeField attribute.
-        [NonSerialized] internal bool _initialized;
+        private ArgumentHolder _argumentHolder;
 
         internal unsafe void* SerializedValuePointer
         {
@@ -42,7 +43,8 @@
             {
                 try
                 {
-                    return GetArgumentHolder(_serializedArg, _type) == null ? default : _argumentHolder.ValuePointer;
+                    EnsureArgumentHolderInitialized();
+                    return _argumentHolder.ValuePointer;
                 }
 #pragma warning disable CS0618
                 catch (ExecutionEngineException)
@@ -64,12 +66,13 @@
                 if (!_isSerialized)
                     throw new Exception("Tried to access a persistent value of an argument but the argument is dynamic");
 
-                if (_type.Type == null || string.IsNullOrEmpty(_serializedArg))
+                if (_type.Type == null)
                     return null;
 
                 try
                 {
-                    return GetArgumentHolder(_serializedArg, _type)?.Value;
+                    EnsureArgumentHolderInitialized();
+                    return _argumentHolder.Value;
                 }
 #pragma warning disable CS0618
                 catch (ExecutionEngineException)
@@ -78,6 +81,11 @@
                     Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_type} but there was no code generated for it ahead of time.");
                     return null;
                 }
+            }
+            internal set
+            {
+                EnsureArgumentHolderInitialized();
+                _argumentHolder.Value = value;
             }
         }
 
@@ -96,12 +104,7 @@
         /// <returns>An instance of the serialized argument.</returns>
         public static PersistentArgument CreateSerialized(object value, Type argumentType)
         {
-            return new PersistentArgument
-            {
-                _isSerialized = true,
-                _type = argumentType,
-                _serializedArg = SerializeValue(value, argumentType)
-            };
+            return new PersistentArgument(argumentType, value);
         }
 
         /// <summary> Creates a dynamic argument. </summary>
@@ -119,39 +122,78 @@
         /// <returns>An instance of the dynamic argument.</returns>
         public static PersistentArgument CreateDynamic(int eventArgumentIndex, Type argumentType)
         {
-            return new PersistentArgument
-            {
-                _isSerialized = false,
-                _type = argumentType,
-                _index = eventArgumentIndex,
-                _canBeDynamic = true
-            };
-        }
-        internal static object GetValue(string serializedArg, Type valueType)
-        {
-            var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
-            var argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
-            return argumentHolder?.Value;
+            return new PersistentArgument(argumentType, eventArgumentIndex);
         }
 
-        internal static string SerializeValue(object value, Type valueType)
+        private PersistentArgument(Type argumentType, object value)
         {
-            var argHolderType = typeof(ArgumentHolder<>).MakeGenericType(valueType);
-            var argHolder = Activator.CreateInstance(argHolderType, value);
-            return JsonUtility.ToJson(argHolder);
+            _isSerialized = true;
+            _type = argumentType;
+            _argumentHolder = CreateArgumentHolder(argumentType, value);
         }
 
-        private ArgumentHolder GetArgumentHolder(string serializedArg, Type valueType)
+        private PersistentArgument(Type argumentType, int index)
         {
-            if (!_initialized)
+            _isSerialized = false;
+            _type = argumentType;
+            _index = index;
+            _canBeDynamic = true;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            // also, should we check if _isSerialized?
+#if UNITY_EDITOR
+            CustomSerialization.SerializeValue(_argumentHolder?.Value, _type, ref _serializationData);
+#endif
+        }
+
+        public void OnAfterDeserialize()
+        {
+#if UNITY_EDITOR
+            // old code support
+            if (DeserializeOldArgumentHolder())
+                return;
+
+            if (_argumentHolder == null || _argumentHolder.ValueType != _type.Type)
+                _argumentHolder = CreateArgumentHolder(_type);
+
+            _argumentHolder.Value = CustomSerialization.DeserializeValue(_type, _serializationData);
+#endif
+        }
+
+        private void EnsureArgumentHolderInitialized()
+        {
+#if UNITY_EDITOR
+            // old code support
+            if (DeserializeOldArgumentHolder())
+                return;
+
+            Assert.IsNotNull(_argumentHolder);
+#else
+            if (_argumentHolder == null)
             {
-                // It's important to assign argumentHolder to a field so that it is not cleaned by GC until we stop using PersistentArgument.
-                _initialized = true;
-                var type = typeof(ArgumentHolder<>).MakeGenericType(valueType);
-                _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(serializedArg, type);
+                _argumentHolder = CreateArgumentHolder(_type);
+                _argumentHolder.Value = CustomSerialization.DeserializeValue(_type, _serializationData);
             }
+#endif
+        }
 
-            return _argumentHolder;
+        private ArgumentHolder CreateArgumentHolder(Type valueType, object value = null)
+        {
+            var holderType = typeof(ArgumentHolder<>).MakeGenericType(valueType);
+            return (ArgumentHolder) (value == null ? Activator.CreateInstance(holderType) : Activator.CreateInstance(holderType, value));
+        }
+
+        private bool DeserializeOldArgumentHolder()
+        {
+            if (_argumentHolder != null || string.IsNullOrEmpty(_serializedArg))
+                return false;
+
+            var type = typeof(ArgumentHolder<>).MakeGenericType(_type);
+            _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(_serializedArg, type);
+            _serializedArg = null;
+            return true;
         }
     }
 }

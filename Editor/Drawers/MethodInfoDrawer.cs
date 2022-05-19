@@ -52,21 +52,14 @@
 
             var methodInfo = GetMethodInfo(declaringType, listenerProperty, isStatic, currentMethodName);
 
-            if (methodInfo != null)
-            {
-                // argNames = methodInfo is MethodInfo method ? method.GetParameters().Select(param => param.Name).ToList() : new List<string> { currentMemberName };
-                argNames = methodInfo.GetParameters().Select(param => param.Name).ToList();
-            }
-            else
-            {
-                argNames = null;
-            }
+            argNames = methodInfo != null ? methodInfo.GetParameters().Select(param => param.Name).ToList() : null;
 
             if (methodInfo == null && ! string.IsNullOrEmpty(currentMethodName))
             {
                 GUI.backgroundColor = new Color(1f, 0f, 0f, .5f);
             }
 
+            // ReSharper disable once PossibleNullReferenceException
             if (currentMethodName.IsPropertySetter())
                 currentMethodName = currentMethodName.Substring(4);
 
@@ -310,12 +303,6 @@
             if (matchingParamFound)
             {
                 argumentProp.FindPropertyRelative(nameof(PersistentArgument._index)).intValue = matchingParamIndex;
-            }
-            else
-            {
-                // Save the default instance of a value to the string field so that the field is not empty.
-                var valueProperty = PersistentArgumentDrawer.GetValueProperty(argumentProp);
-                PersistentArgumentDrawer.SaveValueProperty(argumentProp, valueProperty);
             }
         }
 

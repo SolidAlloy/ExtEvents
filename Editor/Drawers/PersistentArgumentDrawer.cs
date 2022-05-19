@@ -65,7 +65,7 @@ namespace ExtEvents.Editor
             EditorGUI.indentLevel = previousIndent;
         }
 
-        public static SerializedProperty GetValueProperty(SerializedProperty argumentProperty)
+        private static SerializedProperty GetValueProperty(SerializedProperty argumentProperty)
         {
             var mainSerializedObject = argumentProperty.serializedObject;
             var mainPropertyPath = argumentProperty.propertyPath;
@@ -80,29 +80,24 @@ namespace ExtEvents.Editor
                 return GetValueProperty(argumentProperty);
             }
 
-            var serializedValue = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg)).stringValue;
-
-            object value = PersistentArgument.GetValue(serializedValue, type);
             Type soType = ScriptableObjectCache.GetClass(type);
             var so = ScriptableObject.CreateInstance(soType);
             var serializedObject = new SerializedObject(so);
             var soValueField = soType.GetField(nameof(DeserializedValueHolder<int>.Value));
+            var value = argumentProperty.GetObject<PersistentArgument>().SerializedValue;
             soValueField.SetValue(so, value);
             valueProperty = serializedObject.FindProperty(nameof(DeserializedValueHolder<int>.Value));
             _valuePropertyCache.Add((mainSerializedObject, mainPropertyPath), valueProperty);
             return valueProperty;
         }
 
-        public static void SaveValueProperty(SerializedProperty argumentProperty, SerializedProperty valueProperty)
+        private static void SaveValueProperty(SerializedProperty argumentProperty, SerializedProperty valueProperty)
         {
             valueProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
             LogHelper.RemoveLogEntriesByMode(LogModes.NoScriptAssetWarning);
             var value = valueProperty.GetObject();
-            var serializedArgProp = argumentProperty.FindPropertyRelative(nameof(PersistentArgument._serializedArg));
-            serializedArgProp.stringValue = PersistentArgument.SerializeValue(value, valueProperty.GetObjectType());
-
             var argument = argumentProperty.GetObject<PersistentArgument>();
-            argument._initialized = false;
+            argument.SerializedValue = value;
         }
 
         private void DrawValue(SerializedProperty property, Rect valueRect, Rect totalRect, int indentLevel)
@@ -280,8 +275,6 @@ namespace ExtEvents.Editor
             if (GUI.Button(buttonRect, _isSerialized.boolValue ? "s" : "d", ButtonStyle))
             {
                 _isSerialized.boolValue = !_isSerialized.boolValue;
-                var argument = argumentProperty.GetObject<PersistentArgument>();
-                argument._initialized = false;
             }
         }
     }
