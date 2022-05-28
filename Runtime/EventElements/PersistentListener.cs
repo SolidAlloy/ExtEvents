@@ -290,10 +290,10 @@
 
             for (int i = 0; i < _arguments.Length; i++)
             {
-                var serializedArg = _persistentArguments[i];
+                var persistentArg = _persistentArguments[i];
 
-                if (!serializedArg._isSerialized)
-                    _arguments[i] = args[serializedArg._index];
+                if (!persistentArg._isSerialized)
+                    _arguments[i] = persistentArg.ProcessDynamicArgument(args[persistentArg._index]);
             }
         }
 

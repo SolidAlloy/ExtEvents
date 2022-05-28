@@ -1,6 +1,8 @@
 namespace ExtEvents
 {
     using System;
+    using System.Reflection;
+    using System.Runtime.CompilerServices;
     using JetBrains.Annotations;
     using OdinSerializer;
     using TypeReferences;
@@ -140,7 +142,17 @@ namespace ExtEvents
             _canBeDynamic = true;
         }
 
-        public void OnBeforeSerialize()
+        internal unsafe void* ProcessDynamicArgument(void* sourceTypePointer)
+        {
+            return sourceTypePointer;
+
+            // if (_sourceType == _targetType)
+            //     return sourceTypePointer;
+            //
+            // return _converter.Convert(sourceTypePointer);
+        }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             // also, should we check if _isSerialized?
 #if UNITY_EDITOR
@@ -148,7 +160,7 @@ namespace ExtEvents
 #endif
         }
 
-        public void OnAfterDeserialize()
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
 #if UNITY_EDITOR
             // old code support

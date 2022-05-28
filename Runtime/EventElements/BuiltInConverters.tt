@@ -1,0 +1,57 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+namespace ExtEvents
+{
+<#
+const string _sbyte = "sbyte";
+const string _byte = "byte";
+const string _short = "short";
+const string _ushort = "ushort";
+const string _int = "int";
+const string _uint = "uint";
+const string _long = "long";
+const string _ulong = "ulong";
+const string _float = "float";
+const string _nint = "nint";
+const string _nuint = "nuint";
+const string _double = "double";
+const string _decimal = "decimal";
+// TODO: think how to add the generated types to dictionary.
+// TODO: either add preserve or see how to save types through link. Also maybe just adding them to dictionary is enough?
+// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions
+var types = new (string fromType, string[] toTypes)[]
+   {
+       (_sbyte,  new[] { _short,          _int,        _long,         _float, _double, _decimal, _nint }),
+       (_byte,   new[] { _short, _ushort, _int, _uint, _long, _ulong, _float, _double, _decimal, _nint, _nuint }),
+       (_short,  new[] {                  _int,        _long,         _float, _double, _decimal, _nint }),
+       (_ushort, new[] {                  _int, _uint, _long, _ulong, _float, _double, _decimal, _nint, _nuint }),
+       (_int,    new[] {                               _long,         _float, _double, _decimal, _nint }),
+       (_uint,   new[] {                               _long, _ulong, _float, _double, _decimal,        _nuint }),
+       (_long,   new[] {                                              _float, _double, _decimal }),
+       (_ulong,  new[] {                                              _float, _double, _decimal }),
+       (_float,  new[] {                                                      _double }),
+       (_nint,   new[] {                              _long,          _float, _double, _decimal }),
+       (_nuint,  new[] {                                      _ulong, _float, _double, _decimal }),
+   };
+#>
+    using System.Runtime.CompilerServices;
+<#
+foreach ((string fromType, var toTypes) in types)
+{
+    foreach (string toType in toTypes)
+    {
+#>
+
+    internal class <#=fromType#>_<#=toType#>_Converter : Converter
+    {
+        internal override unsafe void* Convert(void* sourceTypePointer)
+        {
+            <#=toType#> arg = Unsafe.Read<<#=fromType#>>(sourceTypePointer);
+            return Unsafe.AsPointer(ref arg);
+        }
+    }
+<#
+    }
+}
+#>
+}
