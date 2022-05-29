@@ -34,7 +34,27 @@ var types = new (string fromType, string[] toTypes)[]
        (_nuint,  new[] {                                      _ulong, _float, _double, _decimal }),
    };
 #>
+    using System;
+    using System.Collections.Generic;
     using System.Runtime.CompilerServices;
+
+    public partial class Converter
+    {
+        public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>()
+        {
+<#
+foreach ((string fromType, var toTypes) in types)
+{
+    foreach (string toType in toTypes)
+    {
+#>
+            { (typeof(<#=fromType#>), typeof(<#=toType#>)), typeof(<#=fromType#>_<#=toType#>_Converter) },
+<#
+    }
+}
+#>
+        };
+    }
 <#
 foreach ((string fromType, var toTypes) in types)
 {
@@ -44,7 +64,7 @@ foreach ((string fromType, var toTypes) in types)
 
     internal class <#=fromType#>_<#=toType#>_Converter : Converter
     {
-        internal override unsafe void* Convert(void* sourceTypePointer)
+        public override unsafe void* Convert(void* sourceTypePointer)
         {
             <#=toType#> arg = Unsafe.Read<<#=fromType#>>(sourceTypePointer);
             return Unsafe.AsPointer(ref arg);
