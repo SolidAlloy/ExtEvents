@@ -8,8 +8,6 @@
     using System.Reflection;
     using System.Reflection.Emit;
     using System.Runtime.CompilerServices;
-    using System.Security;
-    using System.Security.Permissions;
     using UnityEditor;
     using UnityEngine;
 
@@ -86,7 +84,7 @@
                 });
         }
 
-        private static class ConverterEmitter
+        public static class ConverterEmitter
         {
             private const string AssemblyName = "ExtEvents.Editor.EmittedConverters";
 
@@ -98,28 +96,11 @@
                     ProcessorArchitecture = ProcessorArchitecture.MSIL,
                     VersionCompatibility = AssemblyVersionCompatibility.SameDomain
                 }, AssemblyBuilderAccess.Run);
-                // }, AssemblyBuilderAccess.RunAndSave, "Assets/");
 
-            private static readonly ModuleBuilder _moduleBuilder = _assemblyBuilder.DefineDynamicModule(AssemblyName, true);
+            private static readonly ModuleBuilder _moduleBuilder = _assemblyBuilder.DefineDynamicModule(AssemblyName, false);
 
             public static Type EmitConverter(Type fromType, Type toType)
             {
-                var unverifiableCon = typeof(UnverifiableCodeAttribute).GetConstructor(Type.EmptyTypes);
-                _moduleBuilder.SetCustomAttribute(new CustomAttributeBuilder(unverifiableCon, Array.Empty<object>()));
-
-                var securityCon =
-                    typeof(SecurityPermissionAttribute).GetConstructor(new Type[] {typeof(SecurityAction)});
-
-                var skipVerificationProp =
-                    typeof(SecurityPermissionAttribute).GetProperty(
-                        nameof(SecurityPermissionAttribute.SkipVerification), BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-                var unmanagedProp = typeof(SecurityPermissionAttribute).GetProperty(
-                    nameof(SecurityPermissionAttribute.UnmanagedCode),
-                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-                _assemblyBuilder.SetCustomAttribute(new CustomAttributeBuilder(securityCon, new object[] { SecurityAction.PermitOnly }, new[] { skipVerificationProp, unmanagedProp }, new object[]{ true, true }));
-
                 TypeBuilder typeBuilder = _moduleBuilder.DefineType(
                     $"{AssemblyName}.{fromType.Name}_{toType.Name}_Converter",
                     TypeAttributes.Public, typeof(Converter));
@@ -131,11 +112,14 @@
 
                 var il = methodBuilder.GetILGenerator();
 
+                // Since we are working with Unsafe, this code is not easily interpreted by compiler.
+                // We have to declare local values by ourselves.
+                var localBuilder = il.DeclareLocal(toType);
+
                 il.Emit(OpCodes.Ldarg_1);
 
-                var unsafeReadMethodBase = typeof(Unsafe).GetMethods(BindingFlags.Static | BindingFlags.Public).First(method => method.Name == nameof(Unsafe.Read));
-                var unsafeReadMethod = unsafeReadMethodBase.MakeGenericMethod(fromType);
-                il.EmitCall(OpCodes.Call, unsafeReadMethod, null);
+                // inlined Unsafe.Read<T>()
+                il.Emit(OpCodes.Ldobj, fromType);
 
                 var implicitOperator = fromType.GetMethods(BindingFlags.Public | BindingFlags.Static)
                     .Where(mi => mi.Name == "op_Implicit" && mi.ReturnType == toType)
@@ -144,37 +128,16 @@
                         ParameterInfo pi = mi.GetParameters().FirstOrDefault();
                         return pi != null && pi.ParameterType == fromType;
                     });
+
                 il.EmitCall(OpCodes.Call, implicitOperator, null);
+
+                // Instead of calling Unsafe.AsPointer, we inline it and call the instructions directly here.
                 il.Emit(OpCodes.Stloc_0);
-
-                il.Emit(OpCodes.Ldloca_S);
-
-                var unsafePointerMethodBase = typeof(Unsafe).GetMethods(BindingFlags.Static | BindingFlags.Public).First(method => method.Name == nameof(Unsafe.AsPointer));
-                var unsafePointerMethod = unsafePointerMethodBase.MakeGenericMethod(toType); // MakeByRef?
-                il.EmitCall(OpCodes.Call, unsafePointerMethod, null);
-                il.Emit(OpCodes.Stloc_1);
-                il.Emit(OpCodes.Br_S);
-
-                il.Emit(OpCodes.Ldloc_1);
+                // Instead of writing ldloca_s, we have to pass localBuilder manually.
+                il.Emit(OpCodes.Ldloca, localBuilder);
+                il.Emit(OpCodes.Conv_U); // inlined Unsafe.AsPointer()
                 il.Emit(OpCodes.Ret);
-
-                // IL_0001: ldarg.1      // from
-                // IL_0002: call         !!0/*valuetype [GenericScriptableArchitecture]GenericScriptableArchitecture.ClampedInt*/ [System.Runtime.CompilerServices.Unsafe]System.Runtime.CompilerServices.Unsafe::Read<valuetype [GenericScriptableArchitecture]GenericScriptableArchitecture.ClampedInt>(void*)
-                //     IL_0007: call         int32 [GenericScriptableArchitecture]GenericScriptableArchitecture.ClampedInt::op_Implicit(valuetype [GenericScriptableArchitecture]GenericScriptableArchitecture.ClampedInt)
-                // IL_000c: stloc.0      // arg
-                //
-                // // [100 13 - 100 46]
-                // IL_000d: ldloca.s     arg
-                // IL_000f: call         void* [System.Runtime.CompilerServices.Unsafe]System.Runtime.CompilerServices.Unsafe::AsPointer<int32>(!!0/*int32*/&)
-                // IL_0014: stloc.1      // V_1
-                // IL_0015: br.s         IL_0017
-                //
-                // // [101 9 - 101 10]
-                // IL_0017: ldloc.1      // V_1
-                // IL_0018: ret
-
                 Type type = typeBuilder.CreateType();
-                // _assemblyBuilder.Save("test.dll");
                 return type;
             }
         }
