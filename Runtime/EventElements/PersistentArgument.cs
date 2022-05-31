@@ -8,6 +8,7 @@ namespace ExtEvents
     using TypeReferences;
     using UnityEngine;
     using UnityEngine.Assertions;
+    using UnityEngine.Serialization;
 
     /// <summary>
     /// An argument that can be dynamic or serialized, and is configured through editor UI as a part of <see cref="ExtEvent"/>.
@@ -26,10 +27,12 @@ namespace ExtEvents
         /// <summary> Whether the argument is serialized or dynamic. </summary>
         [PublicAPI] public bool IsSerialized => _isSerialized;
 
-        [SerializeField] internal TypeReference _type;
+        [FormerlySerializedAs("_type")] [SerializeField] internal TypeReference _targetType;
+        [SerializeField] internal TypeReference _fromType;
 
         /// <summary> The type of the argument. </summary>
-        [PublicAPI] public Type Type => _type;
+        /// // TODO: think what to do with this public api and two types.
+        [PublicAPI] public Type Type => _targetType;
 
         [SerializeField] private SerializationData _serializationData;
         [SerializeField] internal bool _canBeDynamic;
@@ -38,6 +41,7 @@ namespace ExtEvents
         [SerializeField] private string _serializedArg;
 
         private ArgumentHolder _argumentHolder;
+        private Converter _converter;
 
         internal unsafe void* SerializedValuePointer
         {
@@ -52,7 +56,7 @@ namespace ExtEvents
                 catch (ExecutionEngineException)
 #pragma warning restore CS0618
                 {
-                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_type} but there was no code generated for it ahead of time.");
+                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_targetType} but there was no code generated for it ahead of time.");
                     return default;
                 }
             }
@@ -68,7 +72,7 @@ namespace ExtEvents
                 if (!_isSerialized)
                     throw new Exception("Tried to access a persistent value of an argument but the argument is dynamic");
 
-                if (_type.Type == null)
+                if (_targetType.Type == null)
                     return null;
 
                 try
@@ -80,7 +84,7 @@ namespace ExtEvents
                 catch (ExecutionEngineException)
 #pragma warning restore CS0618
                 {
-                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_type} but there was no code generated for it ahead of time.");
+                    Debug.LogWarning($"Tried to invoke a method with a serialized argument of type {_targetType} but there was no code generated for it ahead of time.");
                     return null;
                 }
             }
@@ -130,33 +134,36 @@ namespace ExtEvents
         private PersistentArgument(Type argumentType, object value)
         {
             _isSerialized = true;
-            _type = argumentType;
+            _targetType = argumentType;
             _argumentHolder = CreateArgumentHolder(argumentType, value);
         }
 
         private PersistentArgument(Type argumentType, int index)
         {
             _isSerialized = false;
-            _type = argumentType;
+            _targetType = argumentType;
             _index = index;
             _canBeDynamic = true;
         }
 
+        internal void InitDynamic()
+        {
+            // Check if fromType is null because this field didn't exist in previous versions of ExtEvents,
+            // so we don't have to create a converter because conversions were not supported previously.
+            if (_fromType?.Type != null && _fromType != _targetType)
+                _converter = Converter.GetForTypes(_fromType, _targetType);
+        }
+
         internal unsafe void* ProcessDynamicArgument(void* sourceTypePointer)
         {
-            return sourceTypePointer;
-
-            // if (_sourceType == _targetType)
-            //     return sourceTypePointer;
-            //
-            // return _converter.Convert(sourceTypePointer);
+            return _converter == null ? sourceTypePointer : _converter.Convert(sourceTypePointer);
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             // also, should we check if _isSerialized?
 #if UNITY_EDITOR
-            CustomSerialization.SerializeValue(_argumentHolder?.Value, _type, ref _serializationData);
+            CustomSerialization.SerializeValue(_argumentHolder?.Value, _targetType, ref _serializationData);
 #endif
         }
 
@@ -167,10 +174,10 @@ namespace ExtEvents
             if (DeserializeOldArgumentHolder())
                 return;
 
-            if (_argumentHolder == null || _argumentHolder.ValueType != _type.Type)
-                _argumentHolder = CreateArgumentHolder(_type);
+            if (_argumentHolder == null || _argumentHolder.ValueType != _targetType.Type)
+                _argumentHolder = CreateArgumentHolder(_targetType);
 
-            _argumentHolder.Value = CustomSerialization.DeserializeValue(_type, _serializationData);
+            _argumentHolder.Value = CustomSerialization.DeserializeValue(_targetType, _serializationData);
 #endif
         }
 
@@ -202,7 +209,7 @@ namespace ExtEvents
             if (_argumentHolder != null || string.IsNullOrEmpty(_serializedArg))
                 return false;
 
-            var type = typeof(ArgumentHolder<>).MakeGenericType(_type);
+            var type = typeof(ArgumentHolder<>).MakeGenericType(_targetType);
             _argumentHolder = (ArgumentHolder) JsonUtility.FromJson(_serializedArg, type);
             _serializedArg = null;
             return true;

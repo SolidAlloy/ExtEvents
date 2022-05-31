@@ -212,7 +212,7 @@
 
             for (int i = 0; i < types.Length; i++)
             {
-                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
+                types[i] = Type.GetType(serializedArgs.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._targetType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue);
                 if (types[i] == null)
                     return null;
             }
@@ -283,18 +283,41 @@
 
         private static void InitializeArgumentProperty(SerializedProperty argumentProp, Type type)
         {
-            var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._type)));
-            serializedTypeRef.SetType(type);
+            // set target type
+            {
+                var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._targetType)));
+                serializedTypeRef.SetType(type);
 
-            // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user.
-            serializedTypeRef.SuppressLogs = true;
+                // When an argument type is not found, there is no need to report that it's missing because the whole method definition is missing and the warning will only confuse the user.
+                serializedTypeRef.SuppressLogs = true;
+            }
 
             // Cannot rely on ExtEventPropertyDrawer.CurrentExtEvent because the initialization of argument property occurs
             // not in the middle of drawing ext events but rather after drawing all the events.
             // argument => arguments array => listener => listeners array => ext event.
             var extEventInfo = ExtEventDrawer.GetExtEventInfo(argumentProp.GetParent().GetParent().GetParent().GetParent());
 
-            int matchingParamIndex = Array.FindIndex(extEventInfo.ParamTypes, eventParamType => eventParamType.IsAssignableFrom(type));
+            int matchingParamIndex = -1;
+            bool exactMatch = false;
+
+            for (int i = 0; i < extEventInfo.ParamTypes.Length; i++)
+            {
+                var eventParamType = extEventInfo.ParamTypes[i];
+
+                if (eventParamType.IsAssignableFrom(type))
+                {
+                    exactMatch = true;
+                    matchingParamIndex = i;
+                    break;
+                }
+
+                if (ImplicitConversionsCache.HaveImplicitConversion(eventParamType, type))
+                {
+                    matchingParamIndex = i;
+                    break;
+                }
+            }
+
             bool matchingParamFound = matchingParamIndex != -1;
 
             argumentProp.FindPropertyRelative(nameof(PersistentArgument._isSerialized)).boolValue = !matchingParamFound;
@@ -303,6 +326,11 @@
             if (matchingParamFound)
             {
                 argumentProp.FindPropertyRelative(nameof(PersistentArgument._index)).intValue = matchingParamIndex;
+
+                // If the type of event is not assignable to the type of response, make persistent argument remember
+                // the type of event so that it can implicitly convert the argument when invoking the response.
+                var serializedTypeRef = new SerializedTypeReference(argumentProp.FindPropertyRelative(nameof(PersistentArgument._fromType)));
+                serializedTypeRef.SetType(exactMatch ? type : extEventInfo.ParamTypes[matchingParamIndex]);
             }
         }
 

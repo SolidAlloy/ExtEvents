@@ -315,6 +315,7 @@
                 }
                 else
                 {
+                    serializedArg.InitDynamic();
                     _arguments[i] = null;
                 }
             }
@@ -324,8 +325,8 @@
         {
             foreach (var argument in _persistentArguments)
             {
-                if (argument._type.Type == null)
-                    yield return argument._type.TypeNameAndAssembly;
+                if (argument._targetType.Type == null)
+                    yield return argument._targetType.TypeNameAndAssembly;
             }
         }
 
@@ -335,7 +336,7 @@
 
             for (int i = 0; i < _persistentArguments.Length; i++)
             {
-                types[i] = _persistentArguments[i]._type.Type;
+                types[i] = _persistentArguments[i]._targetType.Type;
 
                 if (types[i] == null)
                 {

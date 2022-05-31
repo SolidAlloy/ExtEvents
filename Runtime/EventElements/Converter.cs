@@ -60,9 +60,16 @@
 
             if (!ConverterTypes.TryGetValue(types, out var converterType))
             {
-                // check if the from type has implicit conversion operator to to-type, then emit the type and add it to the dict.
-                // implement emit in editor, throw error in AOT builds.
-                converterType = ConverterEmitter.EmitConverter(from, to);
+                // TODO: throw error in AOT builds.
+                var implicitOperator = ImplicitConversionsCache.GetImplicitOperatorForTypes(from, to);
+
+                if (implicitOperator == null)
+                {
+                    Debug.LogError($"Tried to implicitly convert type {from} to {to} but no implicit operator was found.");
+                    return null;
+                }
+
+                converterType = ConverterEmitter.EmitConverter(from, to, implicitOperator);
                 ConverterTypes.Add(types, converterType);
             }
 
@@ -109,7 +116,7 @@
 #endif
                 );
 
-            public static Type EmitConverter(Type fromType, Type toType)
+            public static Type EmitConverter(Type fromType, Type toType, MethodInfo implicitOperator)
             {
                 TypeBuilder typeBuilder = _moduleBuilder.DefineType(
                     $"{AssemblyName}.{fromType.Name}_{toType.Name}_Converter",
@@ -130,15 +137,6 @@
 
                 // inlined Unsafe.Read<T>()
                 il.Emit(OpCodes.Ldobj, fromType);
-
-                var implicitOperator = fromType.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .Where(mi => mi.Name == "op_Implicit" && mi.ReturnType == toType)
-                    .First(mi =>
-                    {
-                        ParameterInfo pi = mi.GetParameters().FirstOrDefault();
-                        return pi != null && pi.ParameterType == fromType;
-                    });
-
                 il.EmitCall(OpCodes.Call, implicitOperator, null);
 
                 // Instead of calling Unsafe.AsPointer, we inline it and call the instructions directly here.

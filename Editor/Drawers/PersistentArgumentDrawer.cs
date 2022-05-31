@@ -189,7 +189,7 @@ namespace ExtEvents.Editor
         private static Type GetTypeFromProperty(SerializedProperty argProperty)
         {
             var typeNameAndAssembly = argProperty
-                .FindPropertyRelative($"{nameof(PersistentArgument._type)}.{nameof(TypeReference._typeNameAndAssembly)}")
+                .FindPropertyRelative($"{nameof(PersistentArgument._targetType)}.{nameof(TypeReference._typeNameAndAssembly)}")
                 .stringValue;
             var type = Type.GetType(typeNameAndAssembly);
             Assert.IsNotNull(type);

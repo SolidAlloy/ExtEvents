@@ -99,10 +99,10 @@
 
         private static void CheckArgument(ref PersistentArgument argument, ParameterInfo parameter, int argumentIndex, Type[] eventParamTypes)
         {
-            if (argument._type.Type != parameter.ParameterType)
-                throw new ArgumentTypeMismatchException($"The passed argument at index {argumentIndex} was assigned a wrong type {argument._type} that does not match the parameter type of the method: {parameter.ParameterType}.");
+            if (argument._targetType.Type != parameter.ParameterType)
+                throw new ArgumentTypeMismatchException($"The passed argument at index {argumentIndex} was assigned a wrong type {argument._targetType} that does not match the parameter type of the method: {parameter.ParameterType}.");
 
-            var matchingParamIndices = GetMatchingParamIndices(eventParamTypes, argument._type);
+            var matchingParamIndices = GetMatchingParamIndices(eventParamTypes, argument._targetType);
 
             if (argument._isSerialized)
             {
@@ -188,7 +188,7 @@
 
         private static bool ArgumentTypeIsInList(Type argType, Type[] eventParamTypes)
         {
-            return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType));
+            return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType) || ImplicitConversionsCache.HaveImplicitConversion(eventParamType, argType));
         }
 
         #endregion

@@ -75,7 +75,7 @@
 
                 for (int i = 0; i < argumentsCount; i++)
                 {
-                    var typeNameAndAssembly = arguments.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._type)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+                    var typeNameAndAssembly = arguments.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._targetType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
                     var type = Type.GetType(typeNameAndAssembly);
                     if (type == null)
                         return null;
