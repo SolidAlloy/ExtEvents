@@ -88,7 +88,13 @@
         {
             private const string AssemblyName = "ExtEvents.Editor.EmittedConverters";
 
-            private static readonly AssemblyBuilder _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
+            private static readonly AssemblyBuilder _assemblyBuilder =
+#if NET_STANDARD
+                AssemblyBuilder
+#else
+                    AppDomain.CurrentDomain
+#endif
+                    .DefineDynamicAssembly(
                 new AssemblyName(AssemblyName)
                 {
                     CultureInfo = CultureInfo.InvariantCulture,
@@ -97,7 +103,11 @@
                     VersionCompatibility = AssemblyVersionCompatibility.SameDomain
                 }, AssemblyBuilderAccess.Run);
 
-            private static readonly ModuleBuilder _moduleBuilder = _assemblyBuilder.DefineDynamicModule(AssemblyName, false);
+            private static readonly ModuleBuilder _moduleBuilder = _assemblyBuilder.DefineDynamicModule(AssemblyName
+#if !NET_STANDARD
+                , false
+#endif
+                );
 
             public static Type EmitConverter(Type fromType, Type toType)
             {
