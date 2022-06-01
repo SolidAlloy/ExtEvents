@@ -51,6 +51,16 @@
         private static readonly Dictionary<(Type from, Type to), Converter> _createdConverters =
             new Dictionary<(Type from, Type to), Converter>();
 
+        public static bool ExistsForTypes(Type from, Type to)
+        {
+            var types = (from, to);
+
+            if (ConverterTypes.TryGetValue(types, out _))
+                return true;
+
+            return ImplicitConversionsCache.HaveImplicitConversion(from, to);
+        }
+
         public static Converter GetForTypes(Type from, Type to)
         {
             var types = (from, to);
@@ -79,17 +89,6 @@
         }
 
         public abstract unsafe void* Convert(void* sourceTypePointer);
-
-        private static bool TypesCanBeConverted(Type fromType, Type toType)
-        {
-            return fromType.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(mi => mi.Name == "op_Implicit" && mi.ReturnType == toType)
-                .Any(mi =>
-                {
-                    ParameterInfo pi = mi.GetParameters().FirstOrDefault();
-                    return pi != null && pi.ParameterType == fromType;
-                });
-        }
 
         public static class ConverterEmitter
         {

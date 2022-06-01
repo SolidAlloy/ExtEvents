@@ -188,7 +188,7 @@
 
         private static bool ArgumentTypeIsInList(Type argType, Type[] eventParamTypes)
         {
-            return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType) || ImplicitConversionsCache.HaveImplicitConversion(eventParamType, argType));
+            return eventParamTypes.Any(eventParamType => eventParamType.IsAssignableFrom(argType) || Converter.ExistsForTypes(eventParamType, argType));
         }
 
         #endregion

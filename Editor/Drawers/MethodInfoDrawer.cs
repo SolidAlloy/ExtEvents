@@ -311,7 +311,7 @@
                     break;
                 }
 
-                if (ImplicitConversionsCache.HaveImplicitConversion(eventParamType, type))
+                if (Converter.ExistsForTypes(eventParamType, type))
                 {
                     matchingParamIndex = i;
                     break;
