@@ -1,12 +1,11 @@
-﻿namespace ExtEvents
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && !ENABLE_IL2CPP
+#define CAN_EMIT
+#endif
+
+namespace ExtEvents
 {
     using System;
     using System.Collections.Generic;
-    using System.Configuration.Assemblies;
-    using System.Globalization;
-    using System.Linq;
-    using System.Reflection;
-    using System.Reflection.Emit;
     using System.Runtime.CompilerServices;
     using UnityEditor;
     using UnityEngine;
@@ -70,7 +69,7 @@
 
             if (!ConverterTypes.TryGetValue(types, out var converterType))
             {
-                // TODO: throw error in AOT builds.
+    #if CAN_EMIT
                 var implicitOperator = ImplicitConversionsCache.GetImplicitOperatorForTypes(from, to);
 
                 if (implicitOperator == null)
@@ -81,6 +80,11 @@
 
                 converterType = ConverterEmitter.EmitConverter(from, to, implicitOperator);
                 ConverterTypes.Add(types, converterType);
+#else
+#pragma warning disable CS0618
+                throw new ExecutionEngineException("Attempting to convert types that don't have a converter generated ahead of time (AOT).");
+#pragma warning restore CS0618
+#endif
             }
 
             converter = (Converter) Activator.CreateInstance(converterType);
@@ -89,65 +93,6 @@
         }
 
         public abstract unsafe void* Convert(void* sourceTypePointer);
-
-        public static class ConverterEmitter
-        {
-            private const string AssemblyName = "ExtEvents.Editor.EmittedConverters";
-
-            private static readonly AssemblyBuilder _assemblyBuilder =
-#if NET_STANDARD
-                AssemblyBuilder
-#else
-                    AppDomain.CurrentDomain
-#endif
-                    .DefineDynamicAssembly(
-                new AssemblyName(AssemblyName)
-                {
-                    CultureInfo = CultureInfo.InvariantCulture,
-                    Flags = AssemblyNameFlags.None,
-                    ProcessorArchitecture = ProcessorArchitecture.MSIL,
-                    VersionCompatibility = AssemblyVersionCompatibility.SameDomain
-                }, AssemblyBuilderAccess.Run);
-
-            private static readonly ModuleBuilder _moduleBuilder = _assemblyBuilder.DefineDynamicModule(AssemblyName
-#if !NET_STANDARD
-                , false
-#endif
-                );
-
-            public static Type EmitConverter(Type fromType, Type toType, MethodInfo implicitOperator)
-            {
-                TypeBuilder typeBuilder = _moduleBuilder.DefineType(
-                    $"{AssemblyName}.{fromType.Name}_{toType.Name}_Converter",
-                    TypeAttributes.Public, typeof(Converter));
-
-                // emit code for the type here.
-                var methodBuilder = typeBuilder.DefineMethod(nameof(Converter.Convert),
-                    MethodAttributes.Public | MethodAttributes.ReuseSlot | MethodAttributes.Virtual |
-                    MethodAttributes.HideBySig, typeof(void*), new[] {typeof(void*)});
-
-                var il = methodBuilder.GetILGenerator();
-
-                // Since we are working with Unsafe, this code is not easily interpreted by compiler.
-                // We have to declare local values by ourselves.
-                var localBuilder = il.DeclareLocal(toType);
-
-                il.Emit(OpCodes.Ldarg_1);
-
-                // inlined Unsafe.Read<T>()
-                il.Emit(OpCodes.Ldobj, fromType);
-                il.EmitCall(OpCodes.Call, implicitOperator, null);
-
-                // Instead of calling Unsafe.AsPointer, we inline it and call the instructions directly here.
-                il.Emit(OpCodes.Stloc_0);
-                // Instead of writing ldloca_s, we have to pass localBuilder manually.
-                il.Emit(OpCodes.Ldloca, localBuilder);
-                il.Emit(OpCodes.Conv_U); // inlined Unsafe.AsPointer()
-                il.Emit(OpCodes.Ret);
-                Type type = typeBuilder.CreateType();
-                return type;
-            }
-        }
     }
 
     public abstract class Converter<TFrom, TTo> : Converter

@@ -11,80 +11,95 @@
 
     public static class ExtEventProjectSearcher
     {
-        public static IEnumerable<MethodInfo> GetMethods(IEnumerable<SerializedProperty> extEventProperties)
+        public static IEnumerable<SerializedProperty> GetListeners(IEnumerable<SerializedProperty> extEventProperties)
         {
             foreach (var extEventProperty in extEventProperties)
             {
-                var responses = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent._persistentListeners));
+                var listeners = extEventProperty.FindPropertyRelative(nameof(BaseExtEvent._persistentListeners));
 
-                int responsesLength = responses.arraySize;
+                int listenersLength = listeners.arraySize;
 
-                for (int i = 0; i < responsesLength; i++)
+                for (int i = 0; i < listenersLength; i++)
                 {
-                    var method = ResponseHelper.GetMethod(responses.GetArrayElementAtIndex(i));
+                    yield return listeners.GetArrayElementAtIndex(i);
 
-                    if (method != null)
-                        yield return method;
+                    // var method = ListenerHelper.GetMethod(listeners.GetArrayElementAtIndex(i));
+                    //
+                    // if (method != null)
+                    //     yield return method;
                 }
             }
         }
 
-        private static class ResponseHelper
+        public static IEnumerable<(Type from, Type to)> GetNonMatchingArgumentTypes(SerializedProperty listener)
         {
-            public static MethodInfo GetMethod(SerializedProperty response)
+            var arguments = listener.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
+            int argumentsCount = arguments.arraySize;
+
+            for (int i = 0; i < argumentsCount; i++)
             {
-                if ((UnityEventCallState) response.FindPropertyRelative(nameof(PersistentListener.CallState)).enumValueIndex == UnityEventCallState.Off)
-                    return null;
+                var fromType = PersistentArgumentHelper.GetTypeFromProperty(arguments.GetArrayElementAtIndex(i), nameof(PersistentArgument._fromType));
+                var targetType = PersistentArgumentHelper.GetTypeFromProperty(arguments.GetArrayElementAtIndex(i), nameof(PersistentArgument._targetType));
 
-                string methodName = response.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
+                if (fromType == null || targetType == null || fromType == targetType)
+                    continue;
 
-                if (string.IsNullOrEmpty(methodName))
-                    return null;
+                yield return (fromType, targetType);
+            }
+        }
 
-                bool isStatic = response.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+        public static MethodInfo GetMethod(SerializedProperty listener)
+        {
+            if ((UnityEventCallState) listener.FindPropertyRelative(nameof(PersistentListener.CallState)).enumValueIndex == UnityEventCallState.Off)
+                return null;
 
-                var declaringType = GetDeclaringType(response, isStatic);
-                if (declaringType == null)
-                    return null;
+            string methodName = listener.FindPropertyRelative(nameof(PersistentListener._methodName)).stringValue;
 
-                var argumentTypes = GetArgumentTypes(response);
-                if (argumentTypes == null)
-                    return null;
+            if (string.IsNullOrEmpty(methodName))
+                return null;
 
-                return PersistentListener.GetMethod(declaringType, argumentTypes, methodName, PersistentListener.GetFlags(isStatic));
+            bool isStatic = listener.FindPropertyRelative(nameof(PersistentListener._isStatic)).boolValue;
+
+            var declaringType = GetDeclaringType(listener, isStatic);
+            if (declaringType == null)
+                return null;
+
+            var argumentTypes = GetArgumentTypes(listener);
+            if (argumentTypes == null)
+                return null;
+
+            return PersistentListener.GetMethod(declaringType, argumentTypes, methodName, PersistentListener.GetFlags(isStatic));
+        }
+
+        private static Type GetDeclaringType(SerializedProperty listener, bool isStatic)
+        {
+            if (isStatic)
+            {
+                string typeNameAndAssembly = listener.FindPropertyRelative($"{nameof(PersistentListener._staticType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
+                return string.IsNullOrEmpty(typeNameAndAssembly) ? null : Type.GetType(typeNameAndAssembly);
             }
 
-            private static Type GetDeclaringType(SerializedProperty response, bool isStatic)
-            {
-                if (isStatic)
-                {
-                    string typeNameAndAssembly = response.FindPropertyRelative($"{nameof(PersistentListener._staticType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
-                    return string.IsNullOrEmpty(typeNameAndAssembly) ? null : Type.GetType(typeNameAndAssembly);
-                }
+            var target = listener.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
+            // ReSharper disable once Unity.NoNullPropagation
+            return target?.GetType();
+        }
 
-                var target = response.FindPropertyRelative(nameof(PersistentListener._target)).objectReferenceValue;
-                // ReSharper disable once Unity.NoNullPropagation
-                return target?.GetType();
+        private static Type[] GetArgumentTypes(SerializedProperty listener)
+        {
+            var arguments = listener.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
+            int argumentsCount = arguments.arraySize;
+            var types = new Type[argumentsCount];
+
+            for (int i = 0; i < argumentsCount; i++)
+            {
+                var type = PersistentArgumentHelper.GetTypeFromProperty(arguments.GetArrayElementAtIndex(i), nameof(PersistentArgument._targetType));
+                if (type == null)
+                    return null;
+
+                types[i] = type;
             }
 
-            private static Type[] GetArgumentTypes(SerializedProperty response)
-            {
-                var arguments = response.FindPropertyRelative(nameof(PersistentListener._persistentArguments));
-                int argumentsCount = arguments.arraySize;
-                var types = new Type[argumentsCount];
-
-                for (int i = 0; i < argumentsCount; i++)
-                {
-                    var typeNameAndAssembly = arguments.GetArrayElementAtIndex(i).FindPropertyRelative($"{nameof(PersistentArgument._targetType)}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
-                    var type = Type.GetType(typeNameAndAssembly);
-                    if (type == null)
-                        return null;
-
-                    types[i] = type;
-                }
-
-                return types;
-            }
+            return types;
         }
     }
 }

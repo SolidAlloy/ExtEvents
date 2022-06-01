@@ -69,7 +69,8 @@ namespace ExtEvents.Editor
         {
             var mainSerializedObject = argumentProperty.serializedObject;
             var mainPropertyPath = argumentProperty.propertyPath;
-            var type = GetTypeFromProperty(argumentProperty, nameof(PersistentArgument._targetType));
+            var type = PersistentArgumentHelper.GetTypeFromProperty(argumentProperty, nameof(PersistentArgument._targetType));
+            Assert.IsNotNull(type);
 
             if (_valuePropertyCache.TryGetValue((mainSerializedObject, mainPropertyPath), out var valueProperty))
             {
@@ -118,7 +119,7 @@ namespace ExtEvents.Editor
             var argNames = ExtEventDrawer.CurrentEventInfo.ArgNames;
             var currentArgName = argNames[indexProp.intValue];
 
-            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventDrawer.CurrentEventInfo.ParamTypes, GetTypeFromProperty(property, nameof(PersistentArgument._fromType)));
+            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventDrawer.CurrentEventInfo.ParamTypes, PersistentArgumentHelper.GetTypeFromProperty(property, nameof(PersistentArgument._fromType)));
 
             using (new EditorGUI.DisabledGroupScope(matchingArgNames.Count == 1))
             {
@@ -131,6 +132,7 @@ namespace ExtEvents.Editor
 
         private static List<(string name, int index)> GetMatchingArgNames(string[] allArgNames, Type[] argTypes, Type argType)
         {
+            Assert.IsNotNull(argType);
             var matchingNames = new List<(string name, int index)>();
 
             for (int i = 0; i < argTypes.Length; i++)
@@ -184,16 +186,6 @@ namespace ExtEvents.Editor
 
             if (_isSerialized.boolValue)
                 _valueProperty = GetValueProperty(property);
-        }
-
-        private static Type GetTypeFromProperty(SerializedProperty argProperty, string typeFieldName)
-        {
-            var typeNameAndAssembly = argProperty
-                .FindPropertyRelative($"{typeFieldName}.{nameof(TypeReference._typeNameAndAssembly)}")
-                .stringValue;
-            var type = Type.GetType(typeNameAndAssembly);
-            Assert.IsNotNull(type);
-            return type;
         }
 
         private void DrawValueProperty(SerializedProperty mainProperty, Rect valueRect, Rect totalRect, int indentLevel)

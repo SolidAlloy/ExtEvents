@@ -77,7 +77,8 @@
 
             var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
 
-            GetCodeToGenerate(out var methods, out var argumentTypes);
+            // TODO: process conversions
+            GetCodeToGenerate(out var methods, out var argumentTypes, out var conversions);
             CreateType(typeBuilder, methods, argumentTypes);
 
             typeBuilder.CreateType();
@@ -110,6 +111,7 @@
                 genericArgs[0] = argumentType;
                 var holderType = typeof(ArgumentHolder<>).MakeGenericType(genericArgs);
                 var constructor = holderType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                // ReSharper disable once AssignNullToNotNullAttribute
                 ilGenerator.Emit(OpCodes.Newobj, constructor);
                 ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
             }
@@ -119,41 +121,56 @@
             ilGenerator.Emit(OpCodes.Ret);
         }
 
-        private static void GetCodeToGenerate(out HashSet<CreateMethod> methods, out HashSet<Type> argumentTypes)
+        private static void GetCodeToGenerate(out HashSet<CreateMethod> methods, out HashSet<Type> argumentTypes, out HashSet<(Type from, Type to)> conversions)
         {
             methods = new HashSet<CreateMethod>();
             argumentTypes = new HashSet<Type>();
+            conversions = new HashSet<(Type from, Type to)>();
 
             var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
             var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
-            var methodInfos = ExtEventProjectSearcher.GetMethods(extEventProperties);
+            var listenerProperties = ExtEventProjectSearcher.GetListeners(extEventProperties);
 
-            foreach (var methodInfo in methodInfos)
+            foreach (var listenerProperty in listenerProperties)
             {
-                var args = GetArgumentTypes(methodInfo.GetParameters());
-                bool isVoid = methodInfo.ReturnType == typeof(void);
+                var methodInfo = ExtEventProjectSearcher.GetMethod(listenerProperty);
+                GetMethodDetails(methodInfo, ref argumentTypes, ref methods);
 
-                if (!isVoid)
+                foreach (var types in ExtEventProjectSearcher.GetNonMatchingArgumentTypes(listenerProperty))
                 {
-                    ArrayHelper.Add(ref args, methodInfo.ReturnType);
+                    conversions.Add(types);
                 }
-
-                if (args.Length == 0)
-                    continue;
-
-                bool hasValueType = false;
-
-                foreach (Type argType in args)
-                {
-                    if (argType.IsValueType)
-                        hasValueType = true;
-
-                    argumentTypes.Add(argType);
-                }
-
-                if (hasValueType)
-                    methods.Add(new CreateMethod(isVoid, args));
             }
+        }
+
+        private static void GetMethodDetails(MethodInfo methodInfo, ref HashSet<Type> argumentTypes, ref HashSet<CreateMethod> methods)
+        {
+            if (methodInfo == null)
+                return;
+
+            var args = GetArgumentTypes(methodInfo.GetParameters());
+            bool isVoid = methodInfo.ReturnType == typeof(void);
+
+            if (!isVoid)
+            {
+                ArrayHelper.Add(ref args, methodInfo.ReturnType);
+            }
+
+            if (args.Length == 0)
+                return;
+
+            bool hasValueType = false;
+
+            foreach (Type argType in args)
+            {
+                if (argType.IsValueType)
+                    hasValueType = true;
+
+                argumentTypes.Add(argType);
+            }
+
+            if (hasValueType)
+                methods.Add(new CreateMethod(isVoid, args));
         }
 
         private static Type[] GetArgumentTypes(ParameterInfo[] parameters)
