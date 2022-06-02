@@ -30,7 +30,7 @@ namespace ExtEvents.OdinSerializer.Editor
 
     public static class AOTSupportUtilities
     {
-        public static void GenerateCode(HashSet<Type> types, ILGenerator il)
+        public static void GenerateCode(ILGenerator il, HashSet<Type> types)
         {
             var falseLocal = il.DeclareLocal(typeof(bool));
 

@@ -15,9 +15,23 @@ namespace ExtEvents
 #if UNITY_EDITOR
         static Converter()
         {
+            // Find all inheritors of the Converter<TFrom, TTo> class and add them to ConverterTypes.
+            foreach ((var fromToTypes, Type customConverterType) in GetCustomConverters())
+            {
+                if (ConverterTypes.TryGetValue(fromToTypes, out var converterType))
+                {
+                    Debug.LogWarning($"Two custom converters for the same pair of types: {converterType} and {customConverterType}");
+                    continue;
+                }
+
+                ConverterTypes.Add(fromToTypes, customConverterType);
+            }
+        }
+
+        public static IEnumerable<((Type from, Type to) fromToTypes, Type customConverter)> GetCustomConverters()
+        {
             var types = TypeCache.GetTypesDerivedFrom<Converter>();
 
-            // Find all inheritors of the Converter<TFrom, TTo> class and add them to ConverterTypes.
             foreach (Type type in types)
             {
                 if (type.IsGenericType || type.IsAbstract)
@@ -36,13 +50,7 @@ namespace ExtEvents
 
                 var fromToTypes = (genericArgs[0], genericArgs[1]);
 
-                if (ConverterTypes.TryGetValue(fromToTypes, out var converterType))
-                {
-                    Debug.LogWarning($"Two custom converters for the same pair of types: {converterType} and {type}");
-                    continue;
-                }
-
-                ConverterTypes.Add(fromToTypes, type);
+                yield return (fromToTypes, type);
             }
         }
 #endif

@@ -13,6 +13,8 @@
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
+    using UnityEngine;
+    using UnityEngine.Assertions;
 
     public static class AOTAssemblyGenerator
     {
@@ -75,26 +77,136 @@
 
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
 
-            var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
-
-            // TODO: process conversions
             GetCodeToGenerate(out var methods, out var argumentTypes, out var conversions);
-            CreateType(typeBuilder, methods, argumentTypes);
+            CreateUsageType(moduleBuilder, methods, argumentTypes); // create a type where all the generic classes are used to save them for IL2CPP.
 
-            typeBuilder.CreateType();
+            var runtimeInitializeConverters = CollectRuntimeInitializeConverters(conversions, moduleBuilder);
+            CreateRuntimeInitializedType(moduleBuilder, runtimeInitializeConverters);
+
             assemblyBuilder.Save(dllName);
         }
 
-        private static void CreateType(TypeBuilder typeBuilder, HashSet<CreateMethod> createMethods, HashSet<Type> argumentTypes)
+        private static List<(Type from, Type to, Type converterType)> CollectRuntimeInitializeConverters(HashSet<(Type from, Type to)> conversions, ModuleBuilder moduleBuilder)
         {
+            var customConverters = GetCustomConverters();
+            var runtimeInitializeConverters = new List<(Type from, Type to, Type converterType)>();
+
+            foreach ((Type from, Type to) types in conversions)
+            {
+                if (Converter.BuiltInConverters.ContainsKey(types))
+                    continue;
+
+                (Type from, Type to) = types;
+
+                if (customConverters.TryGetValue(types, out var customConverterType))
+                {
+                    runtimeInitializeConverters.Add((from, to, customConverterType));
+                    continue;
+                }
+
+                var implicitOperator = ImplicitConversionsCache.GetImplicitOperatorForTypes(from, to);
+                if (implicitOperator == null)
+                {
+                    Debug.LogWarning($"Found an ExtEvent with a generic argument of type {from} and a listener that requires type {to} but neither an implicit operator nor a custom converter was found for these types.");
+                    continue;
+                }
+
+                // TODO: use full type names in the class name instead of short ones.
+                var emittedConverterType = ConverterEmitter.EmitConverter(from, to, implicitOperator, moduleBuilder, "ExtEvents.AOTGenerated");
+                runtimeInitializeConverters.Add((from, to, emittedConverterType));
+            }
+
+            return runtimeInitializeConverters;
+        }
+
+        private static void CreateRuntimeInitializedType(ModuleBuilder moduleBuilder, List<(Type from, Type to, Type converterType)> converterTypes)
+        {
+            var typeBuilder = moduleBuilder.DefineType("ExtEvents.AOTGenerated", TypeAttributes.Public);
+
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
-                "AOTGeneration",
+                "OnLoad",
                 MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 typeof(void),
                 Type.EmptyTypes);
 
-            ILGenerator ilGenerator = methodBuilder.GetILGenerator();
+            // TODO: check which callback may be called earlier than AfterAssembliesLoaded
+            var initializeOnLoadConstructor = typeof(RuntimeInitializeOnLoadMethodAttribute).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(RuntimeInitializeLoadType) }, null);
+            // ReSharper disable once AssignNullToNotNullAttribute
+            methodBuilder.SetCustomAttribute(new CustomAttributeBuilder(initializeOnLoadConstructor, new object[] { RuntimeInitializeLoadType.AfterAssembliesLoaded }));
 
+            var getTypeFromHandle = new Func<RuntimeTypeHandle, Type>(Type.GetTypeFromHandle).Method;
+
+            var tupleConstructor = typeof(ValueTuple<Type, Type>).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(Type), typeof(Type) }, null);
+            Assert.IsNotNull(tupleConstructor);
+
+            var il = methodBuilder.GetILGenerator();
+
+            var converterTypesField = typeof(Converter).GetField(nameof(Converter.ConverterTypes),
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+            Assert.IsNotNull(converterTypesField);
+
+            var addMethod = new Action<(Type, Type), Type>(new Dictionary<(Type, Type), Type>().Add).Method;
+
+            il.Emit(OpCodes.Ldsfld, converterTypesField);
+            il.Emit(OpCodes.Dup);
+
+            foreach ((Type from, Type to, Type converterType) in converterTypes)
+            {
+                il.Emit(OpCodes.Ldtoken, from);
+                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
+
+                il.Emit(OpCodes.Ldtoken, to);
+                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
+
+                il.Emit(OpCodes.Newobj, tupleConstructor);
+
+                il.Emit(OpCodes.Ldtoken, converterType);
+                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
+                il.EmitCall(OpCodes.Callvirt, addMethod, null);
+            }
+
+            il.Emit(OpCodes.Ret);
+
+            typeBuilder.CreateType();
+        }
+
+        private static Dictionary<(Type fromType, Type toType), Type> GetCustomConverters()
+        {
+            var dictionary = new Dictionary<(Type fromType, Type toType), Type>();
+
+            foreach (((Type from, Type to) fromToTypes, Type customConverter) in Converter.GetCustomConverters())
+            {
+                if (!Converter.BuiltInConverters.ContainsKey(fromToTypes))
+                    dictionary.Add(fromToTypes, customConverter);
+            }
+
+            return dictionary;
+        }
+
+        private static void CreateUsageType(ModuleBuilder moduleBuilder, HashSet<CreateMethod> createMethods, HashSet<Type> argumentTypes)
+        {
+            var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
+            var ilGenerator = CreateStaticMethod(typeBuilder, "AOTGeneration");
+            EmitCreateMethodUsages(ilGenerator, createMethods);
+            EmitArgumentHolderUsages(ilGenerator, argumentTypes);
+            AOTSupportUtilities.GenerateCode(ilGenerator, argumentTypes);
+            ilGenerator.Emit(OpCodes.Ret);
+            typeBuilder.CreateType();
+        }
+
+        private static ILGenerator CreateStaticMethod(TypeBuilder typeBuilder, string methodName)
+        {
+            MethodBuilder methodBuilder = typeBuilder.DefineMethod(
+                methodName,
+                MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                typeof(void),
+                Type.EmptyTypes);
+
+            return methodBuilder.GetILGenerator();
+        }
+
+        private static void EmitCreateMethodUsages(ILGenerator ilGenerator, HashSet<CreateMethod> createMethods)
+        {
             foreach (var createMethod in createMethods)
             {
                 ilGenerator.Emit(OpCodes.Ldnull);
@@ -102,7 +214,10 @@
                 ilGenerator.EmitCall(OpCodes.Call, PersistentListener.InvokableCallCreator.GetCreateMethod(createMethod.Args, createMethod.IsVoid), null);
                 ilGenerator.Emit(OpCodes.Pop);
             }
+        }
 
+        private static void EmitArgumentHolderUsages(ILGenerator ilGenerator, HashSet<Type> argumentTypes)
+        {
             var genericArgs = new Type[1];
             var throwAwayVariable = ilGenerator.DeclareLocal(typeof(ArgumentHolder));
 
@@ -115,10 +230,6 @@
                 ilGenerator.Emit(OpCodes.Newobj, constructor);
                 ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
             }
-
-            AOTSupportUtilities.GenerateCode(argumentTypes, ilGenerator);
-
-            ilGenerator.Emit(OpCodes.Ret);
         }
 
         private static void GetCodeToGenerate(out HashSet<CreateMethod> methods, out HashSet<Type> argumentTypes, out HashSet<(Type from, Type to)> conversions)

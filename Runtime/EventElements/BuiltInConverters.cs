@@ -6,7 +6,7 @@
 
     public partial class Converter
     {
-        public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>()
+        public static readonly Dictionary<(Type from, Type to), Type> BuiltInConverters = new Dictionary<(Type from, Type to), Type>()
         {
             { (typeof(sbyte), typeof(short)), typeof(sbyte_short_Converter) },
             { (typeof(sbyte), typeof(int)), typeof(sbyte_int_Converter) },
@@ -68,6 +68,8 @@
             { (typeof(nuint), typeof(double)), typeof(nuint_double_Converter) },
             { (typeof(nuint), typeof(decimal)), typeof(nuint_decimal_Converter) },
         };
+
+        public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>(BuiltInConverters);
     }
 
     internal class sbyte_short_Converter : Converter
