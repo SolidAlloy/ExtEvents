@@ -101,6 +101,54 @@
             }
         }
 
+        public static void CreateAssemblyDefinition()
+        {
+            string asmDefPath = $"{FolderPath}/ExtEvents.AOTGenerated.asmdef";
+            File.WriteAllText(asmDefPath, AsmDefContent);
+            AssetDatabase.ImportAsset(asmDefPath);
+            string scriptPath = $"{FolderPath}/LoadConverterTypes.cs";
+            File.WriteAllText(scriptPath, ScriptContent);
+            AssetDatabase.ImportAsset(scriptPath);
+        }
+
+        private const string AsmDefContent =
+@"{
+    ""name"": ""ExtEvents.AOTGenerated"",
+        ""rootNamespace"": """",
+        ""references"": [],
+        ""includePlatforms"": [],
+        ""excludePlatforms"": [
+        ""Editor""
+        ],
+        ""allowUnsafeCode"": false,
+        ""overrideReferences"": true,
+        ""precompiledReferences"": [
+        ""z_ExtEvents_AOTGeneration.dll""
+        ],
+        ""autoReferenced"": false,
+        ""defineConstraints"": [],
+        ""versionDefines"": [],
+        ""noEngineReferences"": false
+    }";
+
+        private const string ScriptContent =
+@"#if !UNITY_EDITOR
+using ExtEvents;
+using UnityEngine;
+using UnityEngine.Scripting;
+
+public static class LoadConverterTypes
+{
+    // AfterAssembliesLoaded should be early enough that no one invokes ExtEvent. But if it's not early enough, we might try SubsystemRegistration, it runs even before that.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded), Preserve]
+    public static void OnLoad()
+    {
+        AOTGeneratedType.OnLoad();
+    }
+}
+#endif
+";
+
         public static void CreateLinkXml(Dictionary<string, List<string>> typesToPreserve)
         {
             const string tab = "    ";

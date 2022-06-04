@@ -81,6 +81,8 @@
 
             // Create a type that adds all the converter types to a dictionary on start.
             AOTAssemblyGenerator.CreateRuntimeInitializedType(moduleBuilder, runtimeInitializeConverters);
+            // Create a script that will call a method from the emitted type because if we declare RuntimeInitializeOnLoad attribute inside the emitted assembly, it will have no effect.
+            AOTAssemblyGenerator.CreateAssemblyDefinition();
 
             if (scriptingBackend != ScriptingImplementation.IL2CPP)
             {
