@@ -192,8 +192,8 @@ namespace ExtEvents
 #else
             if (_argumentHolder == null)
             {
-                _argumentHolder = CreateArgumentHolder(_type);
-                _argumentHolder.Value = CustomSerialization.DeserializeValue(_type, _serializationData);
+                _argumentHolder = CreateArgumentHolder(_targetType);
+                _argumentHolder.Value = CustomSerialization.DeserializeValue(_targetType, _serializationData);
             }
 #endif
         }

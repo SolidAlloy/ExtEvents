@@ -111,7 +111,6 @@
                     continue;
                 }
 
-                // TODO: use full type names in the class name instead of short ones.
                 var emittedConverterType = ConverterEmitter.EmitConverter(from, to, implicitOperator, moduleBuilder, "ExtEvents.AOTGenerated");
                 runtimeInitializeConverters.Add((from, to, emittedConverterType));
             }
@@ -121,7 +120,7 @@
 
         private static void CreateRuntimeInitializedType(ModuleBuilder moduleBuilder, List<(Type from, Type to, Type converterType)> converterTypes)
         {
-            var typeBuilder = moduleBuilder.DefineType("ExtEvents.AOTGenerated", TypeAttributes.Public);
+            var typeBuilder = moduleBuilder.DefineType("ExtEvents.AOTGeneratedType", TypeAttributes.Public);
 
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
                 "OnLoad",
@@ -129,8 +128,8 @@
                 typeof(void),
                 Type.EmptyTypes);
 
-            // TODO: check which callback may be called earlier than AfterAssembliesLoaded
             var initializeOnLoadConstructor = typeof(RuntimeInitializeOnLoadMethodAttribute).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(RuntimeInitializeLoadType) }, null);
+            // AfterAssembliesLoaded should be early enough that no one invokes ExtEvent. But if it's not early enough, we might try SubsystemRegistration, it runs even before that.
             // ReSharper disable once AssignNullToNotNullAttribute
             methodBuilder.SetCustomAttribute(new CustomAttributeBuilder(initializeOnLoadConstructor, new object[] { RuntimeInitializeLoadType.AfterAssembliesLoaded }));
 

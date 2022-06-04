@@ -37,10 +37,11 @@ var types = new (string fromType, string[] toTypes)[]
     using System;
     using System.Collections.Generic;
     using System.Runtime.CompilerServices;
+    using UnityEngine.Scripting;
 
     public partial class Converter
     {
-        public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>()
+        public static readonly Dictionary<(Type from, Type to), Type> BuiltInConverters = new Dictionary<(Type from, Type to), Type>()
         {
 <#
 foreach ((string fromType, var toTypes) in types)
@@ -54,6 +55,8 @@ foreach ((string fromType, var toTypes) in types)
 }
 #>
         };
+
+        public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>(BuiltInConverters);
     }
 <#
 foreach ((string fromType, var toTypes) in types)

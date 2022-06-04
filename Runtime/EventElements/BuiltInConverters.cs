@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Runtime.CompilerServices;
+    using UnityEngine.Scripting;
 
     public partial class Converter
     {
@@ -72,6 +73,7 @@
         public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>(BuiltInConverters);
     }
 
+    [Preserve]
     internal class sbyte_short_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -81,6 +83,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_int_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -90,6 +93,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -99,6 +103,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -108,6 +113,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -117,6 +123,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -126,6 +133,7 @@
         }
     }
 
+    [Preserve]
     internal class sbyte_nint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -135,6 +143,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_short_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -144,6 +153,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_ushort_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -153,6 +163,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_int_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -162,6 +173,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_uint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -171,6 +183,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -180,6 +193,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_ulong_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -189,6 +203,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -198,6 +213,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -207,6 +223,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -216,6 +233,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_nint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -225,6 +243,7 @@
         }
     }
 
+    [Preserve]
     internal class byte_nuint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -234,6 +253,7 @@
         }
     }
 
+    [Preserve]
     internal class short_int_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -243,6 +263,7 @@
         }
     }
 
+    [Preserve]
     internal class short_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -252,6 +273,7 @@
         }
     }
 
+    [Preserve]
     internal class short_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -261,6 +283,7 @@
         }
     }
 
+    [Preserve]
     internal class short_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -270,6 +293,7 @@
         }
     }
 
+    [Preserve]
     internal class short_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -279,6 +303,7 @@
         }
     }
 
+    [Preserve]
     internal class short_nint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -288,6 +313,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_int_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -297,6 +323,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_uint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -306,6 +333,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -315,6 +343,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_ulong_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -324,6 +353,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -333,6 +363,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -342,6 +373,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -351,6 +383,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_nint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -360,6 +393,7 @@
         }
     }
 
+    [Preserve]
     internal class ushort_nuint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -369,6 +403,7 @@
         }
     }
 
+    [Preserve]
     internal class int_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -378,6 +413,7 @@
         }
     }
 
+    [Preserve]
     internal class int_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -387,6 +423,7 @@
         }
     }
 
+    [Preserve]
     internal class int_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -396,6 +433,7 @@
         }
     }
 
+    [Preserve]
     internal class int_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -405,6 +443,7 @@
         }
     }
 
+    [Preserve]
     internal class int_nint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -414,6 +453,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -423,6 +463,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_ulong_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -432,6 +473,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -441,6 +483,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -450,6 +493,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -459,6 +503,7 @@
         }
     }
 
+    [Preserve]
     internal class uint_nuint_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -468,6 +513,7 @@
         }
     }
 
+    [Preserve]
     internal class long_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -477,6 +523,7 @@
         }
     }
 
+    [Preserve]
     internal class long_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -486,6 +533,7 @@
         }
     }
 
+    [Preserve]
     internal class long_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -495,6 +543,7 @@
         }
     }
 
+    [Preserve]
     internal class ulong_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -504,6 +553,7 @@
         }
     }
 
+    [Preserve]
     internal class ulong_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -513,6 +563,7 @@
         }
     }
 
+    [Preserve]
     internal class ulong_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -522,6 +573,7 @@
         }
     }
 
+    [Preserve]
     internal class float_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -531,6 +583,7 @@
         }
     }
 
+    [Preserve]
     internal class nint_long_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -540,6 +593,7 @@
         }
     }
 
+    [Preserve]
     internal class nint_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -549,6 +603,7 @@
         }
     }
 
+    [Preserve]
     internal class nint_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -558,6 +613,7 @@
         }
     }
 
+    [Preserve]
     internal class nint_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -567,6 +623,7 @@
         }
     }
 
+    [Preserve]
     internal class nuint_ulong_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -576,6 +633,7 @@
         }
     }
 
+    [Preserve]
     internal class nuint_float_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -585,6 +643,7 @@
         }
     }
 
+    [Preserve]
     internal class nuint_double_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -594,6 +653,7 @@
         }
     }
 
+    [Preserve]
     internal class nuint_decimal_Converter : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)

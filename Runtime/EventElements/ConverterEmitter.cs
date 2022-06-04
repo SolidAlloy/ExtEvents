@@ -10,6 +10,7 @@ namespace ExtEvents
     using System.Globalization;
     using System.Reflection;
     using System.Reflection.Emit;
+    using SolidUtilities;
 
     public static class ConverterEmitter
     {
@@ -39,13 +40,13 @@ namespace ExtEvents
         public static Type EmitConverter(Type fromType, Type toType, MethodInfo implicitOperator, ModuleBuilder moduleBuilder, string namespaceName)
         {
             TypeBuilder typeBuilder = moduleBuilder.DefineType(
-                $"{namespaceName}.{fromType.Name}_{toType.Name}_Converter",
+                $"{namespaceName}.{fromType.FullName.MakeClassFriendly()}_{toType.FullName.MakeClassFriendly()}_Converter",
                 TypeAttributes.Public, typeof(Converter));
 
             // emit code for the type here.
             var methodBuilder = typeBuilder.DefineMethod(nameof(Converter.Convert),
                 MethodAttributes.Public | MethodAttributes.ReuseSlot | MethodAttributes.Virtual |
-                MethodAttributes.HideBySig, typeof(void*), new[] {typeof(void*)});
+                MethodAttributes.HideBySig, typeof(void*), new[] { typeof(void*) });
 
             var il = methodBuilder.GetILGenerator();
 

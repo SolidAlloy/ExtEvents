@@ -9,7 +9,9 @@ namespace ExtEvents
     using System.Runtime.CompilerServices;
     using UnityEditor;
     using UnityEngine;
+    using UnityEngine.Scripting;
 
+    [RequireDerived]
     public abstract partial class Converter
     {
 #if UNITY_EDITOR
@@ -90,7 +92,7 @@ namespace ExtEvents
                 ConverterTypes.Add(types, converterType);
 #else
 #pragma warning disable CS0618
-                throw new ExecutionEngineException("Attempting to convert types that don't have a converter generated ahead of time (AOT).");
+                throw new ExecutionEngineException($"Attempting to convert types {{{from}, {to}}} that don't have a converter generated ahead of time (AOT).");
 #pragma warning restore CS0618
 #endif
             }
@@ -103,6 +105,7 @@ namespace ExtEvents
         public abstract unsafe void* Convert(void* sourceTypePointer);
     }
 
+    // TODO: write small documentation here
     public abstract class Converter<TFrom, TTo> : Converter
     {
         public override unsafe void* Convert(void* sourceTypePointer)
@@ -113,12 +116,4 @@ namespace ExtEvents
 
         protected abstract TTo Convert(TFrom from);
     }
-
-    // public class ExampleConverter : Converter<float, int>
-    // {
-    //     protected override int Convert(float from)
-    //     {
-    //         return (int) from;
-    //     }
-    // }
 }
