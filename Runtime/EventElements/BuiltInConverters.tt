@@ -65,12 +65,15 @@ foreach ((string fromType, var toTypes) in types)
     {
 #>
 
+    [Preserve]
     internal class <#=fromType#>_<#=toType#>_Converter : Converter
     {
+        private <#=toType#> _arg;
+
         public override unsafe void* Convert(void* sourceTypePointer)
         {
-            <#=toType#> arg = Unsafe.Read<<#=fromType#>>(sourceTypePointer);
-            return Unsafe.AsPointer(ref arg);
+            _arg = Unsafe.Read<<#=fromType#>>(sourceTypePointer);
+            return Unsafe.AsPointer(ref _arg);
         }
     }
 <#

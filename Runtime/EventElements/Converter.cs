@@ -9,9 +9,7 @@ namespace ExtEvents
     using System.Runtime.CompilerServices;
     using UnityEditor;
     using UnityEngine;
-    using UnityEngine.Scripting;
 
-    [RequireDerived]
     public abstract partial class Converter
     {
 #if UNITY_EDITOR
@@ -108,10 +106,12 @@ namespace ExtEvents
     // TODO: write small documentation here
     public abstract class Converter<TFrom, TTo> : Converter
     {
+        private TTo _arg;
+
         public override unsafe void* Convert(void* sourceTypePointer)
         {
-            TTo arg = Convert(Unsafe.Read<TFrom>(sourceTypePointer));
-            return Unsafe.AsPointer(ref arg);
+            _arg = Convert(Unsafe.Read<TFrom>(sourceTypePointer));
+            return Unsafe.AsPointer(ref _arg);
         }
 
         protected abstract TTo Convert(TFrom from);

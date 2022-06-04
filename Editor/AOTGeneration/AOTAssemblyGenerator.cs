@@ -128,11 +128,6 @@
                 typeof(void),
                 Type.EmptyTypes);
 
-            var initializeOnLoadConstructor = typeof(RuntimeInitializeOnLoadMethodAttribute).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(RuntimeInitializeLoadType) }, null);
-            // AfterAssembliesLoaded should be early enough that no one invokes ExtEvent. But if it's not early enough, we might try SubsystemRegistration, it runs even before that.
-            // ReSharper disable once AssignNullToNotNullAttribute
-            methodBuilder.SetCustomAttribute(new CustomAttributeBuilder(initializeOnLoadConstructor, new object[] { RuntimeInitializeLoadType.AfterAssembliesLoaded }));
-
             var getTypeFromHandle = new Func<RuntimeTypeHandle, Type>(Type.GetTypeFromHandle).Method;
 
             var tupleConstructor = typeof(ValueTuple<Type, Type>).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(Type), typeof(Type) }, null);

@@ -43,6 +43,8 @@ namespace ExtEvents
                 $"{namespaceName}.{fromType.FullName.MakeClassFriendly()}_{toType.FullName.MakeClassFriendly()}_Converter",
                 TypeAttributes.Public, typeof(Converter));
 
+            var fieldBuilder = typeBuilder.DefineField("_arg", toType, FieldAttributes.Private);
+
             // emit code for the type here.
             var methodBuilder = typeBuilder.DefineMethod(nameof(Converter.Convert),
                 MethodAttributes.Public | MethodAttributes.ReuseSlot | MethodAttributes.Virtual |
@@ -50,20 +52,18 @@ namespace ExtEvents
 
             var il = methodBuilder.GetILGenerator();
 
-            // Since we are working with Unsafe, this code is not easily interpreted by compiler.
-            // We have to declare local values by ourselves.
-            var localBuilder = il.DeclareLocal(toType);
+            il.Emit(OpCodes.Ldarg_0); // this
+            il.Emit(OpCodes.Ldarg_1); // from-type pointer
 
-            il.Emit(OpCodes.Ldarg_1);
-
-            // inlined Unsafe.Read<T>()
-            il.Emit(OpCodes.Ldobj, fromType);
+            il.Emit(OpCodes.Ldobj, fromType); // inlined Unsafe.Read<T>()
             il.EmitCall(OpCodes.Call, implicitOperator, null);
 
-            // Instead of calling Unsafe.AsPointer, we inline it and call the instructions directly here.
-            il.Emit(OpCodes.Stloc_0);
-            // Instead of writing ldloca_s, we have to pass localBuilder manually.
-            il.Emit(OpCodes.Ldloca, localBuilder);
+            // save to a field. This is necessary so that when we get a pointer to the object, it isn't destroyed.
+            il.Emit(OpCodes.Stfld, fieldBuilder);
+
+            il.Emit(OpCodes.Ldarg_0); // this
+            il.Emit(OpCodes.Ldflda, fieldBuilder); // ref _arg
+
             il.Emit(OpCodes.Conv_U); // inlined Unsafe.AsPointer()
             il.Emit(OpCodes.Ret);
             Type type = typeBuilder.CreateType();
