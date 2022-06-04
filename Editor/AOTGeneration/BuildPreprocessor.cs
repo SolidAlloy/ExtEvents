@@ -1,10 +1,12 @@
 ﻿namespace ExtEvents.Editor
 {
-    using System.IO;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using SolidUtilities.Editor;
     using UnityEditor;
     using UnityEditor.Build;
     using UnityEditor.Build.Reporting;
-    using UnityEngine;
 
     public class BuildPreprocessor : IPreprocessBuildWithReport
     {
@@ -12,15 +14,81 @@
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            CreateLinkXml();
+            var scriptingBackend = PlayerSettings.GetScriptingBackend(EditorUserBuildSettings.selectedBuildTargetGroup);
+            var buildTarget = EditorUserBuildSettings.selectedBuildTargetGroup;
 
-            if (PlayerSettings.GetScriptingBackend(EditorUserBuildSettings.selectedBuildTargetGroup) !=
-                ScriptingImplementation.IL2CPP)
+            using var _ = AssetDatabaseHelper.DisabledScope();
+            AOTAssemblyGenerator.StartCreatingAssembly(out var assemblyBuilder, out var moduleBuilder, out string dllName);
+
+            // emit custom converters and link.xml for them.
+            var customConverters = AOTAssemblyGenerator.GetCustomConverters();
+
+            // all converters except for built-in need to be added to a dictionary of converter types.
+            // To do that, we emit a method that uses the RuntimeInitializeOnLoad attribute and adds all the converters when the game starts.
+            var runtimeInitializeConverters = new List<(Type from, Type to, Type converterType)>();
+
+            // Built-in converters already have the Preserve attribute.
+            // Emitted converters are added to the assembly which is preserved through link.xml
+            // For custom converters, however, we can't guarantee that they are preserved, so they have to be added to link.xml separately.
+            // A key for the dictionary is the assembly name, the value is all the types that need to be preserved in that assembly.
+            var typesToPreserve = new Dictionary<string, List<string>>();
+
+            // Add custom converter type to runtimeInitializeConverters, so that they are added to a dictionary of converter types on start,
+            // and add them to typesToPreserve so that they are added to link.xml
+            foreach (var keyValue in customConverters)
             {
-                AOTAssemblyGenerator.DeleteGeneratedFolder();
+                var customConverterType = keyValue.Value;
+
+                runtimeInitializeConverters.Add((keyValue.Key.fromType, keyValue.Key.toType, customConverterType));
+
+                string assemblyName = customConverterType.Assembly.GetName().Name;
+                if (!typesToPreserve.TryGetValue(assemblyName, out var preservedTypes))
+                {
+                    preservedTypes = new List<string>();
+                    typesToPreserve.Add(assemblyName, preservedTypes);
+                }
+
+                preservedTypes.Add(customConverterType.FullName);
+            }
+
+            AOTAssemblyGenerator.CreateLinkXml(typesToPreserve);
+
+            List<SerializedProperty> listenerProperties = null;
+
+            // If we can't emit code in builds, emit all the types we will need ahead of time.
+            if (scriptingBackend == ScriptingImplementation.IL2CPP || buildTarget != BuildTargetGroup.Standalone)
+            {
+                // Get listener properties and save them in an outside scope because we might need them later, and we don't want to search for them again.
+                var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
+                var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
+                listenerProperties = ExtEventProjectSearcher.GetListeners(extEventProperties).ToList();
+
+                var conversions = new HashSet<(Type from, Type to)>();
+
+                foreach (var listenerProperty in listenerProperties)
+                {
+                    foreach (var types in ExtEventProjectSearcher.GetNonMatchingArgumentTypes(listenerProperty))
+                    {
+                        conversions.Add(types);
+                    }
+                }
+
+                foreach (var types in AOTAssemblyGenerator.EmitImplicitConverters(moduleBuilder, customConverters, conversions))
+                {
+                    runtimeInitializeConverters.Add(types);
+                }
+            }
+
+            // Create a type that adds all the converter types to a dictionary on start.
+            AOTAssemblyGenerator.CreateRuntimeInitializedType(moduleBuilder, runtimeInitializeConverters);
+
+            if (scriptingBackend != ScriptingImplementation.IL2CPP)
+            {
+                AOTAssemblyGenerator.FinishCreatingAssembly(assemblyBuilder, dllName);
                 return;
             }
 
+            // if IL2CPP setting and OptimizeSpeed, emit generic types usage.
 #if UNITY_2021_2_OR_NEWER
             var codeGeneration =
     #if UNITY_2022
@@ -29,38 +97,14 @@
                 EditorUserBuildSettings.il2CppCodeGeneration;
     #endif
 
-            switch (codeGeneration)
-            {
-                case Il2CppCodeGeneration.OptimizeSpeed:
-                    AOTAssemblyGenerator.GenerateCreateMethods();
-                    break;
-                case Il2CppCodeGeneration.OptimizeSize:
-                    AOTAssemblyGenerator.DeleteGeneratedFolder();
-                    break;
-                default:
-                    Debug.LogWarning($"Unknown value of IL2CPP Code Generation: {codeGeneration}");
-                    break;
-            }
+            // listenerProperties will be initialized for sure here because we initialized inside an if statement that always runs if the scripting backend is IL2CPP.
+            if (codeGeneration == Il2CppCodeGeneration.OptimizeSpeed)
+                AOTAssemblyGenerator.EmitGenericTypesUsage(moduleBuilder, listenerProperties);
 #else
-            AOTAssemblyGenerator.GenerateCreateMethods();
+            AOTAssemblyGenerator.EmitGenericTypesUsage(moduleBuilder, listenerProperties);
 #endif
-        }
 
-        private void CreateLinkXml()
-        {
-            if (!Directory.Exists(PackageSettings.PluginsPath))
-            {
-                Directory.CreateDirectory(PackageSettings.PluginsPath);
-            }
-
-            string linkXmlPath = $"{PackageSettings.PluginsPath}/link.xml";
-
-            if (File.Exists(linkXmlPath))
-                return;
-
-            // preserve the OdinSerializer assembly because it has a lot of code that is invoked through reflection and we are lazy to write [Preserve] all over the place.
-            File.WriteAllText(linkXmlPath, "<linker>\n    <assembly fullname=\"ExtEvents.OdinSerializer\" preserve=\"all\"/>\n</linker>");
-            AssetDatabase.ImportAsset(linkXmlPath);
+            AOTAssemblyGenerator.FinishCreatingAssembly(assemblyBuilder, dllName);
         }
     }
 }

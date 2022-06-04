@@ -8,36 +8,90 @@
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
+    using System.Text;
     using OdinSerializer;
     using OdinSerializer.Editor;
     using SolidUtilities;
     using SolidUtilities.Editor;
     using UnityEditor;
     using UnityEngine;
-    using UnityEngine.Assertions;
+    using Assert = UnityEngine.Assertions.Assert;
 
     public static class AOTAssemblyGenerator
     {
         private const string FolderPath = PackageSettings.PluginsPath + "/AOT Generation";
         private const string AssemblyName = "z_ExtEvents_AOTGeneration";
 
-        public static void GenerateCreateMethods()
+        public static void EmitGenericTypesUsage(ModuleBuilder moduleBuilder, IEnumerable<SerializedProperty> listenerProperties)
         {
-            string dllName = $"{AssemblyName}.dll";
-            string assemblyPath = $"{FolderPath}/{dllName}";
-            bool folderExists = Directory.Exists(FolderPath);
+            // get code that needs to be generated
+            var methods = new HashSet<CreateMethod>();
+            var argumentTypes = new HashSet<Type>();
 
-            using var _ = AssetDatabaseHelper.DisabledScope();
-
-            if (!folderExists)
+            foreach (var listenerProperty in listenerProperties)
             {
-                Directory.CreateDirectory(FolderPath);
-                CreateLinkXml(FolderPath);
+                var methodInfo = ExtEventProjectSearcher.GetMethod(listenerProperty);
+                GetMethodDetails(methodInfo, ref argumentTypes, ref methods);
             }
 
-            CreateAssembly(dllName, FolderPath);
+            CreateUsageType(moduleBuilder, methods, argumentTypes); // create a type where all the generic classes are used to save them for IL2CPP.
+        }
 
-            if (folderExists)
+        public static IEnumerable<(Type from, Type to, Type emittedConverterType)> EmitImplicitConverters(ModuleBuilder moduleBuilder, Dictionary<(Type from, Type to), Type> customConverters, IEnumerable<(Type from, Type to)> conversions)
+        {
+            foreach ((Type from, Type to) types in conversions)
+            {
+                if (Converter.BuiltInConverters.ContainsKey(types) || customConverters.ContainsKey(types))
+                    continue;
+
+                (Type from, Type to) = types;
+
+                // For converters that have to be emitted, emit them and add to the list of converters that have to be added to a dictionary of converter types on start.
+                var implicitOperator = ImplicitConversionsCache.GetImplicitOperatorForTypes(from, to);
+                if (implicitOperator == null)
+                {
+                    Debug.LogWarning($"Found an ExtEvent with a generic argument of type {from} and a listener that requires type {to} but neither an implicit operator nor a custom converter was found for these types.");
+                    continue;
+                }
+
+                var emittedConverterType = ConverterEmitter.EmitConverter(from, to, implicitOperator, moduleBuilder, "ExtEvents.AOTGenerated");
+                yield return (from, to, emittedConverterType);
+            }
+        }
+
+        public static void StartCreatingAssembly(out AssemblyBuilder assemblyBuilder, out ModuleBuilder moduleBuilder, out string dllName)
+        {
+            dllName = $"{AssemblyName}.dll";
+
+            if (!Directory.Exists(FolderPath))
+            {
+                Directory.CreateDirectory(FolderPath);
+            }
+
+            assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
+                new AssemblyName(AssemblyName)
+                {
+                    CultureInfo = CultureInfo.InvariantCulture,
+                    Flags = AssemblyNameFlags.None,
+                    ProcessorArchitecture = ProcessorArchitecture.MSIL,
+                    VersionCompatibility = AssemblyVersionCompatibility.SameDomain
+                },
+                AssemblyBuilderAccess.RunAndSave, FolderPath);
+
+            // ReSharper disable once AssignNullToNotNullAttribute
+            assemblyBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(EmittedAssemblyAttribute).GetConstructor(Type.EmptyTypes), Array.Empty<object>()));
+
+            moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
+        }
+
+        public static void FinishCreatingAssembly(AssemblyBuilder assemblyBuilder, string dllName)
+        {
+            string assemblyPath = $"{FolderPath}/{dllName}";
+
+            // finish creating the assembly
+            assemblyBuilder.Save(dllName);
+
+            if (File.Exists($"{assemblyPath}.meta"))
             {
                 AssetDatabase.ImportAsset(assemblyPath, ImportAssetOptions.ForceUpdate);
             }
@@ -47,78 +101,36 @@
             }
         }
 
-        public static void DeleteGeneratedFolder()
+        public static void CreateLinkXml(Dictionary<string, List<string>> typesToPreserve)
         {
-            if (Directory.Exists(FolderPath))
-                AssetDatabase.DeleteAsset(FolderPath);
-        }
+            const string tab = "    ";
 
-        private static void CreateLinkXml(string folderPath)
-        {
-            string linkXmlPath = $"{folderPath}/link.xml";
-            File.WriteAllText(linkXmlPath, $"<linker>\n    <assembly fullname=\"{AssemblyName}\" preserve=\"all\"/>\n</linker>");
+            var stringBuilder = new StringBuilder(string.Empty, 81);
+            stringBuilder.AppendLine("<linker>");
+            // preserve the OdinSerializer assembly because it has a lot of code that is invoked through reflection and we are lazy to write [Preserve] all over the place.
+            stringBuilder.AppendLine($"{tab}<assembly fullname=\"ExtEvents.OdinSerializer\" preserve=\"all\"/>");
+            stringBuilder.AppendLine($"{tab}<assembly fullname=\"{AssemblyName}\" preserve=\"all\"/>");
+
+            foreach (var assemblyTypes in typesToPreserve)
+            {
+                stringBuilder.AppendLine($"{tab}<assembly fullname=\"{assemblyTypes.Key}\">");
+
+                foreach (string typeName in assemblyTypes.Value)
+                {
+                    stringBuilder.AppendLine($"{tab}{tab}<type fullname=\"{typeName}\" preserve=\"all\"/>");
+                }
+
+                stringBuilder.AppendLine($"{tab}</assembly>");
+            }
+
+            stringBuilder.AppendLine("</linker>");
+
+            string linkXmlPath = $"{FolderPath}/link.xml";
+            File.WriteAllText(linkXmlPath, stringBuilder.ToString());
             AssetDatabase.ImportAsset(linkXmlPath);
         }
 
-        private static void CreateAssembly(string dllName, string folderPath)
-        {
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
-                new AssemblyName(AssemblyName)
-                {
-                    CultureInfo = CultureInfo.InvariantCulture,
-                    Flags = AssemblyNameFlags.None,
-                    ProcessorArchitecture = ProcessorArchitecture.MSIL,
-                    VersionCompatibility = AssemblyVersionCompatibility.SameDomain
-                },
-                AssemblyBuilderAccess.RunAndSave, folderPath);
-
-            // ReSharper disable once AssignNullToNotNullAttribute
-            assemblyBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(EmittedAssemblyAttribute).GetConstructor(Type.EmptyTypes), Array.Empty<object>()));
-
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule(dllName, false);
-
-            GetCodeToGenerate(out var methods, out var argumentTypes, out var conversions);
-            CreateUsageType(moduleBuilder, methods, argumentTypes); // create a type where all the generic classes are used to save them for IL2CPP.
-
-            var runtimeInitializeConverters = CollectRuntimeInitializeConverters(conversions, moduleBuilder);
-            CreateRuntimeInitializedType(moduleBuilder, runtimeInitializeConverters);
-
-            assemblyBuilder.Save(dllName);
-        }
-
-        private static List<(Type from, Type to, Type converterType)> CollectRuntimeInitializeConverters(HashSet<(Type from, Type to)> conversions, ModuleBuilder moduleBuilder)
-        {
-            var customConverters = GetCustomConverters();
-            var runtimeInitializeConverters = new List<(Type from, Type to, Type converterType)>();
-
-            foreach ((Type from, Type to) types in conversions)
-            {
-                if (Converter.BuiltInConverters.ContainsKey(types))
-                    continue;
-
-                (Type from, Type to) = types;
-
-                if (customConverters.TryGetValue(types, out var customConverterType))
-                {
-                    runtimeInitializeConverters.Add((from, to, customConverterType));
-                    continue;
-                }
-
-                var implicitOperator = ImplicitConversionsCache.GetImplicitOperatorForTypes(from, to);
-                if (implicitOperator == null)
-                {
-                    Debug.LogWarning($"Found an ExtEvent with a generic argument of type {from} and a listener that requires type {to} but neither an implicit operator nor a custom converter was found for these types.");
-                    continue;
-                }
-
-                var emittedConverterType = ConverterEmitter.EmitConverter(from, to, implicitOperator, moduleBuilder, "ExtEvents.AOTGenerated");
-                runtimeInitializeConverters.Add((from, to, emittedConverterType));
-            }
-
-            return runtimeInitializeConverters;
-        }
-
-        private static void CreateRuntimeInitializedType(ModuleBuilder moduleBuilder, List<(Type from, Type to, Type converterType)> converterTypes)
+        public static void CreateRuntimeInitializedType(ModuleBuilder moduleBuilder, List<(Type from, Type to, Type converterType)> converterTypes)
         {
             var typeBuilder = moduleBuilder.DefineType("ExtEvents.AOTGeneratedType", TypeAttributes.Public);
 
@@ -164,7 +176,7 @@
             typeBuilder.CreateType();
         }
 
-        private static Dictionary<(Type fromType, Type toType), Type> GetCustomConverters()
+        public static Dictionary<(Type fromType, Type toType), Type> GetCustomConverters()
         {
             var dictionary = new Dictionary<(Type fromType, Type toType), Type>();
 
@@ -223,28 +235,6 @@
                 // ReSharper disable once AssignNullToNotNullAttribute
                 ilGenerator.Emit(OpCodes.Newobj, constructor);
                 ilGenerator.Emit(OpCodes.Stloc, throwAwayVariable);
-            }
-        }
-
-        private static void GetCodeToGenerate(out HashSet<CreateMethod> methods, out HashSet<Type> argumentTypes, out HashSet<(Type from, Type to)> conversions)
-        {
-            methods = new HashSet<CreateMethod>();
-            argumentTypes = new HashSet<Type>();
-            conversions = new HashSet<(Type from, Type to)>();
-
-            var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
-            var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
-            var listenerProperties = ExtEventProjectSearcher.GetListeners(extEventProperties);
-
-            foreach (var listenerProperty in listenerProperties)
-            {
-                var methodInfo = ExtEventProjectSearcher.GetMethod(listenerProperty);
-                GetMethodDetails(methodInfo, ref argumentTypes, ref methods);
-
-                foreach (var types in ExtEventProjectSearcher.GetNonMatchingArgumentTypes(listenerProperty))
-                {
-                    conversions.Add(types);
-                }
             }
         }
 
