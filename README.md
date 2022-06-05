@@ -7,16 +7,17 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 
 ### Feature Comparison
 
-|                            | UnityEvent                                              | UltEvent                                  | ExtEvent                                                     |
-| -------------------------- | ------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
-| Serialized parameter types | :x: A small number of types: Object, bool, string, etc. | :warning:More types: Enum, Vector2, Rect  | :white_check_mark: **Any serializable parameter shows up in the inspector with the correct UI** |
-| Number of parameters       | :x: 0 or 1                                              | :white_check_mark: Up to 4                | :white_check_mark: **Up to 4**                               |
-| Static methods             | :x: No                                                  | :white_check_mark: Yes                    | :white_check_mark: **Yes**                                   |
-| Non-void methods           | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ smart filtration system)**       |
-| Non-public methods         | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ flexible options to show/hide such methods)** |
-| Performance                | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Very Fast**                             |
-| Method Dropdown            | :x: All methods in one GenericMenu list                 | :warning:GenericMenu with a few sub-menus | :white_check_mark: **Scrollable list with a search field and folders** |
-| Finding renamed types      | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
+|                              | UnityEvent                                              | UltEvent                                  | ExtEvent                                                     |
+| ---------------------------- | ------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Serialized parameter types   | :x: A small number of types: Object, bool, string, etc. | :warning:More types: Enum, Vector2, Rect  | :white_check_mark: **Any serializable parameter shows up in the inspector with the correct UI** |
+| Number of parameters         | :x: 0 or 1                                              | :white_check_mark: Up to 4                | :white_check_mark: **Up to 4**                               |
+| Static methods               | :x: No                                                  | :white_check_mark: Yes                    | :white_check_mark: **Yes**                                   |
+| Non-void methods             | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ smart filtration system)**       |
+| Non-public methods           | :x: No                                                  | :warning:Yes                              | :white_check_mark: **Yes (+ flexible options to show/hide such methods)** |
+| Performance                  | :white_check_mark: Fast                                 | :x: Very Slow                             | :white_check_mark: **Very Fast**                             |
+| Method Dropdown              | :x: All methods in one GenericMenu list                 | :warning:GenericMenu with a few sub-menus | :white_check_mark: **Scrollable list with a search field and folders** |
+| Finding renamed types        | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
+| Implicit conversions support | :x: No                                                  | :x: No                                    | :white_check_mark: **Yes**                                   |
 
 ## Installation
 
@@ -187,6 +188,22 @@ public class CustomSerializableClass
 The  serializable class showed up correctly. And if you create a custom drawer for it, it will work too.
 
 <img src="/.images/custom-serializable-arg.png" alt="custom-serializable-arg"  />
+
+## Implicit Conversions
+
+The package supports implicit conversion of arguments that are passed dynamically. For example, when you have `ExtEvent<int>` but want to answer to it with a method that accepts float, you can do that. This works for all numerical conversions of built-in types (e.g. int => float, float => double, etc.) and types with defined [implicit operators](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/user-defined-conversion-operators). If you don't want to define an implicit operator but still want to convert the type of the argument on the fly, or you simply don't have access to the internal structure of the class, you can declare a custom converter. Just inherit from `Converter<TFrom, TTo>` and define your conversion:
+
+```csharp
+public class FloatToIntConverter : Converter<float, int>
+{
+    protected override int Convert(float from)
+    {
+        return Mathf.RoundToInt(from);
+    }
+}
+```
+
+The declared type will be automatically used by ExtEvents, no need to register it anywhere.
 
 ## Project Settings and Preferences
 
