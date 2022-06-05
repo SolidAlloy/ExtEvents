@@ -11,6 +11,9 @@ namespace ExtEvents
     using UnityEditor;
     using UnityEngine;
 
+    /// <summary>
+    /// A class that converts a value of one type to another type. The exact from and to types are defined by derived classes.
+    /// </summary>
     // Not using RequireDerivedAttribute here because it doesn't work and Unity strips the inheritors' default constructor anyway.
     // Instead, we have to rely on good old Preserve in built-in converters and automatically add custom converters to link.xml (See BuildPreprocessor)
     public abstract partial class Converter
@@ -31,7 +34,7 @@ namespace ExtEvents
             }
         }
 
-        public static IEnumerable<((Type from, Type to) fromToTypes, Type customConverter)> GetCustomConverters()
+        internal static IEnumerable<((Type from, Type to) fromToTypes, Type customConverter)> GetCustomConverters()
         {
             var types = TypeCache.GetTypesDerivedFrom<Converter>();
 
@@ -61,6 +64,14 @@ namespace ExtEvents
         private static readonly Dictionary<(Type from, Type to), Converter> _createdConverters =
             new Dictionary<(Type from, Type to), Converter>();
 
+        /// <summary>
+        /// Whether a converter from type <paramref name="from"/> to type <paramref name="to"/> exists.
+        /// This may be a converter for numerical conversions between built-in types,
+        /// a converter that uses implicit conversion operator of the <paramref name="from"/> type, or a custom converter.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <returns></returns>
         public static bool ExistsForTypes(Type from, Type to)
         {
             var types = (from, to);
@@ -107,6 +118,12 @@ namespace ExtEvents
     }
 
 #pragma warning disable 436
+    /// <summary>
+    /// A base converter for custom converters defined between types <typeparamref name="TFrom"/> and <typeparamref name="TTo"/>.
+    /// Inherit from this type and define rules of the conversion in the Convert method. The type will be automatically used by ExtEvents.
+    /// </summary>
+    /// <typeparam name="TFrom"></typeparam>
+    /// <typeparam name="TTo"></typeparam>
     // Using a copy of UsedImplicitly declared below because Unity's version of JetBrains.Annotations is too old and doesn't include WithInheritors.
     [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public abstract class Converter<TFrom, TTo> : Converter
@@ -154,7 +171,7 @@ namespace JetBrains.Annotations
     }
 
     [Flags]
-    public enum ImplicitUseTargetFlags
+    internal enum ImplicitUseTargetFlags
     {
         Default = 1,
         Itself = Default, // 0x00000001

@@ -30,8 +30,15 @@ namespace ExtEvents
         [FormerlySerializedAs("_type")] [SerializeField] internal TypeReference _targetType;
         [SerializeField] internal TypeReference _fromType;
 
+        /// <summary>
+        /// The type of the argument that is passed to the listener by ExtEvent.
+        /// This is usually the same as <see cref="Type"/> except for cases when types are implicitly converted.
+        /// For example, int may be passed from ExtEvent, but the listener will invoke a method that accepts float.
+        /// In this case, <see cref="Type"/> will be float, but <see cref="OriginalType"/> will be int.
+        /// </summary>
+        [PublicAPI] public Type OriginalType => _fromType;
+
         /// <summary> The type of the argument. </summary>
-        /// // TODO: think what to do with this public api and two types.
         [PublicAPI] public Type Type => _targetType;
 
         [SerializeField] private SerializationData _serializationData;
