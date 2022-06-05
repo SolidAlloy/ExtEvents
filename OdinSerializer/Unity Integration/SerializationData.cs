@@ -29,9 +29,9 @@ namespace ExtEvents.OdinSerializer
         public List<SerializationNode> SerializationNodes;
         public byte[] Bytes;
 
-        public bool BytesAreFilled => Bytes is { Length: > 0 };
-        public bool ReferencedUnityObjectsAreFilled => ReferencedUnityObjects is { Count: > 0 };
-        public bool SerializationNodesAreFilled => SerializationNodes is { Count: > 0 };
+        public bool BytesAreFilled => Bytes != null && Bytes.Length > 0;
+        public bool ReferencedUnityObjectsAreFilled => ReferencedUnityObjects != null && ReferencedUnityObjects.Count > 0;
+        public bool SerializationNodesAreFilled => SerializationNodes != null && SerializationNodes.Count > 0;
 
         public void Reset()
         {
