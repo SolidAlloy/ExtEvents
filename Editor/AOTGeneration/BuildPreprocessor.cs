@@ -56,7 +56,10 @@
             List<SerializedProperty> listenerProperties = null;
 
             // If we can't emit code in builds, emit all the types we will need ahead of time.
-            if (scriptingBackend == ScriptingImplementation.IL2CPP || buildTarget != BuildTargetGroup.Standalone)
+            // For Mono stripping level of medium and above, implicit operators that are not used will be stripped.
+            // We must therefore find all the types with implicit operators and add them to link.xml or reference in an emitted method so that they are not stripped.
+            // If we go to such extents, why not just emit the converters AOT then? We already have the code that does it.
+            if (scriptingBackend == ScriptingImplementation.IL2CPP || buildTarget != BuildTargetGroup.Standalone || PlayerSettings.GetManagedStrippingLevel(buildTarget) >= ManagedStrippingLevel.Medium)
             {
                 // Get listener properties and save them in an outside scope because we might need them later, and we don't want to search for them again.
                 var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
