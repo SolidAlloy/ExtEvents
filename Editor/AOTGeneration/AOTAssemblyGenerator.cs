@@ -202,21 +202,23 @@ public static class LoadConverterTypes
             var addMethod = new Action<(Type, Type), Type>(new Dictionary<(Type, Type), Type>().Add).Method;
 
             il.Emit(OpCodes.Ldsfld, converterTypesField);
-            il.Emit(OpCodes.Dup);
+
+            if (converterTypes.Count > 1)
+                il.Emit(OpCodes.Dup);
 
             foreach ((Type from, Type to, Type converterType) in converterTypes)
             {
                 il.Emit(OpCodes.Ldtoken, from);
-                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
+                il.Emit(OpCodes.Call, getTypeFromHandle);
 
                 il.Emit(OpCodes.Ldtoken, to);
-                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
+                il.Emit(OpCodes.Call, getTypeFromHandle);
 
                 il.Emit(OpCodes.Newobj, tupleConstructor);
 
                 il.Emit(OpCodes.Ldtoken, converterType);
-                il.EmitCall(OpCodes.Call, getTypeFromHandle, null);
-                il.EmitCall(OpCodes.Callvirt, addMethod, null);
+                il.Emit(OpCodes.Call, getTypeFromHandle);
+                il.Emit(OpCodes.Callvirt, addMethod);
             }
 
             il.Emit(OpCodes.Ret);
