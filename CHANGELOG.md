@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/SolidAlloy/ExtEvents/compare/1.4.0...1.5.0) (2022-06-07)
+
+
+### Features
+
+* Added ability to subscribe with methods that require implicit conversion of argument types ([ade6565](https://github.com/SolidAlloy/ExtEvents/commit/ade6565d0a7bdfc86e5a702e8e908644cc19425b))
+
 # [1.4.0](https://github.com/SolidAlloy/ExtEvents/compare/1.3.1...1.4.0) (2022-05-19)
 
 
