@@ -195,30 +195,33 @@ public static class LoadConverterTypes
 
             var il = methodBuilder.GetILGenerator();
 
-            var converterTypesField = typeof(Converter).GetField(nameof(Converter.ConverterTypes),
-                BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            Assert.IsNotNull(converterTypesField);
-
-            var addMethod = new Action<(Type, Type), Type>(new Dictionary<(Type, Type), Type>().Add).Method;
-
-            il.Emit(OpCodes.Ldsfld, converterTypesField);
-
-            if (converterTypes.Count > 1)
-                il.Emit(OpCodes.Dup);
-
-            foreach ((Type from, Type to, Type converterType) in converterTypes)
+            if (converterTypes.Count != 0)
             {
-                il.Emit(OpCodes.Ldtoken, from);
-                il.Emit(OpCodes.Call, getTypeFromHandle);
+                var converterTypesField = typeof(Converter).GetField(nameof(Converter.ConverterTypes),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+                Assert.IsNotNull(converterTypesField);
 
-                il.Emit(OpCodes.Ldtoken, to);
-                il.Emit(OpCodes.Call, getTypeFromHandle);
+                var addMethod = new Action<(Type, Type), Type>(new Dictionary<(Type, Type), Type>().Add).Method;
 
-                il.Emit(OpCodes.Newobj, tupleConstructor);
+                il.Emit(OpCodes.Ldsfld, converterTypesField);
 
-                il.Emit(OpCodes.Ldtoken, converterType);
-                il.Emit(OpCodes.Call, getTypeFromHandle);
-                il.Emit(OpCodes.Callvirt, addMethod);
+                if (converterTypes.Count > 1)
+                    il.Emit(OpCodes.Dup);
+
+                foreach ((Type from, Type to, Type converterType) in converterTypes)
+                {
+                    il.Emit(OpCodes.Ldtoken, from);
+                    il.Emit(OpCodes.Call, getTypeFromHandle);
+
+                    il.Emit(OpCodes.Ldtoken, to);
+                    il.Emit(OpCodes.Call, getTypeFromHandle);
+
+                    il.Emit(OpCodes.Newobj, tupleConstructor);
+
+                    il.Emit(OpCodes.Ldtoken, converterType);
+                    il.Emit(OpCodes.Call, getTypeFromHandle);
+                    il.Emit(OpCodes.Callvirt, addMethod);
+                }
             }
 
             il.Emit(OpCodes.Ret);
