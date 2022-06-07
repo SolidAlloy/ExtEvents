@@ -97,7 +97,7 @@
             }
             else
             {
-                AssemblyGeneration.ImportAssemblyAsset(assemblyPath, AssetDatabaseHelper.GetUniqueGUID());
+                AssemblyGeneration.ImportAssemblyAsset(assemblyPath, AssetDatabaseHelper.GetUniqueGUID(), excludeEditor: true);
             }
         }
 
