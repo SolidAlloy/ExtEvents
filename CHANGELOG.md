@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/SolidAlloy/ExtEvents/compare/1.5.0...1.5.1) (2022-06-09)
+
+
+### Bug Fixes
+
+* Removed nint and nuint types from the built-in converters to get rid of errors in Unity 2021.1 and below ([ee12ce4](https://github.com/SolidAlloy/ExtEvents/commit/ee12ce4e27467b8fcf280d7800ef65ad3fc2096e))
+
 # [1.5.0](https://github.com/SolidAlloy/ExtEvents/compare/1.4.0...1.5.0) (2022-06-07)
 
 
