@@ -15,7 +15,6 @@
             { (typeof(sbyte), typeof(float)), typeof(sbyte_float_Converter) },
             { (typeof(sbyte), typeof(double)), typeof(sbyte_double_Converter) },
             { (typeof(sbyte), typeof(decimal)), typeof(sbyte_decimal_Converter) },
-            { (typeof(sbyte), typeof(nint)), typeof(sbyte_nint_Converter) },
             { (typeof(byte), typeof(short)), typeof(byte_short_Converter) },
             { (typeof(byte), typeof(ushort)), typeof(byte_ushort_Converter) },
             { (typeof(byte), typeof(int)), typeof(byte_int_Converter) },
@@ -25,14 +24,11 @@
             { (typeof(byte), typeof(float)), typeof(byte_float_Converter) },
             { (typeof(byte), typeof(double)), typeof(byte_double_Converter) },
             { (typeof(byte), typeof(decimal)), typeof(byte_decimal_Converter) },
-            { (typeof(byte), typeof(nint)), typeof(byte_nint_Converter) },
-            { (typeof(byte), typeof(nuint)), typeof(byte_nuint_Converter) },
             { (typeof(short), typeof(int)), typeof(short_int_Converter) },
             { (typeof(short), typeof(long)), typeof(short_long_Converter) },
             { (typeof(short), typeof(float)), typeof(short_float_Converter) },
             { (typeof(short), typeof(double)), typeof(short_double_Converter) },
             { (typeof(short), typeof(decimal)), typeof(short_decimal_Converter) },
-            { (typeof(short), typeof(nint)), typeof(short_nint_Converter) },
             { (typeof(ushort), typeof(int)), typeof(ushort_int_Converter) },
             { (typeof(ushort), typeof(uint)), typeof(ushort_uint_Converter) },
             { (typeof(ushort), typeof(long)), typeof(ushort_long_Converter) },
@@ -40,19 +36,15 @@
             { (typeof(ushort), typeof(float)), typeof(ushort_float_Converter) },
             { (typeof(ushort), typeof(double)), typeof(ushort_double_Converter) },
             { (typeof(ushort), typeof(decimal)), typeof(ushort_decimal_Converter) },
-            { (typeof(ushort), typeof(nint)), typeof(ushort_nint_Converter) },
-            { (typeof(ushort), typeof(nuint)), typeof(ushort_nuint_Converter) },
             { (typeof(int), typeof(long)), typeof(int_long_Converter) },
             { (typeof(int), typeof(float)), typeof(int_float_Converter) },
             { (typeof(int), typeof(double)), typeof(int_double_Converter) },
             { (typeof(int), typeof(decimal)), typeof(int_decimal_Converter) },
-            { (typeof(int), typeof(nint)), typeof(int_nint_Converter) },
             { (typeof(uint), typeof(long)), typeof(uint_long_Converter) },
             { (typeof(uint), typeof(ulong)), typeof(uint_ulong_Converter) },
             { (typeof(uint), typeof(float)), typeof(uint_float_Converter) },
             { (typeof(uint), typeof(double)), typeof(uint_double_Converter) },
             { (typeof(uint), typeof(decimal)), typeof(uint_decimal_Converter) },
-            { (typeof(uint), typeof(nuint)), typeof(uint_nuint_Converter) },
             { (typeof(long), typeof(float)), typeof(long_float_Converter) },
             { (typeof(long), typeof(double)), typeof(long_double_Converter) },
             { (typeof(long), typeof(decimal)), typeof(long_decimal_Converter) },
@@ -60,14 +52,6 @@
             { (typeof(ulong), typeof(double)), typeof(ulong_double_Converter) },
             { (typeof(ulong), typeof(decimal)), typeof(ulong_decimal_Converter) },
             { (typeof(float), typeof(double)), typeof(float_double_Converter) },
-            { (typeof(nint), typeof(long)), typeof(nint_long_Converter) },
-            { (typeof(nint), typeof(float)), typeof(nint_float_Converter) },
-            { (typeof(nint), typeof(double)), typeof(nint_double_Converter) },
-            { (typeof(nint), typeof(decimal)), typeof(nint_decimal_Converter) },
-            { (typeof(nuint), typeof(ulong)), typeof(nuint_ulong_Converter) },
-            { (typeof(nuint), typeof(float)), typeof(nuint_float_Converter) },
-            { (typeof(nuint), typeof(double)), typeof(nuint_double_Converter) },
-            { (typeof(nuint), typeof(decimal)), typeof(nuint_decimal_Converter) },
         };
 
         public static readonly Dictionary<(Type from, Type to), Type> ConverterTypes = new Dictionary<(Type from, Type to), Type>(BuiltInConverters);
@@ -137,18 +121,6 @@
     internal class sbyte_decimal_Converter : Converter
     {
         private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<sbyte>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class sbyte_nint_Converter : Converter
-    {
-        private nint _arg;
 
         public override unsafe void* Convert(void* sourceTypePointer)
         {
@@ -266,30 +238,6 @@
     }
 
     [Preserve]
-    internal class byte_nint_Converter : Converter
-    {
-        private nint _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<byte>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class byte_nuint_Converter : Converter
-    {
-        private nuint _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<byte>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
     internal class short_int_Converter : Converter
     {
         private int _arg;
@@ -341,18 +289,6 @@
     internal class short_decimal_Converter : Converter
     {
         private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<short>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class short_nint_Converter : Converter
-    {
-        private nint _arg;
 
         public override unsafe void* Convert(void* sourceTypePointer)
         {
@@ -446,30 +382,6 @@
     }
 
     [Preserve]
-    internal class ushort_nint_Converter : Converter
-    {
-        private nint _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<ushort>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class ushort_nuint_Converter : Converter
-    {
-        private nuint _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<ushort>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
     internal class int_long_Converter : Converter
     {
         private long _arg;
@@ -509,18 +421,6 @@
     internal class int_decimal_Converter : Converter
     {
         private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<int>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class int_nint_Converter : Converter
-    {
-        private nint _arg;
 
         public override unsafe void* Convert(void* sourceTypePointer)
         {
@@ -581,18 +481,6 @@
     internal class uint_decimal_Converter : Converter
     {
         private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<uint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class uint_nuint_Converter : Converter
-    {
-        private nuint _arg;
 
         public override unsafe void* Convert(void* sourceTypePointer)
         {
@@ -681,102 +569,6 @@
         public override unsafe void* Convert(void* sourceTypePointer)
         {
             _arg = Unsafe.Read<float>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nint_long_Converter : Converter
-    {
-        private long _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nint_float_Converter : Converter
-    {
-        private float _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nint_double_Converter : Converter
-    {
-        private double _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nint_decimal_Converter : Converter
-    {
-        private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nuint_ulong_Converter : Converter
-    {
-        private ulong _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nuint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nuint_float_Converter : Converter
-    {
-        private float _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nuint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nuint_double_Converter : Converter
-    {
-        private double _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nuint>(sourceTypePointer);
-            return Unsafe.AsPointer(ref _arg);
-        }
-    }
-
-    [Preserve]
-    internal class nuint_decimal_Converter : Converter
-    {
-        private decimal _arg;
-
-        public override unsafe void* Convert(void* sourceTypePointer)
-        {
-            _arg = Unsafe.Read<nuint>(sourceTypePointer);
             return Unsafe.AsPointer(ref _arg);
         }
     }

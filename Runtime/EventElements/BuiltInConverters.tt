@@ -12,26 +12,22 @@ const string _uint = "uint";
 const string _long = "long";
 const string _ulong = "ulong";
 const string _float = "float";
-const string _nint = "nint";
-const string _nuint = "nuint";
 const string _double = "double";
 const string _decimal = "decimal";
-// TODO: think how to add the generated types to dictionary.
-// TODO: either add preserve or see how to save types through link. Also maybe just adding them to dictionary is enough?
+
 // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions
+// nint and nuint types are not included because they exist since C# 9 only and I don't think they would be widely used in ExtEvents. If someone needs to use them, they can create a custom converter.
 var types = new (string fromType, string[] toTypes)[]
    {
-       (_sbyte,  new[] { _short,          _int,        _long,         _float, _double, _decimal, _nint }),
-       (_byte,   new[] { _short, _ushort, _int, _uint, _long, _ulong, _float, _double, _decimal, _nint, _nuint }),
-       (_short,  new[] {                  _int,        _long,         _float, _double, _decimal, _nint }),
-       (_ushort, new[] {                  _int, _uint, _long, _ulong, _float, _double, _decimal, _nint, _nuint }),
-       (_int,    new[] {                               _long,         _float, _double, _decimal, _nint }),
-       (_uint,   new[] {                               _long, _ulong, _float, _double, _decimal,        _nuint }),
+       (_sbyte,  new[] { _short,          _int,        _long,         _float, _double, _decimal }),
+       (_byte,   new[] { _short, _ushort, _int, _uint, _long, _ulong, _float, _double, _decimal }),
+       (_short,  new[] {                  _int,        _long,         _float, _double, _decimal }),
+       (_ushort, new[] {                  _int, _uint, _long, _ulong, _float, _double, _decimal }),
+       (_int,    new[] {                               _long,         _float, _double, _decimal }),
+       (_uint,   new[] {                               _long, _ulong, _float, _double, _decimal }),
        (_long,   new[] {                                              _float, _double, _decimal }),
        (_ulong,  new[] {                                              _float, _double, _decimal }),
-       (_float,  new[] {                                                      _double }),
-       (_nint,   new[] {                              _long,          _float, _double, _decimal }),
-       (_nuint,  new[] {                                      _ulong, _float, _double, _decimal }),
+       (_float,  new[] {                                                      _double })
    };
 #>
     using System;
