@@ -22,6 +22,7 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 ## Installation
 
 :heavy_exclamation_mark: Before installing the package, please disable the **Assembly Version Validation** option in **Player Settings**.
+:heavy_exclamation_mark: If you see compilation errors in Unity 2021.1 and below, switch from **NET Standard 2.0** to **NET 4.x**.
 
 ### OpenUPM
 
