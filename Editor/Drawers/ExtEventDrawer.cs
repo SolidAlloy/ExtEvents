@@ -20,6 +20,12 @@
 
         public static ExtEventInfo CurrentEventInfo { get; private set; }
 
+        private static string[] _overrideArgNames;
+
+        public static void SetOverrideArgNames(string[] overrideArgNames) => _overrideArgNames = overrideArgNames;
+
+        public static void ResetOverrideArgNames() => _overrideArgNames = null;
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var reorderableList = GetList(property, label.text);
@@ -44,10 +50,19 @@
             var propertyPath = extEventProperty.propertyPath;
 
             if (_extEventInfoCache.TryGetValue((serializedObject, propertyPath), out var eventInfo))
+            {
+                if (_overrideArgNames != null)
+                    eventInfo.ArgNames = _overrideArgNames;
+
                 return eventInfo;
+            }
 
             eventInfo = new ExtEventInfo(GetArgNames(extEventProperty), GetEventParamTypes(extEventProperty));
             _extEventInfoCache.Add((extEventProperty.serializedObject, extEventProperty.propertyPath), eventInfo);
+
+            if (_overrideArgNames != null)
+                eventInfo.ArgNames = _overrideArgNames;
+
             return eventInfo;
         }
 
@@ -156,7 +171,7 @@
 
     public class ExtEventInfo
     {
-        public readonly string[] ArgNames;
+        public string[] ArgNames;
         public readonly Type[] ParamTypes;
 
         public ExtEventInfo(string[] argNames, Type[] paramTypes)
