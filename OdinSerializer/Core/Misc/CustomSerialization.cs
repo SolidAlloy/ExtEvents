@@ -1,6 +1,7 @@
 ﻿namespace ExtEvents.OdinSerializer
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using Utilities;
 #if UNITY_EDITOR
@@ -98,6 +99,11 @@
 #endif
         }
 
+        public static void SerializeValueToBinary<T>(T value, out byte[] bytes, out List<UnityEngine.Object> referencedUnityObjects)
+        {
+            bytes = SerializationUtility.SerializeValue(value, DataFormat.Binary, out referencedUnityObjects);
+        }
+
         private static void SerializeValueToBinary(object value, Type valueType, ref SerializationData data)
         {
             data.Bytes = value == null ? null : SerializationUtility.SerializeValue(value, valueType, DataFormat.Binary, out data.ReferencedUnityObjects);
@@ -176,6 +182,11 @@
                     Cache<DeserializationContext>.Release(cachedContext);
                 }
             }
+        }
+
+        public static T DeserializeValue<T>(byte[] bytes, List<UnityEngine.Object> referencedUnityObjects)
+        {
+            return SerializationUtility.DeserializeValue<T>(bytes, DataFormat.Binary, referencedUnityObjects);
         }
 
         private static DeserializationContext GetCachedContext(out Cache<DeserializationContext> cachedContext)

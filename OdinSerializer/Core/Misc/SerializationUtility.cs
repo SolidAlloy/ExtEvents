@@ -55,6 +55,41 @@ namespace ExtEvents.OdinSerializer
             return stream.Value.MemoryStream.ToArray();
         }
 
+        public static byte[] SerializeValue<T>(T value, DataFormat format, out List<Object> unityObjects, SerializationContext context = null)
+        {
+            using var stream = CachedMemoryStream.Claim();
+            var writer = GetCachedWriter(out IDisposable cache, format, stream.Value.MemoryStream, context);
+
+            try
+            {
+                if (context != null)
+                {
+                    SerializeValue(value, writer, out unityObjects);
+                }
+                else
+                {
+                    using var con = Cache<SerializationContext>.Claim();
+                    writer.Context = con;
+                    SerializeValue(value, writer, out unityObjects);
+                }
+            }
+            finally
+            {
+                cache.Dispose();
+            }
+
+            return stream.Value.MemoryStream.ToArray();
+        }
+
+        private static void SerializeValue<T>(T value, IDataWriter writer, out List<Object> unityObjects)
+        {
+            using var unityResolver = Cache<UnityReferenceResolver>.Claim();
+            writer.Context.IndexReferenceResolver = unityResolver.Value;
+            Serializer.Get<T>().WriteValue(value, writer);
+            writer.FlushToStream();
+            unityObjects = unityResolver.Value.GetReferencedUnityObjects();
+        }
+
         public static void SerializeValue(object value, Type valueType, IDataWriter writer)
         {
             Serializer.Get(valueType).WriteValueWeak(value, writer);
@@ -94,6 +129,30 @@ namespace ExtEvents.OdinSerializer
             }
         }
 
+        public static T DeserializeValue<T>(byte[] bytes, DataFormat format, List<Object> referencedUnityObjects, DeserializationContext context = null)
+        {
+            using var stream = CachedMemoryStream.Claim(bytes);
+            var reader = GetCachedReader(out IDisposable cache, format, stream.Value.MemoryStream, context);
+
+            try
+            {
+                if (context != null)
+                {
+                    return DeserializeValue<T>(reader, referencedUnityObjects);
+                }
+                else
+                {
+                    using var con = Cache<DeserializationContext>.Claim();
+                    reader.Context = con;
+                    return DeserializeValue<T>(reader, referencedUnityObjects);
+                }
+            }
+            finally
+            {
+                cache.Dispose();
+            }
+        }
+
         public static object DeserializeValue(Type valueType, IDataReader reader)
         {
             return Serializer.Get(valueType).ReadValueWeak(reader);
@@ -105,6 +164,14 @@ namespace ExtEvents.OdinSerializer
             unityResolver.Value.SetReferencedUnityObjects(referencedUnityObjects);
             reader.Context.IndexReferenceResolver = unityResolver.Value;
             return Serializer.Get(valueType).ReadValueWeak(reader);
+        }
+
+        private static T DeserializeValue<T>(IDataReader reader, List<Object> referencedUnityObjects)
+        {
+            using var unityResolver = Cache<UnityReferenceResolver>.Claim();
+            unityResolver.Value.SetReferencedUnityObjects(referencedUnityObjects);
+            reader.Context.IndexReferenceResolver = unityResolver.Value;
+            return Serializer.Get<T>().ReadValue(reader);
         }
 
         private static IDataWriter GetCachedWriter(out IDisposable cache, DataFormat format, Stream stream, SerializationContext context)
