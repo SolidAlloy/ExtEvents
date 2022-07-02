@@ -24,15 +24,13 @@ ExtEvents is a package that should replace UnityEvents in all your projects and 
 :heavy_exclamation_mark: Before installing the package, please disable the **Assembly Version Validation** option in **Player Settings**.
 :heavy_exclamation_mark: If you see compilation errors in Unity 2021.1 and below, switch from **NET Standard 2.0** to **NET 4.x**.
 
-### OpenUPM
+### Install with OpenUPM
 
 Once you have the [OpenUPM cli](https://github.com/openupm/openupm-cli#installation), run the following command:
 
-```
-openupm install com.solidalloy.extevents
-```
+```openupm install com.solidalloy.extevents```
 
-Or if you don't have it, add the scoped registry to manifest.json with the desired dependency semantic version:
+Or if you don't have it, add the scoped registry to manifest.json with the desired dependency semantic version: 
 
 ```json
   "scopedRegistries": [
@@ -40,32 +38,34 @@ Or if you don't have it, add the scoped registry to manifest.json with the desir
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
       "scopes": [
-        "com.solidalloy.util",
-        "com.solidalloy.type-references",
-        "com.solidalloy.unity-dropdown",
-        "com.solidalloy.extevents",
-        "com.openupm"
+        "com.solidalloy",
+        "com.openupm",
+        "org.nuget"
       ]
     }
   ],
   "dependencies": {
-    "com.solidalloy.extevents": "1.0.0"
+    "com.solidalloy.extevents": "1.5.1"
   },
+
 ```
 
+### Install via Package Manager
 
+Project supports Unity Package Manager. To install the project as a Git package do the following:
 
-### Git URL
-
-To install the package through Package Manager, do the following:
-
-1. In Unity, open **Window** -> **Package Manager**.
-2. Press the **+** button, choose "**Add package from git URL...**"
-3. Enter "https://github.com/SolidAlloy/SolidUtilities.git" and press **Add**.
-4. Do the same with three more packages:
-   - https://github.com/SolidAlloy/ClassTypeReference-for-Unity.git
-   - https://github.com/SolidAlloy/UnityDropdown.git
-   - https://github.com/SolidAlloy/ExtEvents.git
+1. In Unity, open **Project Settings** -> **Package Manager**.
+2. Add a new scoped registry with the following details:
+   - **Name**: package.openupm.com
+   - **URL**: https://package.openupm.com
+   - Scope(s):
+     - com.openupm
+     - com.solidalloy
+     - org.nuget
+3. Hit **Apply**.
+4. Go to **Window** -> **Package Manager**.
+5. Press the **+** button, *Add package from git URL*.
+6. Enter **com.solidalloy.extevents**, press **Add**.
 
 ## Quick Start
 
