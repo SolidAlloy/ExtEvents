@@ -2,15 +2,15 @@
     "name": "ExtEvents.Editor",
     "rootNamespace": "ExtEvents.Editor",
     "references": [
-        "GUID:48d58eaab94e1de429344393b7653b1f",
-        "GUID:34b1251e2e34f984c9cb42350fca1bed",
-        "GUID:b73ef07971851e14fa74ae50b76f8225",
-        "GUID:ea6a6314f279f814facc8c48a7d3c9f1",
-        "GUID:7fadca414dede194f95d4f8d2a1e32dc",
-        "GUID:0046de5c905aeff408e019011d80d21e",
-        "GUID:49818357e697641afb75d2f8acaf1861",
-        "GUID:2e5fb71161fa6f74f958f989fbdbb839",
-        "GUID:c1b147163196482e79b365bdd8451892"
+        "SolidUtilities.Editor",
+        "ExtEvents",
+        "SolidUtilities",
+        "TypeReferences",
+        "TypeReferences.Editor",
+        "UnityDropdown.Editor",
+        "Unity.Settings.Editor",
+        "GenericUnityObjects.Editor",
+        "ExtEvents.OdinSerializer"
     ],
     "includePlatforms": [
         "Editor"

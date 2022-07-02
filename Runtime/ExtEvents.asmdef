@@ -2,10 +2,10 @@
     "name": "ExtEvents",
     "rootNamespace": "ExtEvents",
     "references": [
-        "GUID:ea6a6314f279f814facc8c48a7d3c9f1",
-        "GUID:49818357e697641afb75d2f8acaf1861",
-        "GUID:b73ef07971851e14fa74ae50b76f8225",
-        "GUID:c1b147163196482e79b365bdd8451892"
+        "TypeReferences",
+        "Unity.Settings.Editor",
+        "SolidUtilities",
+        "ExtEvents.OdinSerializer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
