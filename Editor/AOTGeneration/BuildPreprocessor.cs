@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using SolidUtilities.Editor;
     using UnityEditor;
     using UnityEditor.Build;
@@ -53,7 +52,8 @@
 
             AOTAssemblyGenerator.CreateLinkXml(typesToPreserve);
 
-            List<SerializedProperty> listenerProperties = null;
+            var methods = new HashSet<AOTAssemblyGenerator.CreateMethod>();
+            var argumentTypes = new HashSet<Type>();
 
             // If we can't emit code in builds, emit all the types we will need ahead of time.
             // For Mono stripping level of medium and above, implicit operators that are not used will be stripped.
@@ -61,15 +61,19 @@
             // If we go to such extents, why not just emit the converters AOT then? We already have the code that does it.
             if (scriptingBackend == ScriptingImplementation.IL2CPP || buildTarget != BuildTargetGroup.Standalone || PlayerSettings.GetManagedStrippingLevel(buildTarget) >= ManagedStrippingLevel.Medium)
             {
-                // Get listener properties and save them in an outside scope because we might need them later, and we don't want to search for them again.
-                var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
-                var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
-                listenerProperties = ExtEventProjectSearcher.GetListeners(extEventProperties).ToList();
-
                 var conversions = new HashSet<(Type from, Type to)>();
 
-                foreach (var listenerProperty in listenerProperties)
+                var serializedObjects = ProjectWideSearcher.GetSerializedObjectsInProject();
+                var extEventProperties = SerializedPropertyHelper.FindPropertiesOfType(serializedObjects, "ExtEvent");
+
+                foreach (var listenerProperty in ExtEventProjectSearcher.GetListeners(extEventProperties))
                 {
+                    // Although we don't use argumentTypes and methods yet and might not use at all, we gather them here so that we have to go through listener only once.
+                    // Listeners are returned lazily and iterating through them again would require to search through the whole project one more time.
+                    // It's cheaper to gather these details and discard if we don't need them.
+                    var methodInfo = ExtEventProjectSearcher.GetMethod(listenerProperty);
+                    AOTAssemblyGenerator.GetMethodDetails(methodInfo, ref argumentTypes, ref methods);
+
                     foreach (var types in ExtEventProjectSearcher.GetNonMatchingArgumentTypes(listenerProperty))
                     {
                         conversions.Add(types);
@@ -104,7 +108,7 @@
 
             // listenerProperties will be initialized for sure here because we initialized inside an if statement that always runs if the scripting backend is IL2CPP.
             if (codeGeneration == Il2CppCodeGeneration.OptimizeSpeed)
-                AOTAssemblyGenerator.EmitGenericTypesUsage(moduleBuilder, listenerProperties);
+                AOTAssemblyGenerator.CreateUsageType(moduleBuilder, methods, argumentTypes); // create a type where all the generic classes are used to save them for IL2CPP.
 #else
             AOTAssemblyGenerator.EmitGenericTypesUsage(moduleBuilder, listenerProperties);
 #endif

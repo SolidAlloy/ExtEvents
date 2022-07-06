@@ -22,21 +22,6 @@
         private const string FolderPath = PackageSettings.PluginsPath + "/AOT Generation";
         private const string AssemblyName = "z_ExtEvents_AOTGeneration";
 
-        public static void EmitGenericTypesUsage(ModuleBuilder moduleBuilder, IEnumerable<SerializedProperty> listenerProperties)
-        {
-            // get code that needs to be generated
-            var methods = new HashSet<CreateMethod>();
-            var argumentTypes = new HashSet<Type>();
-
-            foreach (var listenerProperty in listenerProperties)
-            {
-                var methodInfo = ExtEventProjectSearcher.GetMethod(listenerProperty);
-                GetMethodDetails(methodInfo, ref argumentTypes, ref methods);
-            }
-
-            CreateUsageType(moduleBuilder, methods, argumentTypes); // create a type where all the generic classes are used to save them for IL2CPP.
-        }
-
         public static IEnumerable<(Type from, Type to, Type emittedConverterType)> EmitImplicitConverters(ModuleBuilder moduleBuilder, Dictionary<(Type from, Type to), Type> customConverters, IEnumerable<(Type from, Type to)> conversions)
         {
             foreach ((Type from, Type to) types in conversions)
@@ -242,7 +227,7 @@ public static class LoadConverterTypes
             return dictionary;
         }
 
-        private static void CreateUsageType(ModuleBuilder moduleBuilder, HashSet<CreateMethod> createMethods, HashSet<Type> argumentTypes)
+        public static void CreateUsageType(ModuleBuilder moduleBuilder, HashSet<CreateMethod> createMethods, HashSet<Type> argumentTypes)
         {
             var typeBuilder = moduleBuilder.DefineType("ExtEvents.GeneratedCreateMethods", TypeAttributes.Public);
             var ilGenerator = CreateStaticMethod(typeBuilder, "AOTGeneration");
@@ -291,7 +276,7 @@ public static class LoadConverterTypes
             }
         }
 
-        private static void GetMethodDetails(MethodInfo methodInfo, ref HashSet<Type> argumentTypes, ref HashSet<CreateMethod> methods)
+        public static void GetMethodDetails(MethodInfo methodInfo, ref HashSet<Type> argumentTypes, ref HashSet<CreateMethod> methods)
         {
             if (methodInfo == null)
                 return;
@@ -333,7 +318,7 @@ public static class LoadConverterTypes
             return types;
         }
 
-        private readonly struct CreateMethod : IEquatable<CreateMethod>
+        public readonly struct CreateMethod : IEquatable<CreateMethod>
         {
             public readonly bool IsVoid;
             public readonly Type[] Args;

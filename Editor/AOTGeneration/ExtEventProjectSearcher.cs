@@ -3,8 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using SolidUtilities;
-    using SolidUtilities.Editor;
     using TypeReferences;
     using UnityEditor;
     using UnityEngine.Events;
@@ -22,11 +20,6 @@
                 for (int i = 0; i < listenersLength; i++)
                 {
                     yield return listeners.GetArrayElementAtIndex(i);
-
-                    // var method = ListenerHelper.GetMethod(listeners.GetArrayElementAtIndex(i));
-                    //
-                    // if (method != null)
-                    //     yield return method;
                 }
             }
         }
