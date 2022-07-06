@@ -19,7 +19,7 @@
 
     public static class AOTAssemblyGenerator
     {
-        private const string FolderPath = PackageSettings.PluginsPath + "/AOT Generation";
+        public const string FolderPath = PackageSettings.PluginsPath + "/AOT Generation";
         private const string AssemblyName = "z_ExtEvents_AOTGeneration";
 
         public static IEnumerable<(Type from, Type to, Type emittedConverterType)> EmitImplicitConverters(ModuleBuilder moduleBuilder, Dictionary<(Type from, Type to), Type> customConverters, IEnumerable<(Type from, Type to)> conversions)
