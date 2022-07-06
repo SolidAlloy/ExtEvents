@@ -1,3 +1,17 @@
+# [1.6.0](https://github.com/SolidAlloy/ExtEvents/compare/1.5.1...1.6.0) (2022-07-06)
+
+
+### Bug Fixes
+
+* Fixed NullReferenceException when building a project with IL2CPP ([4d11316](https://github.com/SolidAlloy/ExtEvents/commit/4d1131675bfd72ffe71adf21b32a53a88cebe864))
+
+
+### Features
+
+* Added an ability to override dynamic argument names in the ExtEvent drawer ([dcdaf95](https://github.com/SolidAlloy/ExtEvents/commit/dcdaf955b64c353aeb16667324f3e385c7a3cea9))
+* Added methods to serialize generic values to binary using odin serializer ([3db0c79](https://github.com/SolidAlloy/ExtEvents/commit/3db0c7943a57dbaf5173b3a8d0bc1ce51fa449da))
+* Switched from GUID to assembly names in asmdefs ([0ac523c](https://github.com/SolidAlloy/ExtEvents/commit/0ac523c40fafa45f73247f7cfcf90a8971146147))
+
 ## [1.5.1](https://github.com/SolidAlloy/ExtEvents/compare/1.5.0...1.5.1) (2022-06-09)
 
 
