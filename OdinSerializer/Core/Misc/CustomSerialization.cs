@@ -104,6 +104,11 @@
             bytes = SerializationUtility.SerializeValue(value, DataFormat.Binary, out referencedUnityObjects);
         }
 
+        public static void SerializeValueToBinaryWeak(object value, out byte[] bytes, out List<UnityEngine.Object> referencedUnityObjects)
+        {
+            bytes = SerializationUtility.SerializeValueWeak(value, DataFormat.Binary, out referencedUnityObjects);
+        }
+
         private static void SerializeValueToBinary(object value, Type valueType, ref SerializationData data)
         {
             data.Bytes = value == null ? null : SerializationUtility.SerializeValue(value, valueType, DataFormat.Binary, out data.ReferencedUnityObjects);
@@ -187,6 +192,11 @@
         public static T DeserializeValue<T>(byte[] bytes, List<UnityEngine.Object> referencedUnityObjects)
         {
             return SerializationUtility.DeserializeValue<T>(bytes, DataFormat.Binary, referencedUnityObjects);
+        }
+
+        public static object DeserializeValue(Type type, byte[] bytes, List<UnityEngine.Object> referencedUnityObjects)
+        {
+            return SerializationUtility.DeserializeValue(type, bytes, DataFormat.Binary, referencedUnityObjects);
         }
 
         private static DeserializationContext GetCachedContext(out Cache<DeserializationContext> cachedContext)

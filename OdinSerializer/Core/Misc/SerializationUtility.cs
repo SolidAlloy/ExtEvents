@@ -81,11 +81,47 @@ namespace ExtEvents.OdinSerializer
             return stream.Value.MemoryStream.ToArray();
         }
 
+        public static byte[] SerializeValueWeak(object value, DataFormat format, out List<Object> unityObjects, SerializationContext context = null)
+        {
+            using var stream = CachedMemoryStream.Claim();
+            var writer = GetCachedWriter(out IDisposable cache, format, stream.Value.MemoryStream, context);
+
+            try
+            {
+                if (context != null)
+                {
+                    SerializeValueWeak(value, writer, out unityObjects);
+                }
+                else
+                {
+                    using var con = Cache<SerializationContext>.Claim();
+                    writer.Context = con;
+                    SerializeValueWeak(value, writer, out unityObjects);
+                }
+            }
+            finally
+            {
+                cache.Dispose();
+            }
+
+            return stream.Value.MemoryStream.ToArray();
+        }
+
         private static void SerializeValue<T>(T value, IDataWriter writer, out List<Object> unityObjects)
         {
             using var unityResolver = Cache<UnityReferenceResolver>.Claim();
             writer.Context.IndexReferenceResolver = unityResolver.Value;
             Serializer.Get<T>().WriteValue(value, writer);
+            writer.FlushToStream();
+            unityObjects = unityResolver.Value.GetReferencedUnityObjects();
+        }
+
+        private static void SerializeValueWeak(object value, IDataWriter writer, out List<Object> unityObjects)
+        {
+            using var unityResolver = Cache<UnityReferenceResolver>.Claim();
+            writer.Context.IndexReferenceResolver = unityResolver.Value;
+            var valueType = value.GetType();
+            Serializer.Get(valueType).WriteValueWeak(value, writer);
             writer.FlushToStream();
             unityObjects = unityResolver.Value.GetReferencedUnityObjects();
         }
