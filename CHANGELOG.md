@@ -1,3 +1,16 @@
+# [1.7.0](https://github.com/SolidAlloy/ExtEvents/compare/1.6.0...1.7.0) (2022-07-24)
+
+
+### Bug Fixes
+
+* Fixed assertion error when using a response created in an older version of the package ([a477fc6](https://github.com/SolidAlloy/ExtEvents/commit/a477fc6cdcea5a646a6cfa51aacce074d734e08d))
+* Started removing the AOT Generation folder after the build is complete ([5a39535](https://github.com/SolidAlloy/ExtEvents/commit/5a39535d42ce1e3a7bb75ab1a3aa78c5fdc4fc0e))
+
+
+### Features
+
+* Added weak value serialization to SerializationUtility ([f70674e](https://github.com/SolidAlloy/ExtEvents/commit/f70674efc0b612cd32427b5abfa87bf4d1f07d78))
+
 # [1.6.0](https://github.com/SolidAlloy/ExtEvents/compare/1.5.1...1.6.0) (2022-07-06)
 
 
