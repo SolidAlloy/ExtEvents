@@ -119,7 +119,8 @@ namespace ExtEvents.Editor
             var argNames = ExtEventDrawer.CurrentEventInfo.ArgNames;
             var currentArgName = argNames[indexProp.intValue];
 
-            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventDrawer.CurrentEventInfo.ParamTypes, PersistentArgumentHelper.GetTypeFromProperty(property, nameof(PersistentArgument._fromType)));
+            // fallback field for backwards compatibility where _fromType didn't exist.
+            var matchingArgNames = GetMatchingArgNames(argNames, ExtEventDrawer.CurrentEventInfo.ParamTypes, PersistentArgumentHelper.GetTypeFromProperty(property, nameof(PersistentArgument._fromType), nameof(PersistentArgument._targetType)));
 
             using (new EditorGUI.DisabledGroupScope(matchingArgNames.Count == 1))
             {

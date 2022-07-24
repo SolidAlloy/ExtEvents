@@ -7,11 +7,22 @@
 
     public static class PersistentArgumentHelper
     {
-        public static Type GetTypeFromProperty(SerializedProperty argProperty, string typeFieldName)
+        public static Type GetTypeFromProperty(SerializedProperty argProperty, string typeFieldName, string fallbackTypeFieldName = null)
+        {
+            var type = GetTypeFromPropertyInternal(argProperty, typeFieldName);
+
+            if (type == null && fallbackTypeFieldName != null)
+            {
+                type = GetTypeFromPropertyInternal(argProperty, fallbackTypeFieldName);
+            }
+
+            return type;
+        }
+
+        private static Type GetTypeFromPropertyInternal(SerializedProperty argProperty, string typeFieldName)
         {
             var typeNameAndAssembly = argProperty.FindPropertyRelative($"{typeFieldName}.{nameof(TypeReference._typeNameAndAssembly)}").stringValue;
-            var type = Type.GetType(typeNameAndAssembly);
-            return type;
+            return Type.GetType(typeNameAndAssembly);
         }
     }
 }
